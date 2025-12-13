@@ -15,10 +15,8 @@ function debounce(fn, ms) {
 // Posts list
 // -----------------------------
 async function loadPosts() {
-  console.log('[loadPosts] Fetching posts.json...');
-  const res = await fetch('posts.json', { cache: 'no-store' });
+  const res = await fetch('posts.json'); // use default cache (much faster/robust)
   const posts = await res.json();
-  console.log('[loadPosts] Loaded.', posts.length, 'posts');
   return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
@@ -389,17 +387,13 @@ async function renderPost() {
     if (mBtn) mBtn.style.display = 'none';
   }
 
-  console.log('[renderPost] Start. Path param:', p);
-
   // --- Robust Path Reconstruction ---
   // Instead of guessing, we look it up in the index.
   // This handles ANY folder structure (flat, nested, etc) correctly.
   let path = null;
 
   try {
-    console.log('[renderPost] Loading index for lookup...');
     const posts = await loadPosts();
-    console.log('[renderPost] Index loaded. Entries:', posts.length);
 
     // 1. Exact Match (Legacy links: ?p=posts/foo/bar.html)
     let found = posts.find(x => x.path === p);
@@ -411,19 +405,13 @@ async function renderPost() {
       found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
     }
 
-    if (found) {
-      path = found.path;
-      console.log('[renderPost] Found exact match:', path);
-    } else {
-      // Fallback for brand new posts not yet in json? Or just a blind guess
-      // (This preserves the "Guess" as a last resort)
+    if (found) path = found.path;
+    else {
       if (!p.includes('/')) path = `posts/${p}/${p}.html`;
       else path = `posts/${p}.html`;
-      console.log('[renderPost] No match, guessing:', path);
     }
 
   } catch (e) {
-    console.error('[renderPost] Index lookup failed:', e);
     path = `posts/${p}/${p}.html`;
   }
 
@@ -598,8 +586,10 @@ async function renderPost() {
   // ===============================================
 
   try {
-    const res = await fetch(path, { cache: 'no-store' });
+    const res = await fetch(path); // Default cache for robustness
+    if (!res.ok) throw new Error('Not found');
     const html = await res.text();
+
     contentEl.innerHTML = html;
     // Fade Animation
     contentEl.classList.remove('fade-enter');
@@ -613,8 +603,6 @@ async function renderPost() {
 
     // Typeset math first for accurate heights
     await typesetAfterLoad(contentEl);
-
-    // Build book pages on phones
     const isPhone = window.matchMedia('(max-width: 560px)').matches;
     if (isPhone) {
       enableSoftBookMode(contentEl);
