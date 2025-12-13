@@ -580,6 +580,11 @@ async function renderPost() {
     const res = await fetch(path, { cache: 'no-store' });
     const html = await res.text();
     contentEl.innerHTML = html;
+    // Fade Animation
+    contentEl.classList.remove('fade-enter');
+    void contentEl.offsetWidth; // force reflow to restart animation
+    contentEl.classList.add('fade-enter');
+
     contentEl.classList.add('post');
 
     // Stable heading text before any measuring
