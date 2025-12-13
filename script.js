@@ -15,8 +15,10 @@ function debounce(fn, ms) {
 // Posts list
 // -----------------------------
 async function loadPosts() {
+  console.log('[loadPosts] Fetching posts.json...');
   const res = await fetch('posts.json', { cache: 'no-store' });
   const posts = await res.json();
+  console.log('[loadPosts] Loaded.', posts.length, 'posts');
   return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
@@ -387,13 +389,17 @@ async function renderPost() {
     if (mBtn) mBtn.style.display = 'none';
   }
 
+  console.log('[renderPost] Start. Path param:', p);
+
   // --- Robust Path Reconstruction ---
   // Instead of guessing, we look it up in the index.
   // This handles ANY folder structure (flat, nested, etc) correctly.
   let path = null;
 
   try {
+    console.log('[renderPost] Loading index for lookup...');
     const posts = await loadPosts();
+    console.log('[renderPost] Index loaded. Entries:', posts.length);
 
     // 1. Exact Match (Legacy links: ?p=posts/foo/bar.html)
     let found = posts.find(x => x.path === p);
@@ -405,25 +411,23 @@ async function renderPost() {
       found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
     }
 
-    if (found) path = found.path;
-    else {
+    if (found) {
+      path = found.path;
+      console.log('[renderPost] Found exact match:', path);
+    } else {
       // Fallback for brand new posts not yet in json? Or just a blind guess
       // (This preserves the "Guess" as a last resort)
       if (!p.includes('/')) path = `posts/${p}/${p}.html`;
       else path = `posts/${p}.html`;
+      console.log('[renderPost] No match, guessing:', path);
     }
 
   } catch (e) {
-    console.error("Index load failed, falling back to guess", e);
+    console.error('[renderPost] Index lookup failed:', e);
     path = `posts/${p}/${p}.html`;
   }
 
   // Fetch Logic
-
-
-
-
-
   // ======= Helpers scoped to this function =======
   function ensureInner() {
     const post = contentEl.closest('.post.book-mode');
@@ -749,14 +753,18 @@ function initControls() {
 // Init
 // -----------------------------
 addEventListener('DOMContentLoaded', () => {
+  console.log('[Init] DOMContentLoaded');
   initControls();
 
   const params = new URLSearchParams(window.location.search);
   const p = params.get('p');
+  console.log('[Init] Params:', p);
 
   if (p) {
+    console.log('[Init] Delegating to renderPost');
     renderPost();
   } else {
+    console.log('[Init] Delegating to renderList');
     renderList();
   }
 });
