@@ -387,22 +387,39 @@ async function renderPost() {
     if (mBtn) mBtn.style.display = 'none';
   }
 
-  // --- Smart Path Reconstruction ---
-  // 1. If it's a full path (legacy or weird link), use it.
-  let path = p;
+  // --- Robust Path Reconstruction ---
+  // Instead of guessing, we look it up in the index.
+  // This handles ANY folder structure (flat, nested, etc) correctly.
+  let path = null;
 
-  // 2. If it is a simple slug (no slashes, e.g. "micro-modelling")
-  //    Assume it maps to: posts/{slug}/{slug}.html
-  if (!p.includes('/') && !p.endsWith('.html')) {
+  try {
+    const posts = await loadPosts();
+
+    // 1. Exact Match (Legacy links: ?p=posts/foo/bar.html)
+    let found = posts.find(x => x.path === p);
+
+    // 2. Slug Match (Clean links: ?p=micro-modelling)
+    //    We look for a post whose path *contains* this slug as a folder or filename
+    if (!found) {
+      // Search for "/slug/" or "/slug.html"
+      found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
+    }
+
+    if (found) path = found.path;
+    else {
+      // Fallback for brand new posts not yet in json? Or just a blind guess
+      // (This preserves the "Guess" as a last resort)
+      if (!p.includes('/')) path = `posts/${p}/${p}.html`;
+      else path = `posts/${p}.html`;
+    }
+
+  } catch (e) {
+    console.error("Index load failed, falling back to guess", e);
     path = `posts/${p}/${p}.html`;
   }
-  // 3. If it looks like "folder/file" (no extension, no prefix)
-  //    Assume: posts/{folder}/{file}.html
-  else if (!p.startsWith('posts/') && !p.endsWith('.html')) {
-    path = `posts/${p}.html`;
-  }
 
-  // Merged Logic: Fetching happens below
+  // Fetch Logic
+
 
 
 
@@ -733,6 +750,13 @@ function initControls() {
 // -----------------------------
 addEventListener('DOMContentLoaded', () => {
   initControls();
-  renderList(); // benign if not on list page
-  renderPost(); // benign if not on post page
+
+  const params = new URLSearchParams(window.location.search);
+  const p = params.get('p');
+
+  if (p) {
+    renderPost();
+  } else {
+    renderList();
+  }
 });
