@@ -631,6 +631,10 @@ async function renderPost() {
     loadSidecarAssets(path);
     document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
 
+    // Update Document Title
+    const h1 = contentEl.querySelector('h1');
+    if (h1) document.title = h1.innerText + " — " + "the-puzzler";
+
     // Final follow-up fit
     if (window.matchMedia('(max-width: 560px)').matches) chaseFit(900);
 
@@ -679,8 +683,6 @@ function initControls() {
   const updateUI = () => {
     // Current state
     const current = getEffectiveMode();
-    // Target state (what clicking will do)
-    const target = current === 'dark' ? 'light' : 'dark';
 
     // Button shows the TARGET icon (Sun if Dark, Moon if Light)
     // ☀ (Sun) / ☾ (Moon)
@@ -689,11 +691,7 @@ function initControls() {
     const mBtn = document.querySelector('.mode-btn');
     if (mBtn) {
       mBtn.textContent = icon;
-      mBtn.onclick = () => {
-        localStorage.setItem('mode', target);
-        applyPreferences();
-        updateUI(); // refresh icon
-      };
+      // onclick is static now
     }
   };
 
@@ -706,8 +704,26 @@ function initControls() {
   mBtn.className = 'mode-btn';
   mBtn.style.fontSize = '1.2rem'; // slightly larger icon
   mBtn.style.padding = '4px 8px';
+
+  const toggleAction = () => {
+    // Current state
+    const current = getEffectiveMode();
+    // Target state (what clicking will do)
+    const target = current === 'dark' ? 'light' : 'dark';
+
+    localStorage.setItem('mode', target);
+    applyPreferences();
+    updateUI(); // refresh icon
+  };
+
+  mBtn.onclick = toggleAction;
   container.appendChild(mBtn);
   document.body.appendChild(container);
+
+  // Bind Hero Images
+  document.querySelectorAll('.hero-img').forEach(img => {
+    img.onclick = toggleAction;
+  });
 
   // Initial render
   updateUI();

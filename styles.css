@@ -24,6 +24,12 @@
   --rule: #a8a39d;
   --accent: #2c2925;
 
+  /* Selection & Scroll (Light) */
+  --selection-bg: #dcd6cc;
+  --selection-ink: #000000;
+  --scroll-track: #fffcf5;
+  --scroll-thumb: #d0c8be;
+
   --font-body: var(--font-stack);
   --font-head: var(--font-stack);
 }
@@ -36,6 +42,12 @@
     --ink-dim: #a89984;
     --rule: #504945;
     --accent: #d79921;
+
+    /* Selection & Scroll (Dark) */
+    --selection-bg: #d79921;
+    --selection-ink: #1d2021;
+    --scroll-track: #1d2021;
+    --scroll-thumb: #504945;
   }
 }
 
@@ -45,6 +57,48 @@
   --ink-dim: #a89984;
   --rule: #504945;
   --accent: #d79921;
+
+  /* Selection & Scroll (Dark forced) */
+  --selection-bg: #d79921;
+  --selection-ink: #1d2021;
+  --scroll-track: #1d2021;
+  --scroll-thumb: #504945;
+}
+
+/* ===========================
+   High-End Polish
+   =========================== */
+
+/* Custom Selection */
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-ink);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border: 2px solid var(--scroll-track);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--ink-dim);
+}
+
+/* Firefox */
+html {
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
 }
 
 /* Removed old theme blocks */
@@ -95,6 +149,17 @@ body {
   font-family: var(--font-body);
   line-height: 1.6;
   text-rendering: optimizeLegibility;
+  animation: fadein 0.3s ease-out;
+}
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 h1,
@@ -196,24 +261,72 @@ li {
   margin-top: 0
 }
 
-/* pull content up */
+/* Pull content up */
 .post.book-mode .sheet> :first-child {
-  margin-top: 0
+  margin-top: 0;
 }
 
 .post.book-mode .sheet> :last-child {
-  margin-bottom: 0
+  margin-bottom: 0;
+}
+
+/* Hero Image */
+.hero-img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  /* Nice rounded corners */
+  margin-bottom: 0px;
+  /* filter: grayscale(100%) contrast(1.1); Removed per user request */
+  border: 1px solid var(--rule);
+  transition: opacity 0.3s ease;
+  cursor: pointer;
+}
+
+.hero-img:hover {
+  opacity: 0.9;
+}
+
+/* Theme-Aware Visibility */
+.hero-dark {
+  display: none;
+}
+
+.hero-light {
+  display: block;
+}
+
+/* Dark Mode (System) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .hero-dark {
+    display: block;
+  }
+
+  :root:not([data-mode="light"]) .hero-light {
+    display: none;
+  }
+}
+
+/* Dark Mode (Manual) */
+:root[data-mode="dark"] .hero-dark {
+  display: block;
+}
+
+:root[data-mode="dark"] .hero-light {
+  display: none;
 }
 
 /* Links */
 a {
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 2px
+  text-underline-offset: 2px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease, opacity 0.15s ease;
 }
 
 a:hover {
-  text-decoration-thickness: 2px
+  text-decoration-thickness: 2px;
+  opacity: 0.8;
 }
 
 /* Home list */
@@ -257,7 +370,33 @@ a:hover {
   display: block;
   margin: 12px 0;
   border: 1px solid var(--rule);
-  border-radius: 0;
+  border-radius: 8px;
+  transition: filter 0.3s ease;
+}
+
+/* Dark Mode: Dim images */
+:root[data-mode="dark"] .post img,
+:root[data-mode="dark"] .post video {
+  filter: brightness(0.7) contrast(1.1) sepia(0.4);
+}
+
+:root[data-mode="dark"] .post img:hover,
+:root[data-mode="dark"] .post video:hover {
+  filter: none;
+}
+
+/* System Dark Mode */
+@media (prefers-color-scheme: dark) {
+
+  :root:not([data-mode="light"]) .post img,
+  :root:not([data-mode="light"]) .post video {
+    filter: brightness(0.7) contrast(1.1) sepia(0.4);
+  }
+
+  :root:not([data-mode="light"]) .post img:hover,
+  :root:not([data-mode="light"]) .post video:hover {
+    filter: none;
+  }
 }
 
 /* Code */
