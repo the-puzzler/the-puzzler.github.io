@@ -337,82 +337,75 @@ function getCurrentPostPath() {
 }
 
 // -----------------------------
-// Post renderer
+// Routing / URL Logic
 // -----------------------------
-// async function renderPost(){
-//   const contentEl = document.querySelector('#post-content');
-//   if(!contentEl) return;
+function makeHref(path) {
+  if (path.startsWith('http')) return path;
 
-//   const params = new URLSearchParams(location.search);
-//   const path = params.get('p');
-//   if(!path){
-//     contentEl.innerHTML = `<p>Missing post path.</p>`;
-//     return;
-//   }
+  // Try to create a "Smart Slug" (?p=name)
+  // If path is "posts/name/name.html", we shorten to just "name"
+  const matchSlug = path.match(/^posts\/([^\/]+)\/\1\.html$/);
+  if (matchSlug) {
+    return `?p=${matchSlug[1]}`; // clean: ?p=micro-modelling
+  }
 
-//   try{
-//     const res = await fetch(path, { cache: 'no-store' });
-//     const html = await res.text();
-//     contentEl.innerHTML = html;
+  // Fallback: Strip "posts/" prefix and ".html" suffix if present
+  let short = path;
+  if (short.startsWith('posts/')) short = short.slice(6);
+  if (short.endsWith('.html')) short = short.slice(0, -5);
 
-//     // Ensure headings have stable final text before any measuring
-//     normalizeHeadings(contentEl);
+  // Encodes as ?p=folder/file (or just folder if logic permits)
+  return `?p=${encodeURIComponent(short)}`;
+}
 
-//     // Typeset math first (accurate heights)
-//     await typesetAfterLoad(contentEl);
-
-//     // Mobile book packing
-//     const isPhone = window.matchMedia('(max-width: 560px)').matches;
-//     if (isPhone) {
-//       enableSoftBookMode(contentEl);
-
-//       const reflowOnce = debounce(async () => {
-//         document.documentElement.style.setProperty('--sheet-h', `${getPageMaxHeight()}px`);
-//         const book = contentEl.querySelector('.book');
-//         if (book) {
-//           normalizeHeadings(book); // avoid capturing scrambled title
-//           const linearHTML = Array.from(book.querySelectorAll('.sheet')).map(s => s.innerHTML).join('');
-//           contentEl.innerHTML = linearHTML;
-//         } else if (contentEl._originalHTML) {
-//           contentEl.innerHTML = contentEl._originalHTML;
-//           normalizeHeadings(contentEl);
-//           await typesetAfterLoad(contentEl);
-//         }
-//         enableSoftBookMode(contentEl);
-//         document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
-//       }, 150);
-
-//       window.addEventListener('orientationchange', reflowOnce, { once: true });
-//       window.addEventListener('load', reflowOnce, { once: true });
-//       contentEl.querySelectorAll('img').forEach(img => {
-//         if (!img.complete) img.addEventListener('load', reflowOnce, { once: true });
-//       });
-//     }
-
-//     // Load per-post sidecars AFTER packing, then fire post:ready
-//     loadSidecarAssets(path);
-//     document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
-
-//   }catch(e){
-//     console.error(e);
-//     contentEl.innerHTML = `<p>Failed to load post.</p>`;
-//   }
-// }
-
+function linkAttrs(path) {
+  if (path.startsWith('http')) return 'target="_blank" rel="noreferrer"';
+  return '';
+}
 
 // -----------------------------
-// Post renderer (PER-PAGE EXACT FIT)
+// Post Loader
 // -----------------------------
 async function renderPost() {
-  const contentEl = document.querySelector('#post-content');
-  if (!contentEl) return;
+  const params = new URLSearchParams(window.location.search);
+  let p = params.get('p');
+  const contentEl = document.querySelector('.page');
 
-  const params = new URLSearchParams(location.search);
-  const path = params.get('p');
-  if (!path) {
-    contentEl.innerHTML = `<p>Missing post path.</p>`;
-    return;
+  // If no "p" param, we are on Home (already handled by index.html + renderList)
+  if (!p) return;
+
+  // Clear listing if we are showing a post
+  const listEl = document.getElementById('post-list');
+  if (listEl) {
+    listEl.innerHTML = '';
+    // also remove "Blogs" header if present, or hide the section
+    const h1 = contentEl.querySelector('h1');
+    if (h1 && h1.textContent === 'Blogs') h1.style.display = 'none';
+
+    // HIDE mode button on detail view
+    const mBtn = document.querySelector('.mode-btn');
+    if (mBtn) mBtn.style.display = 'none';
   }
+
+  // --- Smart Path Reconstruction ---
+  // 1. If it's a full path (legacy or weird link), use it.
+  let path = p;
+
+  // 2. If it is a simple slug (no slashes, e.g. "micro-modelling")
+  //    Assume it maps to: posts/{slug}/{slug}.html
+  if (!p.includes('/') && !p.endsWith('.html')) {
+    path = `posts/${p}/${p}.html`;
+  }
+  // 3. If it looks like "folder/file" (no extension, no prefix)
+  //    Assume: posts/{folder}/{file}.html
+  else if (!p.startsWith('posts/') && !p.endsWith('.html')) {
+    path = `posts/${p}.html`;
+  }
+
+  // Merged Logic: Fetching happens below
+
+
+
 
   // ======= Helpers scoped to this function =======
   function ensureInner() {
@@ -587,6 +580,7 @@ async function renderPost() {
     const res = await fetch(path, { cache: 'no-store' });
     const html = await res.text();
     contentEl.innerHTML = html;
+    contentEl.classList.add('post');
 
     // Stable heading text before any measuring
     normalizeHeadings(contentEl);
