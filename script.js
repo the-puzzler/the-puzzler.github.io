@@ -304,16 +304,22 @@ function getPageMaxHeight() {
   return Math.max(120, Math.round(vh - headerBottom - pad));
 }
 function addPageBadge(postEl, bookEl) {
-  const old = postEl.querySelector('.page-num'); if (old) old.remove();
+  console.log('[addPageBadge] Called. Book children:', bookEl.children.length);
+  // Remove any old global badges
+  const old = document.querySelector('.page-num-global');
+  if (old) old.remove();
+
   const badge = document.createElement('div');
-  badge.className = 'page-num';
-  postEl.appendChild(badge);
+  badge.className = 'page-num page-num-global';
+  document.body.appendChild(badge);
 
   const total = bookEl.children.length;
   function update() {
     const idx = Math.round(bookEl.scrollLeft / Math.max(bookEl.clientWidth, 1));
     const clamped = Math.min(Math.max(idx, 0), total - 1);
-    badge.textContent = `${clamped + 1} / ${total}`;
+    const txt = `${clamped + 1} / ${total}`;
+    // console.log('[addPageBadge] Update:', txt);
+    badge.textContent = txt;
   }
   bookEl.addEventListener('scroll', debounce(update, 50), { passive: true });
   window.addEventListener('resize', debounce(update, 100));
@@ -418,6 +424,11 @@ async function renderPost() {
   // Fetch Logic
   // ======= Helpers scoped to this function =======
   function ensureInner() {
+    // If not in book mode or on desktop, remove global badge
+    if (!window.matchMedia('(max-width: 560px)').matches) {
+      const g = document.querySelector('.page-num-global');
+      if (g) g.remove();
+    }
     const post = contentEl.closest('.post.book-mode');
     if (!post) return;
     post.querySelectorAll('.sheet').forEach(sheet => {

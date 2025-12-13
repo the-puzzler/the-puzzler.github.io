@@ -519,16 +519,19 @@ pre {
   .page-num {
     position: fixed;
     left: 50%;
-    bottom: calc(8px + var(--safe-bottom));
+    bottom: calc(12px + var(--safe-bottom));
+    /* slightly higher */
     transform: translateX(-50%);
     font-size: .85rem;
-    opacity: .75;
-    background: #fff;
-    color: #000;
-    padding: 2px 8px;
-    border: 1px solid #000;
-    border-radius: 12px;
-    z-index: 5;
+    font-weight: 600;
+    opacity: 0.9;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 3px 10px;
+    border: 1px solid var(--rule);
+    border-radius: 99px;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   }
 
   /* Hide <hr> lines visually in book mode (they’re soft breaks) */
