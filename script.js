@@ -1,10 +1,10 @@
 // -----------------------------
 // Minimal helpers
 // -----------------------------
-const $  = (sel, root = document) => root.querySelector(sel);
+const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-function debounce(fn, ms){
+function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
@@ -14,17 +14,17 @@ function debounce(fn, ms){
 // -----------------------------
 // Posts list
 // -----------------------------
-async function loadPosts(){
+async function loadPosts() {
   const res = await fetch('posts.json', { cache: 'no-store' });
   const posts = await res.json();
-  return posts.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  return posts.sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-function formatDate(iso){
-  try { 
-    return new Date(iso).toLocaleDateString(undefined, {year:'numeric', month:'short', day:'2-digit'}); 
-  } catch { 
-    return iso; 
+function formatDate(iso) {
+  try {
+    return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' });
+  } catch {
+    return iso;
   }
 }
 
@@ -34,20 +34,20 @@ function isExternalPath(path = "") {
 }
 
 function makeHref(path = "") {
-  return isExternalPath(path) 
-    ? path 
+  return isExternalPath(path)
+    ? path
     : `post.html?p=${encodeURIComponent(path)}`;
 }
 
 function linkAttrs(path = "") {
-  return isExternalPath(path) 
-    ? 'target="_blank" rel="noopener noreferrer"' 
+  return isExternalPath(path)
+    ? 'target="_blank" rel="noopener noreferrer"'
     : '';
 }
 
-async function renderList(){
+async function renderList() {
   const listEl = $('#post-list');
-  if(!listEl) return;
+  if (!listEl) return;
 
   const posts = await loadPosts();
   listEl.innerHTML = posts.map(p => {
@@ -67,10 +67,10 @@ async function renderList(){
 // -----------------------------
 // MathJax typeset (awaitable)
 // -----------------------------
-function typesetAfterLoad(root){
+function typesetAfterLoad(root) {
   return new Promise((resolve) => {
     let tries = 0;
-    (function tick(){
+    (function tick() {
       const mj = window.MathJax;
       if (mj && typeof mj.typesetPromise === 'function') {
         mj.typesetPromise([root]).then(resolve).catch((err) => { console.error(err); resolve(); });
@@ -86,12 +86,12 @@ function typesetAfterLoad(root){
 // -----------------------------
 // Sidecar loader (per-post JS/CSS)
 // -----------------------------
-function loadSidecarAssets(htmlPath){
+function loadSidecarAssets(htmlPath) {
   const base = htmlPath.replace(/\.html?$/i, '');
   addStylesheet(`${base}.css`);
   addModule(`${base}.js`);
 }
-function addModule(src){
+function addModule(src) {
   const s = document.createElement('script');
   s.type = 'module';
   s.src = src;
@@ -99,7 +99,7 @@ function addModule(src){
   s.onerror = () => console.debug('No post script at', src);
   document.body.appendChild(s);
 }
-function addStylesheet(href){
+function addStylesheet(href) {
   const l = document.createElement('link');
   l.rel = 'stylesheet';
   l.href = href;
@@ -110,7 +110,7 @@ function addStylesheet(href){
 // -----------------------------
 // Heading normalization (prevents stalled scramble snapshots)
 // -----------------------------
-function normalizeHeadings(root){
+function normalizeHeadings(root) {
   $$('h1, h2, h3, h4, h5, h6', root).forEach(h => {
     const finalText = h.dataset.title || h.textContent.trim();
     // Store once so future reflows know the true title
@@ -123,7 +123,7 @@ function normalizeHeadings(root){
 // -----------------------------
 // Book mode (soft page breaks, keep-with-next for headings)
 // -----------------------------
-function enableSoftBookMode(contentEl){
+function enableSoftBookMode(contentEl) {
   const post = contentEl.closest('.post');
   if (!post) return;
 
@@ -158,10 +158,10 @@ function enableSoftBookMode(contentEl){
   for (const section of sections) {
     // Split into blocks, then into "units" that keep headings with their next block
     const blocks = splitSectionIntoBlocks(section);
-    const units  = buildKeepWithNextUnits(blocks);
+    const units = buildKeepWithNextUnits(blocks);
 
     // First, try whole section as a single unit (fast path)
-    const wholeSection = [ ...section ];
+    const wholeSection = [...section];
     if (wholeSection.length && tryPack(wholeSection)) continue;
 
     // Otherwise, pack unit by unit
@@ -212,17 +212,17 @@ function enableSoftBookMode(contentEl){
   window.addEventListener('resize', reflow);
 }
 
-function splitIntoSections(container){
+function splitIntoSections(container) {
   const nodes = Array.from(container.childNodes);
   const groups = [[]];
   for (const n of nodes) {
     if (n.nodeType === 1 && n.tagName === 'HR') {
-      if (groups[groups.length-1].length > 0) groups.push([]);
+      if (groups[groups.length - 1].length > 0) groups.push([]);
     } else {
-      groups[groups.length-1].push(n);
+      groups[groups.length - 1].push(n);
     }
   }
-  if (groups[groups.length-1].length === 0 && groups.length > 1) groups.pop();
+  if (groups[groups.length - 1].length === 0 && groups.length > 1) groups.pop();
   // Normalize stray text to paragraphs
   return groups.map(g => g.map(node => {
     if (node.nodeType === 3 && node.textContent.trim() !== '') {
@@ -235,13 +235,13 @@ function splitIntoSections(container){
 }
 
 // Split into blocks (indivisible display units)
-function splitSectionIntoBlocks(nodes){
+function splitSectionIntoBlocks(nodes) {
   const blocks = [];
   nodes.forEach(n => {
-    if (n.nodeType === 3){
+    if (n.nodeType === 3) {
       const txt = n.textContent.trim();
-      if (txt){ const p = document.createElement('p'); p.textContent = txt; blocks.push(p); }
-    } else if (n.nodeType === 1){
+      if (txt) { const p = document.createElement('p'); p.textContent = txt; blocks.push(p); }
+    } else if (n.nodeType === 1) {
       const tag = n.tagName.toLowerCase();
       const isBlock = /^(p|h1|h2|h3|h4|h5|h6|ul|ol|li|pre|blockquote|figure|img|table|hr|div)$/i.test(tag);
       if (isBlock) blocks.push(n);
@@ -253,14 +253,14 @@ function splitSectionIntoBlocks(nodes){
 }
 
 // Build units that keep headings with the next block
-function buildKeepWithNextUnits(blocks){
+function buildKeepWithNextUnits(blocks) {
   const units = [];
-  for (let i = 0; i < blocks.length; i++){
+  for (let i = 0; i < blocks.length; i++) {
     const b = blocks[i];
     const tag = (b.tagName || '').toLowerCase();
-    if (/^h[1-6]$/.test(tag)){
-      const next = blocks[i+1];
-      if (next){
+    if (/^h[1-6]$/.test(tag)) {
+      const next = blocks[i + 1];
+      if (next) {
         units.push([b, next]); // heading + next block stay together
         i++;                   // skip the next (already grouped)
       } else {
@@ -273,7 +273,7 @@ function buildKeepWithNextUnits(blocks){
   return units;
 }
 
-function makeMeasurer(referenceEl){
+function makeMeasurer(referenceEl) {
   const width = Math.max(referenceEl.getBoundingClientRect().width, 1);
   const measurer = document.createElement('div');
   measurer.style.cssText = `
@@ -286,31 +286,31 @@ function makeMeasurer(referenceEl){
   sheet.className = 'sheet';
   measurer.appendChild(sheet);
 
-  function cleanup(){ measurer.remove(); }
+  function cleanup() { measurer.remove(); }
   return { sheetForMeasure: sheet, cleanup };
 }
-function measureNodesHeight(sheetEl, nodes){
+function measureNodesHeight(sheetEl, nodes) {
   sheetEl.innerHTML = '';
   nodes.forEach(n => sheetEl.appendChild(n.cloneNode(true)));
   const h = sheetEl.scrollHeight;
   sheetEl.innerHTML = '';
   return h;
 }
-function getPageMaxHeight(){
+function getPageMaxHeight() {
   const vh = (window.visualViewport?.height || window.innerHeight);
   const header = document.querySelector('.header');
   const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
   const pad = 12; // room for page badge
   return Math.max(120, Math.round(vh - headerBottom - pad));
 }
-function addPageBadge(postEl, bookEl){
+function addPageBadge(postEl, bookEl) {
   const old = postEl.querySelector('.page-num'); if (old) old.remove();
   const badge = document.createElement('div');
   badge.className = 'page-num';
   postEl.appendChild(badge);
 
   const total = bookEl.children.length;
-  function update(){
+  function update() {
     const idx = Math.round(bookEl.scrollLeft / Math.max(bookEl.clientWidth, 1));
     const clamped = Math.min(Math.max(idx, 0), total - 1);
     badge.textContent = `${clamped + 1} / ${total}`;
@@ -326,12 +326,12 @@ function addPageBadge(postEl, bookEl){
     else if (x > rect.width * 0.8) snapToPage(bookEl, +1);
   }, { passive: true });
 }
-function snapToPage(bookEl, delta){
+function snapToPage(bookEl, delta) {
   const idx = Math.round(bookEl.scrollLeft / Math.max(bookEl.clientWidth, 1)) + delta;
   const target = Math.min(Math.max(idx, 0), bookEl.children.length - 1);
   bookEl.scrollTo({ left: target * bookEl.clientWidth, behavior: 'smooth' });
 }
-function getCurrentPostPath(){
+function getCurrentPostPath() {
   const params = new URLSearchParams(location.search);
   return params.get('p') || '';
 }
@@ -403,19 +403,19 @@ function getCurrentPostPath(){
 // -----------------------------
 // Post renderer (PER-PAGE EXACT FIT)
 // -----------------------------
-async function renderPost(){
+async function renderPost() {
   const contentEl = document.querySelector('#post-content');
-  if(!contentEl) return;
+  if (!contentEl) return;
 
   const params = new URLSearchParams(location.search);
   const path = params.get('p');
-  if(!path){
+  if (!path) {
     contentEl.innerHTML = `<p>Missing post path.</p>`;
     return;
   }
 
   // ======= Helpers scoped to this function =======
-  function ensureInner(){
+  function ensureInner() {
     const post = contentEl.closest('.post.book-mode');
     if (!post) return;
     post.querySelectorAll('.sheet').forEach(sheet => {
@@ -432,11 +432,11 @@ async function renderPost(){
     });
   }
 
-  function setViewportVars(){
+  function setViewportVars() {
     const avail = getPageMaxHeight(); // your existing helper (vv.height - header - pad)
     const px = Math.max(0, Math.floor(avail));
     const root = document.documentElement;
-    root.style.setProperty('--vp-h',    px + 'px');
+    root.style.setProperty('--vp-h', px + 'px');
     root.style.setProperty('--sheet-h', px + 'px');
     return px;
   }
@@ -444,13 +444,13 @@ async function renderPost(){
   const supportsZoom = CSS.supports?.('zoom', '1') || /Safari|iPhone|iPad/i.test(navigator.userAgent);
 
   // Measure the PAINTED height of an inner (taking scale into account)
-  function paintedHeight(inner){
+  function paintedHeight(inner) {
     // getBoundingClientRect reflects both zoom *and* transforms reliably
     return inner.getBoundingClientRect().height || 0;
   }
 
   // Apply a temporary scale to measure; returns painted height at that scale.
-  function measureAtScale(inner, s){
+  function measureAtScale(inner, s) {
     // reset
     inner.style.transform = 'none';
     if (supportsZoom) inner.style.zoom = '';
@@ -465,62 +465,62 @@ async function renderPost(){
   }
 
   // Binary search the LARGEST s in [minS, 1] such that paintedHeight <= avail - marginPx
-  
-// Binary search the MAX scale that fits, with a smaller safety + a final nudge up
-function fitInnerExactly(inner, avail, options){
-  // leaner safety
-  const marginPct = options?.marginPct ?? 0.006; // 0.6% (was 1.2%)
-  const marginPx  = options?.marginPx  ?? 0;     // 0 px (was 1px per DPR)
-  const lowerCap  = options?.minScale  ?? 0.75;  // don’t go microscopic
-  const supportsZoom = CSS.supports?.('zoom','1') || /Safari|iPhone|iPad/i.test(navigator.userAgent);
 
-  // measure helper at a given scale
-  function measureAtScale(s){
-    // reset
-    inner.style.transform = 'none';
-    if (supportsZoom) inner.style.zoom = '';
-    // set
-    if (s < 1){
-      if (supportsZoom) inner.style.zoom = String(s);
-      else inner.style.transform = `scale(${s})`;
+  // Binary search the MAX scale that fits, with a smaller safety + a final nudge up
+  function fitInnerExactly(inner, avail, options) {
+    // leaner safety
+    const marginPct = options?.marginPct ?? 0.006; // 0.6% (was 1.2%)
+    const marginPx = options?.marginPx ?? 0;     // 0 px (was 1px per DPR)
+    const lowerCap = options?.minScale ?? 0.75;  // don’t go microscopic
+    const supportsZoom = CSS.supports?.('zoom', '1') || /Safari|iPhone|iPad/i.test(navigator.userAgent);
+
+    // measure helper at a given scale
+    function measureAtScale(s) {
+      // reset
+      inner.style.transform = 'none';
+      if (supportsZoom) inner.style.zoom = '';
+      // set
+      if (s < 1) {
+        if (supportsZoom) inner.style.zoom = String(s);
+        else inner.style.transform = `scale(${s})`;
+      }
+      // read
+      return paintedHeight(inner);
     }
-    // read
-    return paintedHeight(inner);
+
+    // quick path: full size already fits
+    if (measureAtScale(1) <= (avail - marginPx)) {
+      if (supportsZoom) inner.style.zoom = '';
+      inner.style.transform = 'none';
+      inner.dataset.scale = '1.000';
+      return 1;
+    }
+
+    // search the largest s ∈ [lowerCap, 1] that fits
+    let lo = lowerCap, hi = 1;
+    let best = lo;
+    for (let i = 0; i < 14; i++) {            // a few extra iters for precision
+      const mid = (lo + hi) / 2;
+      const h = measureAtScale(mid);
+      if (h <= (avail - marginPx)) { best = mid; lo = mid; }
+      else { hi = mid; }
+    }
+
+    // optimistic nudge up to reclaim a hair of space (counteracts tiny rounding)
+    const nudge = 0.004; // 0.4%
+    let finalS = Math.min(1, best + nudge);
+    // if nudge pushed us over, step back once
+    if (measureAtScale(finalS) > (avail - marginPx)) {
+      finalS = best;
+      measureAtScale(finalS); // apply exactly
+    }
+
+    // lock it in (already applied by measureAtScale)
+    inner.dataset.scale = finalS.toFixed(3);
+    return finalS;
   }
 
-  // quick path: full size already fits
-  if (measureAtScale(1) <= (avail - marginPx)){
-    if (supportsZoom) inner.style.zoom = '';
-    inner.style.transform = 'none';
-    inner.dataset.scale = '1.000';
-    return 1;
-  }
-
-  // search the largest s ∈ [lowerCap, 1] that fits
-  let lo = lowerCap, hi = 1;
-  let best = lo;
-  for (let i = 0; i < 14; i++){            // a few extra iters for precision
-    const mid = (lo + hi) / 2;
-    const h   = measureAtScale(mid);
-    if (h <= (avail - marginPx)) { best = mid; lo = mid; }
-    else                         { hi = mid; }
-  }
-
-  // optimistic nudge up to reclaim a hair of space (counteracts tiny rounding)
-  const nudge = 0.004; // 0.4%
-  let finalS  = Math.min(1, best + nudge);
-  // if nudge pushed us over, step back once
-  if (measureAtScale(finalS) > (avail - marginPx)) {
-    finalS = best;
-    measureAtScale(finalS); // apply exactly
-  }
-
-  // lock it in (already applied by measureAtScale)
-  inner.dataset.scale = finalS.toFixed(3);
-  return finalS;
-}
-
-  function fitAllSheets(){
+  function fitAllSheets() {
     ensureInner();
     const avail = setViewportVars();
 
@@ -536,7 +536,7 @@ function fitInnerExactly(inner, avail, options){
   }
 
   let fitRAF = 0;
-  function chaseFit(ms = 900){
+  function chaseFit(ms = 900) {
     const t0 = performance.now();
     cancelAnimationFrame(fitRAF);
     const tick = () => {
@@ -546,7 +546,7 @@ function fitInnerExactly(inner, avail, options){
     fitRAF = requestAnimationFrame(tick);
   }
 
-  async function startViewportFitterOnce(){
+  async function startViewportFitterOnce() {
     if (contentEl._fitStarted) return;
     contentEl._fitStarted = true;
 
@@ -556,34 +556,34 @@ function fitInnerExactly(inner, avail, options){
 
     // follow dynamic viewport changes
     if (window.visualViewport) {
-      visualViewport.addEventListener('resize', () => chaseFit(900), { passive:true });
-      visualViewport.addEventListener('scroll', () => chaseFit(900), { passive:true });
+      visualViewport.addEventListener('resize', () => chaseFit(900), { passive: true });
+      visualViewport.addEventListener('scroll', () => chaseFit(900), { passive: true });
     } else {
-      window.addEventListener('resize', () => chaseFit(900), { passive:true });
-      window.addEventListener('scroll', () => chaseFit(900), { passive:true });
+      window.addEventListener('resize', () => chaseFit(900), { passive: true });
+      window.addEventListener('scroll', () => chaseFit(900), { passive: true });
     }
-    window.addEventListener('orientationchange', () => chaseFit(1200), { passive:true });
-    window.addEventListener('pageshow', () => chaseFit(900), { passive:true });
-    window.addEventListener('load', () => chaseFit(900), { passive:true });
+    window.addEventListener('orientationchange', () => chaseFit(1200), { passive: true });
+    window.addEventListener('pageshow', () => chaseFit(900), { passive: true });
+    window.addEventListener('load', () => chaseFit(900), { passive: true });
 
     // refit on content/layout changes
     if (window.MutationObserver) {
       const mo = new MutationObserver(() => chaseFit(900));
-      mo.observe(contentEl, { childList:true, subtree:true });
+      mo.observe(contentEl, { childList: true, subtree: true });
     }
-    if (document.fonts?.ready) document.fonts.ready.then(() => chaseFit(600)).catch(()=>{});
+    if (document.fonts?.ready) document.fonts.ready.then(() => chaseFit(600)).catch(() => { });
     contentEl.querySelectorAll('img,video').forEach(el => {
-      el.addEventListener('load', () => chaseFit(600), { once:true });
-      el.addEventListener('loadedmetadata', () => chaseFit(600), { once:true });
+      el.addEventListener('load', () => chaseFit(600), { once: true });
+      el.addEventListener('loadedmetadata', () => chaseFit(600), { once: true });
     });
     if (window.MathJax?.startup?.promise) {
-      MathJax.startup.promise.then(() => chaseFit(900)).catch(()=>{});
+      MathJax.startup.promise.then(() => chaseFit(900)).catch(() => { });
     }
     window.addEventListener('post:ready', () => chaseFit(900));
   }
   // ===============================================
 
-  try{
+  try {
     const res = await fetch(path, { cache: 'no-store' });
     const html = await res.text();
     contentEl.innerHTML = html;
@@ -634,7 +634,7 @@ function fitInnerExactly(inner, avail, options){
     // Final follow-up fit
     if (window.matchMedia('(max-width: 560px)').matches) chaseFit(900);
 
-  }catch(e){
+  } catch (e) {
     console.error(e);
     contentEl.innerHTML = `<p>Failed to load post.</p>`;
   }
@@ -644,11 +644,80 @@ function fitInnerExactly(inner, avail, options){
 
 
 // -----------------------------
+// Font & Mode Controls
+// -----------------------------
+// -----------------------------
+// Mode Logic (Persistent & UI)
+// -----------------------------
+function applyPreferences() {
+  const modeVal = localStorage.getItem('mode');
+  // If no manual override, let CSS (prefers-color-scheme) handle it naturally.
+  // If manual override exists (light/dark), apply it.
+  if (modeVal === 'dark') document.documentElement.setAttribute('data-mode', 'dark');
+  else if (modeVal === 'light') document.documentElement.setAttribute('data-mode', 'light');
+  else document.documentElement.removeAttribute('data-mode');
+}
+
+function initControls() {
+  // 1. Always apply saved preference
+  applyPreferences();
+
+  // 2. Only render button on Home Page (which has #post-list)
+  const isHomePage = !!document.getElementById('post-list');
+  if (!isHomePage) return;
+
+  // --- UI Setup ---
+  const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
+
+  // Helper: determine effective current mode (manual > system)
+  const getEffectiveMode = () => {
+    const manual = localStorage.getItem('mode');
+    if (manual) return manual;
+    return sysDark.matches ? 'dark' : 'light';
+  };
+
+  const updateUI = () => {
+    // Current state
+    const current = getEffectiveMode();
+    // Target state (what clicking will do)
+    const target = current === 'dark' ? 'light' : 'dark';
+
+    // Button shows the TARGET icon (Sun if Dark, Moon if Light)
+    // ☀ (Sun) / ☾ (Moon)
+    const icon = current === 'dark' ? '☀' : '☾';
+
+    const mBtn = document.querySelector('.mode-btn');
+    if (mBtn) {
+      mBtn.textContent = icon;
+      mBtn.onclick = () => {
+        localStorage.setItem('mode', target);
+        applyPreferences();
+        updateUI(); // refresh icon
+      };
+    }
+  };
+
+  // Create Container
+  const container = document.createElement('div');
+  container.className = 'theme-controls';
+
+  // Mode Button
+  const mBtn = document.createElement('button');
+  mBtn.className = 'mode-btn';
+  mBtn.style.fontSize = '1.2rem'; // slightly larger icon
+  mBtn.style.padding = '4px 8px';
+  container.appendChild(mBtn);
+  document.body.appendChild(container);
+
+  // Initial render
+  updateUI();
+}
+
+// -----------------------------
 // Init
 // -----------------------------
 addEventListener('DOMContentLoaded', () => {
-  renderList();
-  renderPost();
+  initControls();
+  renderList(); // benign if not on list page
+  renderPost(); // benign if not on post page
 });
-
-

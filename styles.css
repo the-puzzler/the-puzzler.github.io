@@ -1,268 +1,485 @@
 /* ===========================
    Black & White — ultra clean
    =========================== */
-   :root{
-    --bg:#ffffff;
-    --ink:#000000;
-    --ink-dim:#333333;
-    --rule:#000000;
-    --text-max:48rem; /* ~768px */
-  
-    /* Mobile “book page” sizing (set by JS on post pages) */
-    --sheet-h:100dvh;
-    --safe-bottom:env(safe-area-inset-bottom, 0px);
-    --sheet-pad-top:10px;
-    --sheet-pad-x:16px;
-    --sheet-pad-bottom:28px; /* leave room for page badge */
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+:root {
+  /* Shared Layout Vars */
+  --text-max: 48rem;
+  /* ~768px */
+  --sheet-h: 100dvh;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --sheet-pad-top: 10px;
+  --sheet-pad-x: 16px;
+  --sheet-pad-bottom: 28px;
+  /* leave room for page badge */
+
+  /* Font Stack (Locked) */
+  --font-stack: "EB Garamond", Garamond, "URW Palladio L", serif;
+
+  /* Theme: PAPER (Light Default) */
+  --bg: #f9f7f1;
+  --ink: #2c2925;
+  --ink-dim: #8a847e;
+  --rule: #a8a39d;
+  --accent: #2c2925;
+
+  --font-body: var(--font-stack);
+  --font-head: var(--font-stack);
+}
+
+/* Theme: DARK MODE (Hacker Palette) - System or Forced */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) {
+    --bg: #1d2021;
+    --ink: #ebdbb2;
+    --ink-dim: #a89984;
+    --rule: #504945;
+    --accent: #d79921;
   }
-  
-  *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
-  html{font-size:16px}
-  body{
-    background:var(--bg);
-    color:var(--ink);
-    font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, "Courier New", monospace;
-    line-height:1.6;
-    text-rendering:optimizeLegibility;
+}
+
+:root[data-mode="dark"] {
+  --bg: #1d2021;
+  --ink: #ebdbb2;
+  --ink-dim: #a89984;
+  --rule: #504945;
+  --accent: #d79921;
+}
+
+/* Removed old theme blocks */
+
+/* Theme Buttons Container */
+.theme-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 1000;
+}
+
+.mode-btn {
+  background: var(--bg);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 8px 12px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.mode-btn:hover {
+  opacity: 1;
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0
+}
+
+html {
+  font-size: 16px
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-head);
+}
+
+/* Layout shell */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px clamp(16px, 4vw, 40px) 24px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 4px;
+  /* tighter */
+  margin-bottom: 10px;
+  /* tighter */
+}
+
+.brand {
+  font-size: 1.125rem;
+  letter-spacing: .5px;
+  font-weight: 700
+}
+
+.badge {
+  padding: 0 6px;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  font-size: .9rem
+}
+
+.nav {
+  margin-left: auto;
+  display: flex;
+  gap: 14px
+}
+
+.nav a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px
+}
+
+.nav a:hover {
+  text-decoration-thickness: 2px
+}
+
+/* Reading column (centered, text left-aligned) */
+.page {
+  max-width: var(--text-max);
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+/* Typography */
+h1,
+h2,
+h3 {
+  margin: .4rem 0 .6rem
+}
+
+h1 {
+  font-size: clamp(1.6rem, 4.5vw, 2.2rem)
+}
+
+h2 {
+  font-size: clamp(1.25rem, 3.5vw, 1.5rem)
+}
+
+h3 {
+  font-size: clamp(1.05rem, 3vw, 1.2rem)
+}
+
+p,
+li {
+  font-size: clamp(1rem, 3.2vw, 1.0625rem);
+  overflow-wrap: anywhere;
+  hyphens: auto
+}
+
+.page> :first-child {
+  margin-top: 0
+}
+
+/* pull content up */
+.post.book-mode .sheet> :first-child {
+  margin-top: 0
+}
+
+.post.book-mode .sheet> :last-child {
+  margin-bottom: 0
+}
+
+/* Links */
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px
+}
+
+a:hover {
+  text-decoration-thickness: 2px
+}
+
+/* Home list */
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0
+}
+
+.item {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--rule)
+}
+
+.item:first-child {
+  border-top: 1px solid var(--rule)
+}
+
+.item h3 {
+  margin: 0 0 4px 0
+}
+
+.item small {
+  color: var(--ink-dim)
+}
+
+.item p {
+  margin: .25rem 0 0 0;
+  color: var(--ink-dim)
+}
+
+/* Post body */
+.post h1 {
+  margin-top: 0
+}
+
+.post img,
+.post video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 12px 0;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+
+/* Code */
+code,
+pre {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 0;
+}
+
+code {
+  padding: .05rem .3rem
+}
+
+pre {
+  padding: 10px;
+  overflow: auto
+}
+
+/* Divider helper */
+.hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 16px 0
+}
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--rule);
+  margin-top: 20px;
+  padding-top: 10px;
+  color: var(--ink-dim);
+  font-size: .9rem;
+}
+
+/* Mobile tweaks for header/nav */
+@media (max-width:520px) {
+  .nav {
+    width: 100%;
+    margin-top: 6px
   }
-  
-  /* Layout shell */
-  .container{
-    max-width:1200px;
-    margin:0 auto;
-    padding:16px clamp(16px,4vw,40px) 24px;
+
+  .brand {
+    width: auto
   }
-  
-  /* Header */
-  .header{
-    display:flex; gap:16px; align-items:baseline; flex-wrap:wrap;
-    border-bottom:1px solid var(--rule);
-    padding-bottom:4px;     /* tighter */
-    margin-bottom:10px;     /* tighter */
-  }
-  .brand{font-size:1.125rem; letter-spacing:.5px; font-weight:700}
-  .badge{padding:0 6px; border:1px solid var(--rule); border-radius:0; font-size:.9rem}
-  .nav{margin-left:auto; display:flex; gap:14px}
-  .nav a{color:var(--ink); text-decoration:underline; text-underline-offset:2px}
-  .nav a:hover{ text-decoration-thickness:2px }
-  
-  /* Reading column (centered, text left-aligned) */
-  .page{
-    max-width:var(--text-max);
-    width:100%;
-    margin-left:auto;
-    margin-right:auto;
-    padding:0;
-    border:0;
-    background:transparent;
-  }
-  
-  /* Typography */
-  h1,h2,h3{margin:.4rem 0 .6rem}
-  h1{font-size:clamp(1.6rem,4.5vw,2.2rem)}
-  h2{font-size:clamp(1.25rem,3.5vw,1.5rem)}
-  h3{font-size:clamp(1.05rem,3vw,1.2rem)}
-  p,li{font-size:clamp(1rem,3.2vw,1.0625rem); overflow-wrap:anywhere; hyphens:auto}
-  .page > :first-child{margin-top:0} /* pull content up */
-  .post.book-mode .sheet > :first-child{margin-top:0}
-  .post.book-mode .sheet > :last-child{margin-bottom:0}
-  
-  /* Links */
-  a{color:var(--ink); text-decoration:underline; text-underline-offset:2px}
-  a:hover{ text-decoration-thickness:2px }
-  
-  /* Home list */
-  .list{list-style:none; padding:0; margin:0}
-  .item{padding:10px 0; border-bottom:1px solid var(--rule)}
-  .item:first-child{border-top:1px solid var(--rule)}
-  .item h3{margin:0 0 4px 0}
-  .item small{color:var(--ink-dim)}
-  .item p{margin:.25rem 0 0 0; color:var(--ink-dim)}
-  
-  /* Post body */
-  .post h1{margin-top:0}
-  .post img, .post video{
-    max-width:100%;
-    height:auto;
-    display:block;
-    margin:12px 0;
-    border:1px solid var(--rule);
-    border-radius:0;
-  }
-  
-  /* Code */
-  code, pre{
-    background:#fff;
-    border:1px solid var(--rule);
-    border-radius:0;
-  }
-  code{padding:.05rem .3rem}
-  pre{padding:10px; overflow:auto}
-  
-  /* Divider helper */
-  .hr{border:none; border-top:1px solid var(--rule); margin:16px 0}
-  
-  /* Footer */
-  .footer{
-    border-top:1px solid var(--rule);
-    margin-top:20px;
-    padding-top:10px;
-    color:var(--ink-dim);
-    font-size:.9rem;
-  }
-  
-  /* Mobile tweaks for header/nav */
-  @media (max-width:520px){
-    .nav{width:100%; margin-top:6px}
-    .brand{width:auto}
-  }
-  
-  /* =========================================
+}
+
+/* =========================================
      Mobile “book” mode — soft page breaks
      ========================================= */
-  @media (max-width:560px){
-    /* Prevent vertical page scroll on post view only */
-    body:has(.post.book-mode){ overflow-y:hidden }
-  
-    .post.book-mode{
-      position:relative;
-      padding:0;
-      margin-bottom:0;
-    }
-  
-    .book{
-      display:grid;
-      grid-auto-flow:column;
-      grid-auto-columns:100%;
-      overflow-x:auto;
-      overflow-y:hidden;                 /* lock vertical scroll */
-      scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;
-      touch-action:pan-x;
-      overscroll-behavior-x:contain;
-      height:var(--sheet-h);            /* provided by JS (header-aware) */
-    }
-    .book::-webkit-scrollbar{ display:none }
-    .book{ scrollbar-width:none }
-  
-    .sheet{
-      scroll-snap-align:start;
-      padding:var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--safe-bottom));
-      min-height:var(--sheet-h);
-      max-height:var(--sheet-h);
-      overflow:hidden;                   /* no per-sheet vertical scroll */
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-start;
-    }
-  
-    /* Fit media to the page height to avoid overflow */
-    .post.book-mode img,
-    .post.book-mode video{
-      max-height:calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-      object-fit:contain;
-    }
-  
-    /* If a code block is very tall, let it scroll internally (rare case) */
-    .post.book-mode pre{
-      max-height:calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-      overflow:auto;
-    }
-  
-    /* Page number badge */
-    .page-num{
-      position:fixed;
-      left:50%; bottom:calc(8px + var(--safe-bottom));
-      transform:translateX(-50%);
-      font-size:.85rem;
-      opacity:.75;
-      background:#fff; color:#000;
-      padding:2px 8px;
-      border:1px solid #000; border-radius:12px;
-      z-index:5;
-    }
-  
-    /* Hide <hr> lines visually in book mode (they’re soft breaks) */
-    .post.book-mode hr{ display:none }
-  
-    /* No extra whitespace after the book on phones */
-    .post.book-mode + .footer{ display:none }
-  
-    /* Slightly reduce bottom padding on phones */
-    .container{ padding-bottom:8px }
-  }
-  
-  :root{
-    /* how much to zoom out (lower = smaller). 0.94–0.90 works well */
-    --page-scale: 0.93;
-  
-    /* optional extra gutter inside the viewport */
-    --page-gutter: max(12px, env(safe-area-inset-bottom, 0px));
-  }
-  
-  @media (max-width:560px){
-    /* keep the book vibe (no vertical scroll at the root) */
-    body:has(.post.book-mode){ overflow-y:hidden }
-  
-    .post.book-mode .book{
-      height: 100svh; /* use the *visible* small viewport; okay because we underscan */
-      /* if your browser supports dvh, prefer it: */
-    }
-    @supports (height: 100dvh){
-      .post.book-mode .book{ height: 100dvh; }
-    }
-  
-    /* wrapper that is exactly viewport-high */
-    .post.book-mode .sheet-wrap{
-      height: 100%;
-      width: 100%;
-      overflow: hidden;          /* clip the over-sized inner content */
-      display: flex;
-    }
-  
-    /* inner layer that we “zoom out” */
-    .post.book-mode .sheet-zoom{
-      /* make it bigger than the wrapper so that scaling it down fits with margin */
-      width: calc(100% / var(--page-scale));
-      height: calc(100% / var(--page-scale));
-      transform: scale(var(--page-scale));
-      transform-origin: top left;    /* important */
-      padding: var(--sheet-pad-top) var(--sheet-pad-x)
-               calc(var(--sheet-pad-bottom) + var(--page-gutter));
-      /* your existing styles may add borders etc. — that’s fine */
-    }
-  
-    /* if you previously set height on .sheet, remove it or let this override */
-    .post.book-mode .sheet{
-      height: auto; /* the zoomed inner provides the sizing now */
-    }
-  
-    /* cap tall media/code so they never touch the edges even after scale */
-    .post.book-mode img,
-    .post.book-mode video{
-      max-height: 80%;
-      object-fit: contain;
-    }
-    .post.book-mode pre{
-      max-height: 80%;
-      overflow: auto;
-    }
-  }
-  
-  @media (max-width:560px){
-    .post.book-mode .sheet{
-      height: var(--vp-h, 100svh);
-      overflow: hidden;
-      position: relative;
-      padding: 0; /* moved to inner */
-    }
-    .post.book-mode .page-inner{
-      transform-origin: top left;
-      will-change: transform;
-      padding: var(--sheet-pad-top) var(--sheet-pad-x)
-               calc(var(--sheet-pad-bottom) + env(safe-area-inset-bottom, 0px));
-    }
-  }
-  
+@media (max-width:560px) {
 
+  /* Prevent vertical page scroll on post view only */
+  body:has(.post.book-mode) {
+    overflow-y: hidden
+  }
+
+  .post.book-mode {
+    position: relative;
+    padding: 0;
+    margin-bottom: 0;
+  }
+
+  .book {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* lock vertical scroll */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    height: var(--sheet-h);
+    /* provided by JS (header-aware) */
+  }
+
+  .book::-webkit-scrollbar {
+    display: none
+  }
+
+  .book {
+    scrollbar-width: none
+  }
+
+  .sheet {
+    scroll-snap-align: start;
+    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--safe-bottom));
+    min-height: var(--sheet-h);
+    max-height: var(--sheet-h);
+    overflow: hidden;
+    /* no per-sheet vertical scroll */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+
+  /* Fit media to the page height to avoid overflow */
+  .post.book-mode img,
+  .post.book-mode video {
+    max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
+    object-fit: contain;
+  }
+
+  /* If a code block is very tall, let it scroll internally (rare case) */
+  .post.book-mode pre {
+    max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
+    overflow: auto;
+  }
+
+  /* Page number badge */
+  .page-num {
+    position: fixed;
+    left: 50%;
+    bottom: calc(8px + var(--safe-bottom));
+    transform: translateX(-50%);
+    font-size: .85rem;
+    opacity: .75;
+    background: #fff;
+    color: #000;
+    padding: 2px 8px;
+    border: 1px solid #000;
+    border-radius: 12px;
+    z-index: 5;
+  }
+
+  /* Hide <hr> lines visually in book mode (they’re soft breaks) */
+  .post.book-mode hr {
+    display: none
+  }
+
+  /* No extra whitespace after the book on phones */
+  .post.book-mode+.footer {
+    display: none
+  }
+
+  /* Slightly reduce bottom padding on phones */
+  .container {
+    padding-bottom: 8px
+  }
+}
+
+:root {
+  /* how much to zoom out (lower = smaller). 0.94–0.90 works well */
+  --page-scale: 0.93;
+
+  /* optional extra gutter inside the viewport */
+  --page-gutter: max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width:560px) {
+
+  /* keep the book vibe (no vertical scroll at the root) */
+  body:has(.post.book-mode) {
+    overflow-y: hidden
+  }
+
+  .post.book-mode .book {
+    height: 100svh;
+    /* use the *visible* small viewport; okay because we underscan */
+    /* if your browser supports dvh, prefer it: */
+  }
+
+  @supports (height: 100dvh) {
+    .post.book-mode .book {
+      height: 100dvh;
+    }
+  }
+
+  /* wrapper that is exactly viewport-high */
+  .post.book-mode .sheet-wrap {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    /* clip the over-sized inner content */
+    display: flex;
+  }
+
+  /* inner layer that we “zoom out” */
+  .post.book-mode .sheet-zoom {
+    /* make it bigger than the wrapper so that scaling it down fits with margin */
+    width: calc(100% / var(--page-scale));
+    height: calc(100% / var(--page-scale));
+    transform: scale(var(--page-scale));
+    transform-origin: top left;
+    /* important */
+    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--page-gutter));
+    /* your existing styles may add borders etc. — that’s fine */
+  }
+
+  /* if you previously set height on .sheet, remove it or let this override */
+  .post.book-mode .sheet {
+    height: auto;
+    /* the zoomed inner provides the sizing now */
+  }
+
+  /* cap tall media/code so they never touch the edges even after scale */
+  .post.book-mode img,
+  .post.book-mode video {
+    max-height: 80%;
+    object-fit: contain;
+  }
+
+  .post.book-mode pre {
+    max-height: 80%;
+    overflow: auto;
+  }
+}
+
+@media (max-width:560px) {
+  .post.book-mode .sheet {
+    height: var(--vp-h, 100svh);
+    overflow: hidden;
+    position: relative;
+    padding: 0;
+    /* moved to inner */
+  }
+
+  .post.book-mode .page-inner {
+    transform-origin: top left;
+    will-change: transform;
+    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + env(safe-area-inset-bottom, 0px));
+  }
+}
