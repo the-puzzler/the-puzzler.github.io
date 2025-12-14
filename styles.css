@@ -110,7 +110,8 @@ html {
   right: 20px;
   display: flex;
   gap: 8px;
-  z-index: 1000;
+  z-index: 2000;
+  /* Ensure above everything */
 }
 
 .mode-btn {
@@ -122,11 +123,43 @@ html {
   font-family: var(--font-body);
   font-size: 0.85rem;
   opacity: 0.6;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, transform 0.1s;
+  border-radius: 4px;
+  /* Soften edges */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .mode-btn:hover {
   opacity: 1;
+}
+
+.mode-btn:active {
+  transform: translateY(1px);
+}
+
+/* Mobile Tweaks for Controls */
+@media (max-width: 560px) {
+  .theme-controls {
+    bottom: 24px;
+    right: 16px;
+    background: rgba(var(--bg), 0.5);
+    /* fallback */
+    backdrop-filter: blur(4px);
+    /* frost effect for visibility */
+    border-radius: 8px;
+    padding: 4px;
+    /* Slight padding container */
+  }
+
+  .mode-btn {
+    font-size: 1.25rem;
+    /* Larger icon/touch target */
+    padding: 10px 14px;
+    opacity: 0.95;
+    /* More visible by default on mobile */
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    /* Stronger shadow for separation */
+  }
 }
 
 * {
@@ -452,96 +485,106 @@ pre {
 }
 
 /* =========================================
-     Mobile “book” mode — soft page breaks
+     Book mode — soft page breaks (Global)
      ========================================= */
+
+/* Prevent vertical page scroll on post view only */
+body:has(.post.book-mode) {
+  overflow-y: hidden;
+}
+
+.post.book-mode {
+  position: relative;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+.book {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  /* lock vertical scroll */
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  height: var(--sheet-h);
+  /* provided by JS (header-aware) */
+}
+
+.book::-webkit-scrollbar {
+  display: none
+}
+
+.book {
+  scrollbar-width: none
+}
+
+.sheet {
+  scroll-snap-align: start;
+  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--safe-bottom));
+  min-height: var(--sheet-h);
+  max-height: var(--sheet-h);
+  overflow: hidden;
+  /* no per-sheet vertical scroll */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* Fit media to the page height to avoid overflow */
+.post.book-mode img,
+.post.book-mode video {
+  max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
+  object-fit: contain;
+}
+
+/* If a code block is very tall, let it scroll internally (rare case) */
+.post.book-mode pre {
+  max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
+  overflow: auto;
+}
+
+/* Page number badge */
+.page-num {
+  position: fixed;
+  left: 50%;
+  bottom: calc(12px + var(--safe-bottom));
+  /* slightly higher */
+  transform: translateX(-50%);
+  font-size: .85rem;
+  font-weight: 600;
+  opacity: 0.9;
+  background: var(--bg);
+  color: var(--ink);
+  padding: 3px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 99px;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Hide <hr> lines visually in book mode (they’re soft breaks) */
+.post.book-mode hr {
+  display: none
+}
+
+/* No extra whitespace after the book on phones */
+.post.book-mode+.footer {
+  display: none
+}
+
+
+/* ===========================
+     Mobile Specific & Overrides
+   =========================== */
 @media (max-width:560px) {
 
-  /* Prevent vertical page scroll on post view only */
-  body:has(.post.book-mode) {
-    overflow-y: hidden
-  }
-
-  .post.book-mode {
-    position: relative;
-    padding: 0;
-    margin-bottom: 0;
-  }
-
-  .book {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
-    /* lock vertical scroll */
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
-    overscroll-behavior-x: contain;
-    height: var(--sheet-h);
-    /* provided by JS (header-aware) */
-  }
-
-  .book::-webkit-scrollbar {
-    display: none
-  }
-
-  .book {
-    scrollbar-width: none
-  }
-
-  .sheet {
-    scroll-snap-align: start;
-    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--safe-bottom));
-    min-height: var(--sheet-h);
-    max-height: var(--sheet-h);
-    overflow: hidden;
-    /* no per-sheet vertical scroll */
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-  }
-
-  /* Fit media to the page height to avoid overflow */
-  .post.book-mode img,
-  .post.book-mode video {
-    max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-    object-fit: contain;
-  }
-
-  /* If a code block is very tall, let it scroll internally (rare case) */
-  .post.book-mode pre {
-    max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-    overflow: auto;
-  }
-
-  /* Page number badge */
-  .page-num {
-    position: fixed;
-    left: 50%;
-    bottom: calc(12px + var(--safe-bottom));
-    /* slightly higher */
-    transform: translateX(-50%);
-    font-size: .85rem;
-    font-weight: 600;
-    opacity: 0.9;
-    background: var(--bg);
-    color: var(--ink);
-    padding: 3px 10px;
-    border: 1px solid var(--rule);
-    border-radius: 99px;
-    z-index: 1000;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-
-  /* Hide <hr> lines visually in book mode (they’re soft breaks) */
-  .post.book-mode hr {
-    display: none
-  }
-
-  /* No extra whitespace after the book on phones */
-  .post.book-mode+.footer {
-    display: none
+  /* Hide Header in Book Mode (Mobile Only) */
+  body:has(.post.book-mode) .header {
+    display: none;
   }
 
   /* Slightly reduce bottom padding on phones */
@@ -558,63 +601,61 @@ pre {
   --page-gutter: max(12px, env(safe-area-inset-bottom, 0px));
 }
 
-@media (max-width:560px) {
+/* Logic for zoomed sheets (shared, but useful mainly for small screens/book mode) */
+/* keep the book vibe (no vertical scroll at the root) */
+body:has(.post.book-mode) {
+  overflow-y: hidden
+}
 
-  /* keep the book vibe (no vertical scroll at the root) */
-  body:has(.post.book-mode) {
-    overflow-y: hidden
-  }
+.post.book-mode .book {
+  height: 100svh;
+  /* use the *visible* small viewport; okay because we underscan */
+  /* if your browser supports dvh, prefer it: */
+}
 
+@supports (height: 100dvh) {
   .post.book-mode .book {
-    height: 100svh;
-    /* use the *visible* small viewport; okay because we underscan */
-    /* if your browser supports dvh, prefer it: */
+    height: 100dvh;
   }
+}
 
-  @supports (height: 100dvh) {
-    .post.book-mode .book {
-      height: 100dvh;
-    }
-  }
+/* wrapper that is exactly viewport-high */
+.post.book-mode .sheet-wrap {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  /* clip the over-sized inner content */
+  display: flex;
+}
 
-  /* wrapper that is exactly viewport-high */
-  .post.book-mode .sheet-wrap {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    /* clip the over-sized inner content */
-    display: flex;
-  }
+/* inner layer that we “zoom out” */
+.post.book-mode .sheet-zoom {
+  /* make it bigger than the wrapper so that scaling it down fits with margin */
+  width: calc(100% / var(--page-scale));
+  height: calc(100% / var(--page-scale));
+  transform: scale(var(--page-scale));
+  transform-origin: top left;
+  /* important */
+  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--page-gutter));
+  /* your existing styles may add borders etc. — that’s fine */
+}
 
-  /* inner layer that we “zoom out” */
-  .post.book-mode .sheet-zoom {
-    /* make it bigger than the wrapper so that scaling it down fits with margin */
-    width: calc(100% / var(--page-scale));
-    height: calc(100% / var(--page-scale));
-    transform: scale(var(--page-scale));
-    transform-origin: top left;
-    /* important */
-    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--page-gutter));
-    /* your existing styles may add borders etc. — that’s fine */
-  }
+/* if you previously set height on .sheet, remove it or let this override */
+.post.book-mode .sheet {
+  height: auto;
+  /* the zoomed inner provides the sizing now */
+}
 
-  /* if you previously set height on .sheet, remove it or let this override */
-  .post.book-mode .sheet {
-    height: auto;
-    /* the zoomed inner provides the sizing now */
-  }
+/* cap tall media/code so they never touch the edges even after scale */
+.post.book-mode img,
+.post.book-mode video {
+  max-height: 80%;
+  object-fit: contain;
+}
 
-  /* cap tall media/code so they never touch the edges even after scale */
-  .post.book-mode img,
-  .post.book-mode video {
-    max-height: 80%;
-    object-fit: contain;
-  }
-
-  .post.book-mode pre {
-    max-height: 80%;
-    overflow: auto;
-  }
+.post.book-mode pre {
+  max-height: 80%;
+  overflow: auto;
 }
 
 @media (max-width:560px) {

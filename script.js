@@ -126,6 +126,7 @@ function normalizeHeadings(root) {
 function enableSoftBookMode(contentEl) {
   const post = contentEl.closest('.post');
   if (!post) return;
+  if (post.classList.contains('book-mode')) return; // already active
 
   // Save linear HTML once for clean rebuilds
   if (!contentEl._originalHTML) contentEl._originalHTML = contentEl.innerHTML;
@@ -140,6 +141,8 @@ function enableSoftBookMode(contentEl) {
   const { sheetForMeasure, cleanup } = makeMeasurer(contentEl);
 
   // Available page height below header
+  // If header is hidden by CSS in book mode, this might change, but we assume
+  // consistency or that maxH uses current logic.
   const maxH = getPageMaxHeight();
   document.documentElement.style.setProperty('--sheet-h', `${maxH}px`);
 
@@ -156,28 +159,17 @@ function enableSoftBookMode(contentEl) {
 
   // Build pages
   for (const section of sections) {
-    // Split into blocks, then into "units" that keep headings with their next block
     const blocks = splitSectionIntoBlocks(section);
     const units = buildKeepWithNextUnits(blocks);
 
-    // First, try whole section as a single unit (fast path)
     const wholeSection = [...section];
     if (wholeSection.length && tryPack(wholeSection)) continue;
 
-    // Otherwise, pack unit by unit
-    // If a unit is too large for an empty page (e.g. huge pre/img), place it alone.
-    // This guarantees a heading never sits at the BOTTOM of a page:
-    // we never place a heading without its companion block on the same page unless it's impossible.
     pushPage(current); current = [];
     for (const unit of units) {
       if (tryPack(unit)) continue;
-
-      // Unit doesn't fit in current (which is empty here): force it as a separate page
       pushPage(current); current = [];
-      if (!tryPack(unit)) {
-        // Extremely tall unit: still put as a single page (may exceed slightly)
-        pushPage(unit); // no split inside the unit
-      }
+      if (!tryPack(unit)) pushPage(unit);
     }
   }
   pushPage(current); current = [];
@@ -194,23 +186,53 @@ function enableSoftBookMode(contentEl) {
 
   contentEl.innerHTML = '';
   contentEl.appendChild(book);
-  post.classList.add('book-mode');
+
+  post.classList.add('book-mode'); // Triggers CSS
 
   addPageBadge(post, book);
   cleanup();
 
-  // Repack on resize: normalize headings first, then flatten, then pack
-  const reflow = debounce(() => {
-    document.documentElement.style.setProperty('--sheet-h', `${getPageMaxHeight()}px`);
-    // Normalize headings inside sheets so we don't capture a scrambled snapshot
-    normalizeHeadings(book);
-    const linearHTML = Array.from(book.querySelectorAll('.sheet')).map(s => s.innerHTML).join('');
-    contentEl.innerHTML = linearHTML;
-    enableSoftBookMode(contentEl);
-    document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
-  }, 200);
-  window.addEventListener('resize', reflow);
+  window.addEventListener('resize', onBookResize);
 }
+
+function disableBookMode(contentEl) {
+  const post = contentEl.closest('.post');
+  if (!post) return;
+  if (!post.classList.contains('book-mode')) return;
+
+  // Restore
+  if (contentEl._originalHTML) {
+    contentEl.innerHTML = contentEl._originalHTML;
+  }
+  post.classList.remove('book-mode');
+
+  // Remove Global Badges
+  const old = document.querySelector('.page-num-global');
+  if (old) old.remove();
+
+  // Cleanup Resize Listener
+  window.removeEventListener('resize', onBookResize);
+
+  document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
+}
+
+
+const onBookResize = debounce(() => {
+  document.documentElement.style.setProperty('--sheet-h', `${getPageMaxHeight()}px`);
+  const contentEl = document.querySelector('.page');
+  if (!contentEl) return;
+  const book = contentEl.querySelector('.book');
+  if (!book) return;
+
+  normalizeHeadings(book);
+  const linearHTML = Array.from(book.querySelectorAll('.sheet')).map(s => s.innerHTML).join('');
+  contentEl.innerHTML = linearHTML;
+
+  contentEl.closest('.post').classList.remove('book-mode');
+  enableSoftBookMode(contentEl);
+
+  document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
+}, 200);
 
 function splitIntoSections(container) {
   const nodes = Array.from(container.childNodes);
@@ -388,9 +410,6 @@ async function renderPost() {
     const h1 = contentEl.querySelector('h1');
     if (h1 && h1.textContent === 'Blogs') h1.style.display = 'none';
 
-    // HIDE mode button on detail view
-    const mBtn = document.querySelector('.mode-btn');
-    if (mBtn) mBtn.style.display = 'none';
   }
 
   // --- Robust Path Reconstruction ---
@@ -614,8 +633,13 @@ async function renderPost() {
 
     // Typeset math first for accurate heights
     await typesetAfterLoad(contentEl);
-    const isPhone = window.matchMedia('(max-width: 560px)').matches;
-    if (isPhone) {
+
+    // ----------- Book Mode Logic -----------
+    // User Request: Start in regular scroll mode by default on ALL devices.
+    // Explicit click required to enable.
+    const shouldBook = false;
+
+    if (shouldBook) {
       enableSoftBookMode(contentEl);
 
       // Rebuild-once hooks then refit
@@ -631,7 +655,12 @@ async function renderPost() {
           normalizeHeadings(contentEl);
           await typesetAfterLoad(contentEl);
         }
-        enableSoftBookMode(contentEl);
+
+        // Only re-enable if still "shouldBook"? 
+        if (contentEl.closest('.post').classList.contains('book-mode')) {
+          enableSoftBookMode(contentEl);
+        }
+
         document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
         chaseFit(900);
       }, 150);
@@ -654,8 +683,10 @@ async function renderPost() {
     const h1 = contentEl.querySelector('h1');
     if (h1) document.title = h1.innerText + " — " + "the-puzzler";
 
-    // Final follow-up fit
-    if (window.matchMedia('(max-width: 560px)').matches) chaseFit(900);
+    // Final follow-up fit (Only if book mode is active)
+    if (window.matchMedia('(max-width: 560px)').matches && contentEl.closest('.post.book-mode')) {
+      chaseFit(900);
+    }
 
   } catch (e) {
     console.error(e);
@@ -682,70 +713,105 @@ function applyPreferences() {
 }
 
 function initControls() {
-  // 1. Always apply saved preference
   applyPreferences();
 
-  // 2. Only render button on Home Page (which has #post-list)
-  const isHomePage = !!document.getElementById('post-list');
-  if (!isHomePage) return;
-
-  // --- UI Setup ---
-  const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
-
-  // Helper: determine effective current mode (manual > system)
-  const getEffectiveMode = () => {
-    const manual = localStorage.getItem('mode');
-    if (manual) return manual;
-    return sysDark.matches ? 'dark' : 'light';
-  };
-
-  const updateUI = () => {
-    // Current state
-    const current = getEffectiveMode();
-
-    // Button shows the TARGET icon (Sun if Dark, Moon if Light)
-    // ☀ (Sun) / ☾ (Moon)
-    const icon = current === 'dark' ? '☀' : '☾';
-
-    const mBtn = document.querySelector('.mode-btn');
-    if (mBtn) {
-      mBtn.textContent = icon;
-      // onclick is static now
-    }
-  };
+  const params = new URLSearchParams(window.location.search);
+  const isHomePage = !params.get('p');
 
   // Create Container
-  const container = document.createElement('div');
-  container.className = 'theme-controls';
+  let container = document.querySelector('.theme-controls');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'theme-controls';
+    document.body.appendChild(container);
+  } else {
+    container.innerHTML = '';
+  }
 
-  // Mode Button
-  const mBtn = document.createElement('button');
-  mBtn.className = 'mode-btn';
-  mBtn.style.fontSize = '1.2rem'; // slightly larger icon
-  mBtn.style.padding = '4px 8px';
+  // === 1. Controls for HOME PAGE (Theme Only) ===
+  if (isHomePage) {
+    const themeBtn = document.createElement('button');
+    themeBtn.className = 'mode-btn';
+    const sysDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const getEffectiveMode = () => {
+      const manual = localStorage.getItem('mode');
+      if (manual) return manual;
+      return sysDark.matches ? 'dark' : 'light';
+    };
+    const updateThemeUI = () => {
+      const current = getEffectiveMode();
+      themeBtn.textContent = current === 'dark' ? '☀' : '☾';
+    };
+    themeBtn.onclick = () => {
+      const current = getEffectiveMode();
+      const target = current === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('mode', target);
+      applyPreferences();
+      updateThemeUI();
+    };
+    updateThemeUI();
+    container.appendChild(themeBtn);
 
-  const toggleAction = () => {
-    // Current state
-    const current = getEffectiveMode();
-    // Target state (what clicking will do)
-    const target = current === 'dark' ? 'light' : 'dark';
+    // Hero images only exist on home page typically, but safe to bind if present
+    document.querySelectorAll('.hero-img').forEach(img => {
+      img.onclick = themeBtn.onclick;
+    });
+  }
 
-    localStorage.setItem('mode', target);
-    applyPreferences();
-    updateUI(); // refresh icon
-  };
+  // === 2. Controls for POST PAGE (Home + Book Mode) ===
+  if (!isHomePage) {
+    // A. Home Button
+    const homeBtn = document.createElement('a');
+    homeBtn.className = 'mode-btn';
+    homeBtn.innerHTML = '🏠';
+    homeBtn.href = 'index.html';
+    homeBtn.title = 'Home';
+    homeBtn.style.textDecoration = 'none';
+    homeBtn.style.lineHeight = '1';
+    container.appendChild(homeBtn);
 
-  mBtn.onclick = toggleAction;
-  container.appendChild(mBtn);
-  document.body.appendChild(container);
+    // B. Book Mode Button
+    const bookBtn = document.createElement('button');
+    bookBtn.className = 'mode-btn';
 
-  // Bind Hero Images
-  document.querySelectorAll('.hero-img').forEach(img => {
-    img.onclick = toggleAction;
-  });
+    const updateBookUI = () => {
+      const contentEl = document.querySelector('.page');
+      const isBook = contentEl?.closest('.post')?.classList.contains('book-mode');
+      bookBtn.textContent = isBook ? '📄' : '📖';
+      bookBtn.title = isBook ? 'Disable Book Mode' : 'Enable Book Mode';
+    };
 
-  // Initial render
-  updateUI();
+    bookBtn.onclick = () => {
+      const contentEl = document.querySelector('.page');
+      if (!contentEl) return;
+      const post = contentEl.closest('.post');
+      if (!post) return;
+
+      const isBook = post.classList.contains('book-mode');
+      if (isBook) {
+        disableBookMode(contentEl);
+        localStorage.setItem('bookMode', 'false');
+      } else {
+        // CRITICAL: Scroll to top before measuring to prevent offset issues
+        window.scrollTo(0, 0);
+
+        enableSoftBookMode(contentEl);
+        localStorage.setItem('bookMode', 'true');
+        if (window.matchMedia('(max-width: 560px)').matches) {
+          document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
+        }
+      }
+      updateBookUI();
+    };
+    // Initialize UI state
+    updateBookUI();
+    container.appendChild(bookBtn);
+
+    // CRITICAL FIX: Update button state when Book Mode is toggled programmatically (e.g. auto-load)
+    window.addEventListener('post:ready', () => {
+      updateBookUI();
+    });
+  }
 }
 
 // -----------------------------
