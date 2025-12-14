@@ -142,19 +142,20 @@ html {
   .theme-controls {
     bottom: 24px;
     right: 16px;
-    background: rgba(var(--bg), 0.5);
-    /* fallback */
-    backdrop-filter: blur(4px);
-    /* frost effect for visibility */
-    border-radius: 8px;
-    padding: 4px;
-    /* Slight padding container */
+    /* Removed container background to prevent blocking text */
+    pointer-events: none;
+    /* Let clicks pass through empty space */
+  }
+
+  /* Re-enable clicks on buttons */
+  .theme-controls>* {
+    pointer-events: auto;
   }
 
   .mode-btn {
-    font-size: 1.25rem;
-    /* Larger icon/touch target */
-    padding: 10px 14px;
+    font-size: 1rem;
+    /* Reduced scale */
+    padding: 8px 12px;
     opacity: 0.95;
     /* More visible by default on mobile */
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);

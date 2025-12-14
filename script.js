@@ -322,7 +322,7 @@ function getPageMaxHeight() {
   const vh = (window.visualViewport?.height || window.innerHeight);
   const header = document.querySelector('.header');
   const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-  const pad = 12; // room for page badge
+  const pad = 4; // Minimal pad, allowing text behind buttons
   return Math.max(120, Math.round(vh - headerBottom - pad));
 }
 function addPageBadge(postEl, bookEl) {
