@@ -293,7 +293,8 @@ h3 {
 
 p,
 li {
-  font-size: clamp(1rem, 3.2vw, 1.0625rem);
+  font-size: clamp(1.1875rem, 4vw, 1.25rem);
+  /* ~19px min */
   overflow-wrap: anywhere;
   hyphens: auto
 }
