@@ -45,6 +45,43 @@
   When facing challenges that are OOD with respect to our training data, we require creativity in order to surpass them. This intuition can be used to gather insight into the key components required to make creative agents. If a challenge is not part of our training distribution, we cannot rely on memory or learned tricks. Therefore, the only way for us to overcome this obstacle is if we can reliably mobilise internalised ideas about the world, reformulating them into a new configuration that can produce a behaviour we have never even witnessed. A concrete example is in how a child can approach a maths problem they have never encountered before. A child, not knowing their 9 times tables may be stumped at first. But if they know how to count, and they know how to decompose a product into a series of additions, they can solve it. Consider a neural network on the other hand. If it is never trained on the 9 times table, it will never be able to accurately predict the solutions to such problems. This example also highlights another facet of creativity: curriculum. Generalising to all times tables problems requires already knowing counting, and ideally addition, as quasi-discrete factorised concepts that can easily be re-combined and reapplied.
 </p>
 
+<section id="mul-ood-lab" class="mul-lab">
+  <h3>Interactive Mini-Lab: Hold Out 9</h3>
+  <p class="mul-sub">
+    Tiny MLP, trained only on multiplication pairs from
+    <input id="mul-train-min" class="mul-inline-input" type="number" min="1" max="20" value="1">
+    ..
+    <input id="mul-train-max" class="mul-inline-input" type="number" min="1" max="20" value="5">.
+    Any pair involving
+    <input id="mul-holdout" class="mul-inline-input" type="number" min="1" max="20" value="9">
+    is out-of-distribution.
+  </p>
+
+  <div class="mul-controls">
+    <button id="mul-train-btn" type="button">Train Model</button>
+    <button id="mul-reset-btn" type="button">Reset</button>
+    <label class="mul-epochs-label">Epochs
+      <input id="mul-epochs" type="range" min="300" max="5000" step="100" value="2200">
+      <output id="mul-epochs-out">2200</output>
+    </label>
+  </div>
+
+  <div class="mul-stats">
+    <span>Train MSE: <strong id="mul-train-mse">-</strong></span>
+    <span><span id="mul-ood-label">OOD(9)</span> MSE: <strong id="mul-ood-mse">-</strong></span>
+  </div>
+
+  <canvas id="mul-scatter" width="840" height="320" aria-label="True product vs absolute error for OOD pairs"></canvas>
+
+  <div class="mul-query">
+    <h4>Query</h4>
+    <label>a <input id="mul-a" type="number" min="1" max="12" value="9"></label>
+    <label>b <input id="mul-b" type="number" min="1" max="12" value="5"></label>
+    <button id="mul-predict-btn" type="button">Predict</button>
+    <span id="mul-query-out">-</span>
+  </div>
+</section>
+
 <p>
   The reason a model trained on all manner of multiplication except 9 times tables will struggle with exactly pinpointing the 9 times tables, is because it has been trained on the sole objective of maximising its fitness within the remit of a single thinly sliced objective. There is no incentive to build well factorised internal representations of the world. A well factorised internal representation may not be possible due to topological/architectural constraints. It may also not be possible to approximate based on the given task’s reward mechanism. Thus the only thing it can do is maximise its current reward, under its current distribution, which is fundamentally disabling.
 </p>
