@@ -2,6 +2,173 @@
 // Tiny in-browser experiment: train on 1..5 multiplication, hold out 9 (OOD).
 
 (function () {
+  function initAggregateFlockLab() {
+    const root = document.getElementById('aggregate-flock-lab');
+    if (!root) return;
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const canvas = root.querySelector('#aggregate-flock-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const N = 84;
+    const agents = Array.from({ length: N }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() * 2 - 1) * 0.55,
+      vy: (Math.random() * 2 - 1) * 0.55,
+      hue: 188 + Math.random() * 56,
+      phase: Math.random() * Math.PI * 2
+    }));
+
+    let running = true;
+    let rafId = null;
+    let lastTs = 0;
+    let weavePhase = 0;
+
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function dist2(ax, ay, bx, by) {
+      const dx = bx - ax;
+      const dy = by - ay;
+      return dx * dx + dy * dy;
+    }
+
+    function step(dt) {
+      const sepR2 = 20 * 20;
+      const aliR2 = 58 * 58;
+      const cohR2 = 72 * 72;
+      const centerPull = 0.012;
+      const weave = 0.34 + 0.66 * (0.5 + 0.5 * Math.sin(weavePhase));
+
+      for (let i = 0; i < N; i++) {
+        const a = agents[i];
+        let sepX = 0, sepY = 0, aliX = 0, aliY = 0, cohX = 0, cohY = 0;
+        let cAli = 0, cCoh = 0;
+
+        for (let j = 0; j < N; j++) {
+          if (i === j) continue;
+          const b = agents[j];
+          const d2 = dist2(a.x, a.y, b.x, b.y);
+          if (d2 < sepR2) {
+            const inv = 1 / Math.max(1, d2);
+            sepX += (a.x - b.x) * inv;
+            sepY += (a.y - b.y) * inv;
+          }
+          if (d2 < aliR2) {
+            aliX += b.vx;
+            aliY += b.vy;
+            cAli++;
+          }
+          if (d2 < cohR2) {
+            cohX += b.x;
+            cohY += b.y;
+            cCoh++;
+          }
+        }
+
+        if (cAli > 0) {
+          aliX = aliX / cAli - a.vx;
+          aliY = aliY / cAli - a.vy;
+        }
+        if (cCoh > 0) {
+          cohX = cohX / cCoh - a.x;
+          cohY = cohY / cCoh - a.y;
+        }
+
+        const swirl = Math.sin(a.phase + weavePhase * 1.8);
+        a.vx += (sepX * 1.05 + aliX * 0.052 + cohX * 0.0017) * dt * 60;
+        a.vy += (sepY * 1.05 + aliY * 0.052 + cohY * 0.0017) * dt * 60;
+
+        // Light weaving field nudges flock into temporary bands/threads.
+        a.vx += Math.cos((a.y / H) * Math.PI * 4 + weavePhase + a.phase) * 0.008 * weave;
+        a.vy += Math.sin((a.x / W) * Math.PI * 3 - weavePhase + a.phase) * 0.008 * weave;
+        a.vx += swirl * 0.004;
+        a.vy += -swirl * 0.004;
+
+        a.vx += ((W * 0.5 - a.x) * centerPull) * dt;
+        a.vy += ((H * 0.5 - a.y) * centerPull) * dt;
+
+        const sp = Math.hypot(a.vx, a.vy);
+        const maxSp = 1.55;
+        if (sp > maxSp) {
+          a.vx = (a.vx / sp) * maxSp;
+          a.vy = (a.vy / sp) * maxSp;
+        }
+
+        a.x += a.vx * dt * 60;
+        a.y += a.vy * dt * 60;
+
+        if (a.x < -8) a.x = W + 8;
+        else if (a.x > W + 8) a.x = -8;
+        if (a.y < -8) a.y = H + 8;
+        else if (a.y > H + 8) a.y = -8;
+      }
+
+      weavePhase += dt * 0.7;
+    }
+
+    function draw() {
+      ctx.fillStyle = 'hsla(40 24% 97% / 0.11)';
+      ctx.fillRect(0, 0, W, H);
+
+      for (let i = 0; i < N; i++) {
+        const a = agents[i];
+        for (let j = i + 1; j < N; j++) {
+          const b = agents[j];
+          const d2 = dist2(a.x, a.y, b.x, b.y);
+          if (d2 > 62 * 62) continue;
+          const d = Math.sqrt(d2);
+          const alpha = clamp((62 - d) / 62, 0, 1) * 0.12;
+          ctx.strokeStyle = `hsla(${((a.hue + b.hue) * 0.5).toFixed(1)} 48% 42% / ${alpha.toFixed(3)})`;
+          ctx.lineWidth = 0.9;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+
+      for (let i = 0; i < N; i++) {
+        const a = agents[i];
+        ctx.fillStyle = `hsla(${a.hue.toFixed(1)} 62% 46% / 0.78)`;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, 2.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function tick(ts) {
+      if (!running) return;
+      if (!lastTs) lastTs = ts;
+      const dt = clamp((ts - lastTs) / 1000, 1 / 120, 1 / 24);
+      lastTs = ts;
+      step(dt);
+      draw();
+      rafId = window.requestAnimationFrame(tick);
+    }
+
+    function setRunning(on) {
+      running = on;
+      if (running) {
+        lastTs = 0;
+        rafId = window.requestAnimationFrame(tick);
+      } else if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    ctx.fillStyle = 'hsl(40 24% 97%)';
+    ctx.fillRect(0, 0, W, H);
+    for (let i = 0; i < 36; i++) {
+      step(1 / 60);
+      draw();
+    }
+    canvas.addEventListener('click', () => setRunning(!running));
+    setRunning(true);
+  }
+
   function initCreativityTilesLab() {
     const root = document.getElementById('creativity-tiles-lab');
     if (!root) return;
@@ -1738,6 +1905,7 @@
   }
 
   function initAllLabs() {
+    initAggregateFlockLab();
     initCreativityTilesLab();
     initMulLab();
     initQuiltLab();
