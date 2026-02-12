@@ -40,7 +40,6 @@
 <hr>
 
 <h2>Creativity</h2>
-<img src="posts/curriculum-is-key/images/new-chall-new-behaviour-cycle.png" alt="New challenge to new behaviour cycle" style="display:block; margin:20px auto; max-width:100%; height:auto;">
 <p>
   When facing challenges that are OOD with respect to our training data, we require creativity in order to surpass them. This intuition can be used to gather insight into the key components required to make creative agents. If a challenge is not part of our training distribution, we cannot rely on memory or learned tricks. Therefore, the only way for us to overcome this obstacle is if we can reliably mobilise internalised ideas about the world, reformulating them into a new configuration that can produce a behaviour we have never even witnessed. A concrete example is in how a child can approach a maths problem they have never encountered before. A child, not knowing their 9 times tables may be stumped at first. But if they know how to count, and they know how to decompose a product into a series of additions, they can solve it. Consider a neural network on the other hand. If it is never trained on the 9 times table, it will never be able to accurately predict the solutions to such problems. This example also highlights another facet of creativity: curriculum. Generalising to all times tables problems requires already knowing counting, and ideally addition, as quasi-discrete factorised concepts that can easily be re-combined and reapplied.
 </p>
@@ -138,12 +137,24 @@
   The notion of local competition with phenotypic diversity preservation is a recurring theme.
 </p>
 
-<h3>The Recipe - Summary</h3>
-<ol>
-  <li>Generate solvable novelty - evolve/find the niches.</li>
-  <li>Preserve diversity with niches.</li>
-  <li>Local competition within niche (transfer).</li>
-</ol>
+<hr class="principles-divider">
+<section class="principles-card">
+  <h3>Three Principles</h3>
+  <div class="principles-grid">
+    <article class="principle-item">
+      <h4>Generate Solvable Novelty</h4>
+      <p>Evolve and discover niches that are new, but still learnable.</p>
+    </article>
+    <article class="principle-item">
+      <h4>Preserve Diversity</h4>
+      <p>Keep specialised behaviours alive instead of collapsing to one winner.</p>
+    </article>
+    <article class="principle-item">
+      <h4>Compete Locally</h4>
+      <p>Let transfer and niche-level selection drive recombination and progress.</p>
+    </article>
+  </div>
+</section>
 
 <hr>
 

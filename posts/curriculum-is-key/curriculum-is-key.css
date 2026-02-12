@@ -47,6 +47,52 @@
   background: color-mix(in srgb, var(--bg) 97%, #ffffff 3%);
 }
 
+.principles-divider {
+  margin: 12px 0 10px;
+}
+
+.principles-card {
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.principles-card h3 {
+  margin: 0 0 9px;
+}
+
+.principles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.principle-item {
+  border: 1px solid color-mix(in srgb, var(--rule) 46%, transparent);
+  border-radius: 10px;
+  padding: 9px 10px;
+  background: color-mix(in srgb, var(--bg) 97%, #ffffff 3%);
+}
+
+.principle-item h4 {
+  margin: 0 0 5px;
+  font-size: 1em;
+}
+
+.principle-item p {
+  margin: 0;
+  font-size: 1em;
+  line-height: 1.35;
+  color: var(--ink-dim);
+}
+
+@media (max-width: 780px) {
+  .principles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .mul-lab {
   margin: 18px 0 22px;
   padding: 14px;
