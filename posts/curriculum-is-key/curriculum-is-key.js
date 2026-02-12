@@ -428,6 +428,200 @@
     predictOne(model);
   }
 
+  function initQuiltLab() {
+    const root = document.getElementById('quilt-lab');
+    if (!root) return;
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const canvas = root.querySelector('#quilt-canvas');
+    const ctx = canvas.getContext('2d');
+
+    const CW = canvas.width;
+    const CH = canvas.height;
+    const TILE = 14;
+    const COLS = Math.floor(CW / TILE);
+    const ROWS = Math.floor(CH / TILE);
+    const N = COLS * ROWS;
+    const DIR8 = [
+      { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+      { x: 1, y: 1 }, { x: -1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: -1 }
+    ];
+
+    const grid = Array.from({ length: N }, () => randomStyle());
+    const next = Array.from({ length: N }, () => randomStyle());
+    let running = true;
+    let rafId = null;
+    let lastTs = 0;
+    let carryMs = 0;
+    const TEMPO = 38;
+
+    function ixy(x, y) { return y * COLS + x; }
+    function inBounds(x, y) { return x >= 0 && x < COLS && y >= 0 && y < ROWS; }
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function hueWrap(h) {
+      let n = h % 360;
+      if (n < 0) n += 360;
+      return n;
+    }
+
+    function randomStyle() {
+      return {
+        h: Math.random() * 360,
+        s: 58 + Math.random() * 30,
+        l: 36 + Math.random() * 28,
+        p: Math.floor(Math.random() * 5)
+      };
+    }
+
+    function drawTile(x, y, st) {
+      const px = x * TILE;
+      const py = y * TILE;
+      ctx.fillStyle = `hsl(${st.h.toFixed(1)} ${st.s.toFixed(1)}% ${st.l.toFixed(1)}%)`;
+      ctx.fillRect(px, py, TILE, TILE);
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(px, py, TILE, TILE);
+      ctx.clip();
+      ctx.strokeStyle = `hsla(${hueWrap(st.h + 150).toFixed(1)} 38% 18% / 0.35)`;
+      ctx.fillStyle = `hsla(${hueWrap(st.h + 150).toFixed(1)} 38% 18% / 0.28)`;
+      ctx.lineWidth = 1;
+
+      if (st.p === 0) {
+        for (let i = -TILE; i < TILE * 2; i += 4) {
+          ctx.beginPath();
+          ctx.moveTo(px + i, py);
+          ctx.lineTo(px + i + TILE, py + TILE);
+          ctx.stroke();
+        }
+      } else if (st.p === 1) {
+        ctx.beginPath();
+        ctx.arc(px + TILE * 0.3, py + TILE * 0.3, 2, 0, Math.PI * 2);
+        ctx.arc(px + TILE * 0.72, py + TILE * 0.68, 2, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (st.p === 2) {
+        ctx.beginPath();
+        ctx.moveTo(px + 2, py + TILE * 0.5);
+        ctx.lineTo(px + TILE - 2, py + TILE * 0.5);
+        ctx.moveTo(px + TILE * 0.5, py + 2);
+        ctx.lineTo(px + TILE * 0.5, py + TILE - 2);
+        ctx.stroke();
+      } else if (st.p === 3) {
+        ctx.beginPath();
+        ctx.arc(px + TILE * 0.5, py + TILE * 0.5, TILE * 0.34, 0.2, Math.PI + 0.6);
+        ctx.stroke();
+      } else {
+        ctx.fillRect(px + 2, py + 2, 3, 3);
+        ctx.fillRect(px + TILE - 5, py + 2, 3, 3);
+        ctx.fillRect(px + 2, py + TILE - 5, 3, 3);
+        ctx.fillRect(px + TILE - 5, py + TILE - 5, 3, 3);
+      }
+      ctx.restore();
+    }
+
+    function renderAll() {
+      for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS; x++) {
+          drawTile(x, y, grid[ixy(x, y)]);
+        }
+      }
+    }
+
+    function localUpdate(x, y, kick = 0) {
+      const idx = ixy(x, y);
+      let hSin = 0;
+      let hCos = 0;
+      let sAcc = 0;
+      let lAcc = 0;
+      let pAcc = 0;
+      let n = 0;
+      for (let i = 0; i < DIR8.length; i++) {
+        const nx = x + DIR8[i].x;
+        const ny = y + DIR8[i].y;
+        if (!inBounds(nx, ny)) continue;
+        const st = grid[ixy(nx, ny)];
+        const ang = (st.h * Math.PI) / 180;
+        hSin += Math.sin(ang);
+        hCos += Math.cos(ang);
+        sAcc += st.s;
+        lAcc += st.l;
+        pAcc += st.p;
+        n += 1;
+      }
+      if (!n) return { ...grid[idx] };
+      const cur = grid[idx];
+      const hMean = hueWrap((Math.atan2(hSin / n, hCos / n) * 180) / Math.PI);
+      const sMean = sAcc / n;
+      const lMean = lAcc / n;
+      const pMean = pAcc / n;
+      const newP = (Math.random() < 0.88)
+        ? Math.round((cur.p * 3 + pMean) / 4) % 5
+        : Math.floor(Math.random() * 5);
+      return {
+        h: hueWrap(cur.h * 0.56 + hMean * 0.44 + (Math.random() * 11 - 5.5) + kick * (Math.random() * 36 - 18)),
+        s: clamp(cur.s * 0.50 + sMean * 0.50 + (Math.random() * 8 - 4) + kick * (Math.random() * 10 - 5), 40, 92),
+        l: clamp(cur.l * 0.56 + lMean * 0.44 + (Math.random() * 8 - 4) + kick * (Math.random() * 8 - 4), 24, 82),
+        p: newP
+      };
+    }
+
+    function stepBatch(intensity = 1) {
+      const updates = Math.max(8, Math.round(N * 0.10 * intensity));
+      for (let i = 0; i < updates; i++) {
+        const x = Math.floor(Math.random() * COLS);
+        const y = Math.floor(Math.random() * ROWS);
+        next[ixy(x, y)] = localUpdate(x, y, 0);
+      }
+      for (let i = 0; i < updates; i++) {
+        const x = Math.floor(Math.random() * COLS);
+        const y = Math.floor(Math.random() * ROWS);
+        const id = ixy(x, y);
+        grid[id] = next[id];
+        drawTile(x, y, grid[id]);
+      }
+    }
+
+    function resetWorld() {
+      for (let i = 0; i < N; i++) {
+        grid[i] = randomStyle();
+        next[i] = { ...grid[i] };
+      }
+      renderAll();
+      for (let i = 0; i < 18; i++) stepBatch(1.6);
+    }
+
+    function tick(ts) {
+      if (!running) return;
+      if (!lastTs) lastTs = ts;
+      carryMs += ts - lastTs;
+      lastTs = ts;
+      const msPerStep = 1000 / Math.max(1, TEMPO * 2.6);
+      while (carryMs >= msPerStep) {
+        stepBatch(1);
+        carryMs -= msPerStep;
+      }
+      rafId = window.requestAnimationFrame(tick);
+    }
+
+    function setRunning(on) {
+      running = on;
+      if (running) {
+        lastTs = 0;
+        carryMs = 0;
+        rafId = window.requestAnimationFrame(tick);
+      } else if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    canvas.addEventListener('click', () => setRunning(!running));
+
+    resetWorld();
+    setRunning(true);
+  }
+
   function initPicbreedLab() {
     const root = document.getElementById('picbreed-lab');
     if (!root) return;
@@ -1438,6 +1632,7 @@
 
   function initAllLabs() {
     initMulLab();
+    initQuiltLab();
     initPicbreedLab();
     initMazeQDLab();
   }

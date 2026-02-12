@@ -308,6 +308,27 @@
   margin-bottom: 4px;
 }
 
+.quilt-lab {
+  margin: 10px 0 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.quilt-lab h3 {
+  margin: 0 0 4px;
+}
+
+#quilt-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  display: block;
+  cursor: pointer;
+}
+
 .maze-lab {
   position: relative;
   margin: 16px 0 18px;
