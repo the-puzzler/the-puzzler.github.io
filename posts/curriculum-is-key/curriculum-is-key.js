@@ -2,6 +2,113 @@
 // Tiny in-browser experiment: train on 1..5 multiplication, hold out 9 (OOD).
 
 (function () {
+  function initCreativityTilesLab() {
+    const root = document.getElementById('creativity-tiles-lab');
+    if (!root) return;
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const canvas = root.querySelector('#creativity-tiles-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width;
+    const H = canvas.height;
+    const cx = W * 0.5;
+    const cy = H * 0.5;
+    const N = 140;
+    let running = true;
+    let rafId = null;
+    let lastTs = 0;
+    let hueDrift = 0;
+
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function rand(a, b) { return a + Math.random() * (b - a); }
+
+    const tiles = Array.from({ length: N }, () => ({}));
+
+    function respawn(t, near = false) {
+      t.x = rand(-1, 1);
+      t.y = rand(-0.72, 0.72);
+      t.z = near ? rand(0.18, 0.6) : rand(0.75, 2.2);
+      t.vz = rand(0.14, 0.42);
+      t.size = rand(8, 26);
+      t.rot = rand(-Math.PI, Math.PI);
+      t.vr = rand(-0.35, 0.35);
+      t.h = rand(175, 245);
+      t.s = rand(46, 78);
+      t.l = rand(42, 68);
+      t.a = rand(0.10, 0.34);
+    }
+
+    for (let i = 0; i < tiles.length; i++) respawn(tiles[i], i < 20);
+
+    function drawTile(t, dt) {
+      t.z -= t.vz * dt;
+      t.rot += t.vr * dt;
+      if (t.z <= 0.14) {
+        respawn(t, false);
+        return;
+      }
+
+      const p = 1 / t.z;
+      const sx = cx + t.x * W * 0.36 * p;
+      const sy = cy + t.y * H * 0.42 * p;
+      const size = t.size * p;
+      if (sx < -60 || sx > W + 60 || sy < -60 || sy > H + 60 || size > 180) {
+        respawn(t, false);
+        return;
+      }
+
+      const hue = (t.h + hueDrift) % 360;
+      const alpha = clamp(t.a * (1.2 - t.z), 0.05, 0.38);
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(t.rot);
+      ctx.fillStyle = `hsla(${hue.toFixed(1)} ${t.s.toFixed(1)}% ${t.l.toFixed(1)}% / ${alpha.toFixed(3)})`;
+      ctx.fillRect(-size * 0.5, -size * 0.5, size, size);
+      ctx.strokeStyle = `hsla(${(hue + 30).toFixed(1)} 42% 20% / ${Math.min(0.18, alpha * 0.8).toFixed(3)})`;
+      ctx.lineWidth = Math.max(0.6, size * 0.03);
+      ctx.strokeRect(-size * 0.5, -size * 0.5, size, size);
+      ctx.restore();
+    }
+
+    function renderFrame(dt) {
+      ctx.fillStyle = 'hsla(38 28% 97% / 0.11)';
+      ctx.fillRect(0, 0, W, H);
+      hueDrift += dt * 8.5;
+      for (let i = 0; i < tiles.length; i++) drawTile(tiles[i], dt);
+    }
+
+    function tick(ts) {
+      if (!running) return;
+      if (!lastTs) lastTs = ts;
+      const dt = clamp((ts - lastTs) / 1000, 1 / 120, 1 / 24);
+      lastTs = ts;
+      renderFrame(dt);
+      rafId = window.requestAnimationFrame(tick);
+    }
+
+    function setRunning(on) {
+      running = on;
+      if (running) {
+        lastTs = 0;
+        rafId = window.requestAnimationFrame(tick);
+      } else if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function resetBackground() {
+      ctx.fillStyle = 'hsl(38 28% 97%)';
+      ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 40; i++) renderFrame(1 / 60);
+    }
+
+    canvas.addEventListener('click', () => setRunning(!running));
+    resetBackground();
+    setRunning(true);
+  }
+
   function initMulLab() {
     const root = document.getElementById('mul-ood-lab');
     if (!root) return;
@@ -1631,6 +1738,7 @@
   }
 
   function initAllLabs() {
+    initCreativityTilesLab();
     initMulLab();
     initQuiltLab();
     initPicbreedLab();

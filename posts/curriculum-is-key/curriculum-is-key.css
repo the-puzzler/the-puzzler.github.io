@@ -47,6 +47,23 @@
   background: color-mix(in srgb, var(--bg) 97%, #ffffff 3%);
 }
 
+.creativity-tiles-lab {
+  margin: 10px 0 16px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#creativity-tiles-canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  display: block;
+  cursor: pointer;
+}
+
 .principles-divider {
   margin: 12px 0 10px;
 }
