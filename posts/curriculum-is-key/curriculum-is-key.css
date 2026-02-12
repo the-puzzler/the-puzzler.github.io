@@ -1,0 +1,48 @@
+/* Post-specific styles for Curriculum Is Key */
+.def-table-wrap {
+  margin: 10px 0 18px;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--rule) 65%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 94%, #ffffff 6%);
+}
+
+.def-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 560px;
+  background: transparent;
+}
+
+.def-table th,
+.def-table td {
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+  padding: 11px 14px;
+  vertical-align: top;
+}
+
+.def-table th {
+  text-align: left;
+  font-size: 0.86rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--bg) 90%, #ffffff 10%);
+}
+
+.def-table td:first-child {
+  white-space: normal;
+  font-weight: 700;
+  width: 34%;
+}
+
+.def-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.def-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg) 97%, #ffffff 3%);
+}

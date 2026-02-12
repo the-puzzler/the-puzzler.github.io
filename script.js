@@ -120,6 +120,150 @@ function normalizeHeadings(root) {
   });
 }
 
+let tocTeardown = null;
+
+function ensurePostTOCScaffold(contentEl) {
+  let toc = document.getElementById('post-toc');
+  let nav = document.getElementById('toc-nav');
+  if (toc && nav) return { toc, nav };
+
+  const page = contentEl?.closest('.page');
+  if (!page) return { toc: null, nav: null };
+
+  let layout = page.closest('.post-layout');
+  if (!layout) {
+    layout = document.createElement('main');
+    layout.className = 'post-layout';
+    page.parentNode.insertBefore(layout, page);
+    layout.appendChild(page);
+  }
+
+  if (!toc) {
+    toc = document.createElement('aside');
+    toc.id = 'post-toc';
+    toc.className = 'post-toc';
+    toc.setAttribute('aria-label', 'Table of contents');
+    toc.hidden = true;
+    toc.innerHTML = '<div class="toc-card"><h2>Contents</h2><nav id="toc-nav"></nav></div>';
+    layout.appendChild(toc);
+  }
+
+  nav = toc.querySelector('#toc-nav');
+  return { toc, nav };
+}
+
+function clearPostTOC() {
+  if (typeof tocTeardown === 'function') tocTeardown();
+  tocTeardown = null;
+  const toc = document.getElementById('post-toc');
+  const nav = document.getElementById('toc-nav');
+  if (nav) nav.innerHTML = '';
+  if (toc) toc.hidden = true;
+}
+
+function slugifyHeading(s) {
+  return (s || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'section';
+}
+
+function buildPostTOC(contentEl) {
+  const { toc, nav } = ensurePostTOCScaffold(contentEl);
+  if (!toc || !nav || !contentEl) return;
+
+  clearPostTOC();
+
+  const headings = $$('h2, h3', contentEl).filter(h => h.textContent.trim().length);
+  if (headings.length < 2) return;
+
+  const usedIds = new Set();
+  for (const h of headings) {
+    if (!h.id) {
+      const base = slugifyHeading(h.textContent);
+      let id = base;
+      let i = 2;
+      while (usedIds.has(id) || document.getElementById(id)) id = `${base}-${i++}`;
+      h.id = id;
+    }
+    usedIds.add(h.id);
+  }
+
+  const ul = document.createElement('ul');
+  ul.className = 'toc-list';
+
+  for (const h of headings) {
+    const li = document.createElement('li');
+    li.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+    const a = document.createElement('a');
+    a.href = `#${h.id}`;
+    a.textContent = h.textContent.trim();
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      history.replaceState(null, '', `#${h.id}`);
+      // Collapse hover panel after mouse click (avoid sticky focus-within state)
+      a.blur();
+    });
+    li.appendChild(a);
+    ul.appendChild(li);
+  }
+
+  nav.appendChild(ul);
+  toc.hidden = false;
+
+  let roller = toc.querySelector('.toc-roller');
+  if (!roller) {
+    roller = document.createElement('div');
+    roller.className = 'toc-roller';
+    roller.innerHTML = `
+      <div class="toc-roller-line toc-roller-prev2"></div>
+      <div class="toc-roller-line toc-roller-prev"></div>
+      <div class="toc-roller-line toc-roller-current"></div>
+      <div class="toc-roller-line toc-roller-next"></div>
+      <div class="toc-roller-line toc-roller-next2"></div>
+    `;
+    toc.insertBefore(roller, toc.firstChild);
+  }
+  const rollerPrev2 = roller.querySelector('.toc-roller-prev2');
+  const rollerPrev = roller.querySelector('.toc-roller-prev');
+  const rollerCurrent = roller.querySelector('.toc-roller-current');
+  const rollerNext = roller.querySelector('.toc-roller-next');
+  const rollerNext2 = roller.querySelector('.toc-roller-next2');
+
+  const links = $$('a', ul);
+  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const topOffset = 120;
+
+  const updateActive = () => {
+    let activeIndex = 0;
+    for (let i = 0; i < headings.length; i++) {
+      if (headings[i].getBoundingClientRect().top - topOffset <= 0) activeIndex = i;
+      else break;
+    }
+    const active = headings[activeIndex];
+    links.forEach(a => a.classList.remove('active'));
+    byId.get(active.id)?.classList.add('active');
+    rollerPrev2.textContent = headings[activeIndex - 2]?.textContent.trim() || '';
+    rollerPrev.textContent = headings[activeIndex - 1]?.textContent.trim() || '';
+    rollerCurrent.textContent = active.textContent.trim() || 'Contents';
+    rollerNext.textContent = headings[activeIndex + 1]?.textContent.trim() || '';
+    rollerNext2.textContent = headings[activeIndex + 2]?.textContent.trim() || '';
+  };
+
+  window.addEventListener('scroll', updateActive, { passive: true });
+  window.addEventListener('resize', updateActive);
+  updateActive();
+
+  tocTeardown = () => {
+    window.removeEventListener('scroll', updateActive);
+    window.removeEventListener('resize', updateActive);
+  };
+}
+
 // -----------------------------
 // Book mode (soft page breaks, keep-with-next for headings)
 // -----------------------------
@@ -400,7 +544,10 @@ async function renderPost() {
   const contentEl = document.querySelector('.page');
 
   // If no "p" param, we are on Home (already handled by index.html + renderList)
-  if (!p) return;
+  if (!p) {
+    clearPostTOC();
+    return;
+  }
 
   // Clear listing if we are showing a post
   const listEl = document.getElementById('post-list');
@@ -630,6 +777,7 @@ async function renderPost() {
 
     // Stable heading text before any measuring
     normalizeHeadings(contentEl);
+    buildPostTOC(contentEl);
 
     // Typeset math first for accurate heights
     await typesetAfterLoad(contentEl);
@@ -690,6 +838,7 @@ async function renderPost() {
 
   } catch (e) {
     console.error(e);
+    clearPostTOC();
     contentEl.innerHTML = `<p>Failed to load post.</p>`;
   }
 }

@@ -7,8 +7,8 @@
   <title>the-puzzler — Post</title>
   <meta name="description" content="Blog post · the-puzzler">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>M</text></svg>">
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="styles.css?v=20260212h">
+  <script defer src="script.js?v=20260212h"></script>
   <!-- MathJax v3 config -->
   <script>
     window.MathJax = {
@@ -45,11 +45,20 @@
       </nav>
     </header>
 
-    <article class="page post">
-      <div id="post-content">
-        <!-- Post content is loaded here from /posts/*.html -->
-      </div>
-    </article>
+    <main class="post-layout">
+      <article class="page post">
+        <div id="post-content">
+          <!-- Post content is loaded here from /posts/*.html -->
+        </div>
+      </article>
+
+      <aside id="post-toc" class="post-toc" aria-label="Table of contents" hidden>
+        <div class="toc-card">
+          <h2>Contents</h2>
+          <nav id="toc-nav"></nav>
+        </div>
+      </aside>
+    </main>
 
 
   </div>
