@@ -154,12 +154,40 @@
 </p>
 
 <p>
-  Picbreeder is an open-ended experiment in which users select images they like the look of iteratively. Under the hood, each image is represented by a CPPN (compositional pattern producing network). CPPNs are evolved using NEAT, a topology search algorithm. Every time the user clicks on images they find appealing (by whatever instantaneous metric they desire), the networks producing those images are bred. This in turn produces more images and the process goes on. After a few iterations the networks can produce interesting and recognisable shapes.
+  Picbreeder is an open-ended experiment in which users select images they like the look of iteratively. Under the hood, each image is represented by a CPPN (compositional pattern producing network). CPPNs are evolved using NEAT, a topology search algorithm. Every time the user clicks on images they find appealing (by whatever instantaneous metric they desire), the networks producing those images are bred. This in turn produces more images and the process goes on. After a few iterations the networks can produce interesting and recognisable shapes like this one:
 </p>
 <img src="posts/curriculum-is-key/images/skull.png" alt="Picbreeder skull image" style="display:block; margin:20px auto; max-width:100%; height:auto;">
 <p>
   The Picbreeder process followed those same underlying principles as POET. The users did not have an over-arching goal. This meant that every round of selection was a local competition in the direction of the user's interest at that moment. The user might see some aspect that has emerged suddenly, and completely change the course of the optimisation.
 </p>
+
+<section id="picbreed-lab" class="pic-lab">
+  <h3>Interactive Mini-Lab: Picbreeder-Lite</h3>
+  <p class="pic-sub">
+    Pick images you like, breed the next generation, and watch open-ended drift emerge from local selection.
+  </p>
+
+  <div class="pic-controls">
+    <button id="pic-next-btn" type="button">Breed Next Gen</button>
+    <button id="pic-random-btn" type="button">Curated Restart</button>
+    <span class="pic-gen">Generation <strong id="pic-gen">0</strong></span>
+    <label>Mut rate <input id="pic-mut-rate" type="range" min="0.02" max="0.35" step="0.01" value="0.12"></label>
+    <label>Mut mag <input id="pic-mut-mag" type="range" min="0.03" max="0.5" step="0.01" value="0.16"></label>
+    <label>Topo <input id="pic-topo-rate" type="range" min="0.00" max="0.25" step="0.01" value="0.05"></label>
+  </div>
+
+  <div id="pic-grid" class="pic-grid"></div>
+
+  <div class="pic-perturb">
+    <h4>Perturbation View (selected favourite)</h4>
+    <div class="pic-perturb-controls">
+      <label>Perturb scale <input id="pic-perturb-scale" type="range" min="0.00" max="0.40" step="0.01" value="0.12"></label>
+      <button id="pic-perturb-param-btn" type="button">Change Parameter</button>
+      <span id="pic-perturb-param" class="pic-perturb-param">param: -</span>
+    </div>
+    <div id="pic-perturb-row" class="pic-perturb-row"></div>
+  </div>
+</section>
 
 <p>
   Now, in the FERH paper, the authors trained another network by backpropagation to reproduce the above image. Its sole objective was the immediate reconstruction of this image. It was able to create an identical image. The major difference however was only revealed upon weight perturbations. Weight perturbations are a reasonable test of robustness because under new challenges, one expects robust representations to still be useful, just requiring a small amount of reconfiguration. The image produced by Picbreeder was very reasonable under different weight changes.
@@ -187,6 +215,64 @@
 <p>
   This is shown in <a href="https://docnum.univ-lorraine.fr/public/DDOC_T_2020_0087_GAIER.pdf#page=108.32" target="_blank" rel="noopener noreferrer">Accelerating Evolutionary Design</a>[...]. In this thesis, the author re-attempts the reconstruction challenge on the skull image above. However, instead of using backpropagation, they use NEAT. NEAT is a much weaker optimisation tool compared to backpropagation for reconstruction tasks. This is due to the fact NEAT is an evolutionary method and hence does not receive gradients that directly guide to minimising the reconstruction loss. The author compares using NEAT with MAP-Elites against NEAT with a direct reconstruction objective.
 </p>
+
+<section id="maze-qd-lab" class="maze-lab">
+  <button class="maze-help-btn" type="button" aria-label="What is this demo doing?">?</button>
+  <div class="maze-help-tip">
+    Left panel: MAP-Elites. Right panel: direct objective search (single best-so-far optimiser to goal).<br>
+    Controller genotype: linear policy with 9 local features (free N/E/S/W, visited N/E/S/W, bias) and 4 action heads (N/E/S/W) plus epsilon-greedy exploration.<br>
+    MAP-Elites descriptor: endpoint cell (x,y). Local fitness inside each cell: faster arrival (fewer steps), with a goal bonus.<br>
+    MAP-Elites variation: mostly mutate an elite, sometimes crossover two elites first, then mutate. Occasional random genomes maintain novelty.<br>
+    Direct search: mutation-only hill-climb on one best-so-far genome using distance-to-goal as main signal.<br>
+    Blue heat/cells indicate explored endpoints or filled niches. Each click/step runs one rollout per method.
+  </div>
+  <h3>Interactive Mini-Lab: MAP-Elites Maze</h3>
+  <p class="maze-sub">
+    Behaviour descriptor = endpoint cell. Local fitness = how quickly that endpoint was reached.
+  </p>
+
+  <div class="maze-controls">
+    <button id="maze-step-btn" type="button">Step</button>
+    <button id="maze-run-btn" type="button">Run</button>
+    <button id="maze-reset-btn" type="button">Reset</button>
+    <label>Maze size <input id="maze-size" type="range" min="15" max="27" step="2" value="15"><output id="maze-size-out">15</output></label>
+    <label>Speed <input id="maze-speed" type="range" min="1" max="40" step="1" value="10"></label>
+    <label>Mutation σ <input id="maze-sigma" type="range" min="0.02" max="0.40" step="0.01" value="0.14"></label>
+  </div>
+
+  <div class="maze-meta">
+    <span>Coverage: <strong id="maze-coverage">0%</strong></span>
+    <span>Total evals (both): <strong id="maze-evals">0</strong></span>
+  </div>
+
+  <div class="maze-stats">
+    <div class="maze-stat-col">
+      <h4>MAP-Elites</h4>
+      <span>Best distance-to-goal: <strong id="maze-map-best-dist">-</strong></span>
+      <span>Best-attempt steps: <strong id="maze-map-best-dist-steps">-</strong></span>
+      <span>Best solved path steps: <strong id="maze-map-goal-steps">-</strong></span>
+      <span>First solve at eval: <strong id="maze-map-solve-eval">-</strong></span>
+    </div>
+    <div class="maze-stat-col">
+      <h4>Direct Objective Search</h4>
+      <span>Best distance-to-goal: <strong id="maze-direct-best-dist">-</strong></span>
+      <span>Best-attempt steps: <strong id="maze-direct-best-dist-steps">-</strong></span>
+      <span>Best solved path steps: <strong id="maze-direct-goal-steps">-</strong></span>
+      <span>First solve at eval: <strong id="maze-direct-solve-eval">-</strong></span>
+    </div>
+  </div>
+
+  <div class="maze-panels">
+    <div>
+      <h4>MAP-Elites Archive</h4>
+      <canvas id="maze-archive" width="340" height="340" aria-label="MAP-Elites maze archive"></canvas>
+    </div>
+    <div>
+      <h4>Direct Objective Search</h4>
+      <canvas id="maze-direct" width="340" height="340" aria-label="Direct objective maze search"></canvas>
+    </div>
+  </div>
+</section>
 
 <p>
   MAP-Elites is a member of a family of methods called Quality-Diversity. The aim of a Quality-Diversity algorithm is not to solve any particular objective. It is instead, to create many local competitions in the phenotypic output space allowed for by the environment. For example, in the case of a maze solving robot task.
