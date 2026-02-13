@@ -958,114 +958,101 @@
       return { mse: mse / pairs.length, preds };
     }
 
-    function drawScatter(pairs, preds) {
+    function buildGridDigits() {
+      const lo = intInRange(trainMinEl.value, 1, 20, 1);
+      const hi = intInRange(trainMaxEl.value, 1, 20, 5);
+      const a = Math.min(lo, hi);
+      const b = Math.max(lo, hi);
+      const digits = [];
+      for (let d = a; d <= b; d++) digits.push(d);
+      if (!digits.includes(currentHoldout)) digits.push(currentHoldout);
+      digits.sort((x, y) => x - y);
+      return digits;
+    }
+
+    function drawScatter(digits, pairs, preds) {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       const W = canvas.width;
       const Hc = canvas.height;
-      const pad = { l: 56, r: 18, t: 20, b: 40 };
+      const pad = { l: 48, r: 14, t: 14, b: 30 };
 
       ctx.clearRect(0, 0, W, Hc);
       ctx.fillStyle = 'rgba(255,255,255,0.28)';
       ctx.fillRect(0, 0, W, Hc);
+      const n = digits.length;
+      if (!n || pairs.length !== preds.length) return;
 
-      // Merge duplicate true values (e.g. (9,2) and (2,9)) so each x appears once.
-      const byTrue = new Map();
+      const gridSize = Math.min(W - pad.l - pad.r, Hc - pad.t - pad.b) * 0.9;
+      const gx = pad.l + Math.max(0, ((W - pad.l - pad.r) - gridSize) * 0.5);
+      const gy = pad.t + Math.max(0, ((Hc - pad.t - pad.b) - gridSize) * 0.5);
+      const cell = gridSize / n;
+
+      let maxErr = 0;
       for (let i = 0; i < pairs.length; i++) {
-        const t = pairs[i].y;
-        if (!byTrue.has(t)) byTrue.set(t, []);
-        byTrue.get(t).push(preds[i]);
+        const e = Math.abs(preds[i] - pairs[i].y);
+        if (e > maxErr) maxErr = e;
       }
-      const ptsData = Array.from(byTrue.entries())
-        .map(([trueY, ps]) => ({
-          trueY: Number(trueY),
-          predY: ps.reduce((a, b) => a + b, 0) / ps.length
-        }))
-        .sort((a, b) => a.trueY - b.trueY);
+      maxErr = Math.max(1e-6, maxErr);
 
-      const xs = ptsData.map(p => p.trueY); // true
-      const ys = ptsData.map(p => p.predY); // predicted
-      const xMin = 0;
-      const yMin = 0;
-      const maxVal = Math.max(81, ...xs, ...ys.map(v => Math.max(0, v)));
-      const xMax = maxVal * 1.05;
-      const yMax = maxVal * 1.05;
+      const holdoutIdx = digits.indexOf(currentHoldout);
 
-      const sx = (x) => pad.l + (x - xMin) / (xMax - xMin) * (W - pad.l - pad.r);
-      const sy = (y) => Hc - pad.b - (y - yMin) / (yMax - yMin) * (Hc - pad.t - pad.b);
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const idx = r * n + c;
+          const p = pairs[idx];
+          const pred = preds[idx];
+          const err = Math.abs(pred - p.y);
+          const t = Math.min(1, err / maxErr);
+          const x = gx + c * cell;
+          const y = gy + r * cell;
 
-      ctx.strokeStyle = 'rgba(120,120,120,0.28)';
-      ctx.lineWidth = 1;
-      const yTickVals = Array.from(new Set(ys.map(v => Math.round(v * 10) / 10))).sort((a, b) => a - b);
-      const xTickVals = Array.from(new Set(xs)).sort((a, b) => a - b);
-      for (const gy of yTickVals) {
-        const py = sy(gy);
-        ctx.beginPath();
-        ctx.moveTo(pad.l, py);
-        ctx.lineTo(W - pad.r, py);
-        ctx.stroke();
-      }
-      for (const gx of xTickVals) {
-        const px = sx(gx);
-        ctx.beginPath();
-        ctx.moveTo(px, Hc - pad.b);
-        ctx.lineTo(px, pad.t);
-        ctx.stroke();
+          const light = 88 - t * 38;
+          ctx.fillStyle = `hsl(${120 - t * 120} 72% ${light}%)`;
+          ctx.fillRect(x, y, cell, cell);
+          ctx.strokeStyle = 'rgba(60,60,60,0.18)';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x, y, cell, cell);
+
+          if (cell >= 20) {
+            const rounded = Math.round(pred * 10) / 10;
+            const isInt = Math.abs(rounded - Math.round(rounded)) < 1e-6;
+            ctx.fillStyle = t > 0.55 ? 'rgba(255,255,255,0.92)' : 'rgba(24,24,24,0.9)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `${Math.max(10, Math.floor(cell * 0.24))}px EB Garamond, serif`;
+            ctx.fillText(isInt ? String(Math.round(rounded)) : rounded.toFixed(1), x + cell * 0.5, y + cell * 0.52);
+          }
+        }
       }
 
-      ctx.strokeStyle = 'rgba(80,80,80,0.7)';
-      ctx.beginPath();
-      ctx.moveTo(pad.l, Hc - pad.b);
-      ctx.lineTo(W - pad.r, Hc - pad.b);
-      ctx.moveTo(pad.l, Hc - pad.b);
-      ctx.lineTo(pad.l, pad.t);
-      ctx.stroke();
-
-      // Ideal diagonal y = x
-      ctx.strokeStyle = 'rgba(190,80,80,0.85)';
-      ctx.lineWidth = 1.6;
-      ctx.setLineDash([5, 4]);
-      ctx.beginPath();
-      ctx.moveTo(sx(xMin), sy(xMin));
-      ctx.lineTo(sx(Math.min(xMax, yMax)), sy(Math.min(xMax, yMax)));
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      const pts = ptsData.map(p => ({ x: sx(p.trueY), y: sy(p.predY) }));
-
-      // Connect points left->right
-      ctx.strokeStyle = '#5a86d8';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      for (let i = 0; i < pts.length; i++) {
-        if (i === 0) ctx.moveTo(pts[i].x, pts[i].y);
-        else ctx.lineTo(pts[i].x, pts[i].y);
-      }
-      ctx.stroke();
-
-      ctx.fillStyle = '#2d4d8c';
-      for (const pt of pts) {
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 3.2, 0, Math.PI * 2);
-        ctx.fill();
+      if (holdoutIdx >= 0) {
+        const hy = gy + holdoutIdx * cell;
+        const hx = gx + holdoutIdx * cell;
+        ctx.strokeStyle = 'rgba(180, 48, 48, 0.95)';
+        ctx.lineWidth = Math.max(1.5, cell * 0.06);
+        ctx.strokeRect(gx, hy, gridSize, cell);
+        ctx.strokeRect(hx, gy, cell, gridSize);
       }
 
-      ctx.fillStyle = 'rgba(50,50,50,0.82)';
+      ctx.fillStyle = 'rgba(44,44,44,0.9)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = `${Math.max(11, Math.floor(cell * 0.34))}px EB Garamond, serif`;
+      for (let i = 0; i < n; i++) {
+        const cx = gx + i * cell + cell * 0.5;
+        const cy = gy + i * cell + cell * 0.5;
+        ctx.fillText(String(digits[i]), cx, gy - Math.max(8, cell * 0.28));
+        ctx.fillText(String(digits[i]), gx - Math.max(10, cell * 0.35), cy);
+      }
+
+      ctx.fillStyle = 'rgba(55,55,55,0.84)';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'alphabetic';
       ctx.font = '12px EB Garamond, serif';
-      // Axis labels
-      ctx.fillText('x: true product (OOD pairs)', W - 170, Hc - 14);
-      ctx.fillText('y: predicted product', 12, 16);
-
-      // Numeric ticks
-      ctx.font = '11px EB Garamond, serif';
-      ctx.fillStyle = 'rgba(70,70,70,0.9)';
-      for (const xv of xTickVals) {
-        const px = sx(xv);
-        ctx.fillText(String(Math.round(xv)), px - 8, Hc - pad.b + 14);
-      }
-      for (const yv of yTickVals) {
-        const py = sy(yv);
-        ctx.fillText(String(Math.round(yv)), pad.l - 28, py + 4);
+      ctx.fillText('a × b grid: cell text = prediction, colour = |prediction - truth|', 12, 16);
+      if (holdoutIdx >= 0) {
+        ctx.fillText(`red outlines mark row/column for holdout ${currentHoldout}`, 12, Hc - 10);
       }
     }
 
@@ -1074,7 +1061,13 @@
       const ood = evalPairs(m, oodPairs);
       trainMseEl.textContent = tr.mse.toFixed(4);
       oodMseEl.textContent = ood.mse.toFixed(4);
-      drawScatter(oodPairs, ood.preds);
+      const digits = buildGridDigits();
+      const gridPairs = [];
+      for (const a of digits) {
+        for (const b of digits) gridPairs.push({ a, b, y: a * b });
+      }
+      const gridEval = evalPairs(m, gridPairs);
+      drawScatter(digits, gridPairs, gridEval.preds);
       if (epochText) queryOut.textContent = epochText;
     }
 
