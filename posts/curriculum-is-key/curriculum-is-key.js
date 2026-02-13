@@ -2,6 +2,451 @@
 // Tiny in-browser experiment: train on 1..5 multiplication, hold out 9 (OOD).
 
 (function () {
+  function initPoetFlowLab() {
+    const root = document.getElementById('poet-flow-lab');
+    if (!root) return;
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const canvas = root.querySelector('#poet-flow-canvas');
+    const playBtn = root.querySelector('#poet-play-btn');
+    const prevBtn = root.querySelector('#poet-prev-btn');
+    const nextBtn = root.querySelector('#poet-next-btn');
+    const ctx = canvas.getContext('2d');
+    const W = 900;
+    const H = 260;
+    const TAU = Math.PI * 2;
+    const TOTAL_STEPS = 5;
+    const STEP_DURATION = [3.0, 4.2, 4.0, 4.0, 4.9];
+    const PAIR_A_X = 72;
+    const PAIR_A_Y = 84;
+    const PAIR_A_DIFF = 0.24;
+    const PAIR_A_ALPHA = 1;
+
+    let running = true;
+    let rafId = null;
+    let lastTs = 0;
+    let t = 0;
+    let step = 0;
+    let stepStartT = 0;
+    let scaleX = 1;
+    let scaleY = 1;
+
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function lerp(a, b, p) { return a + (b - a) * p; }
+    function smooth(p) { return p * p * (3 - 2 * p); }
+
+    // Stable jagged reward trajectory (generated once, then revealed over time).
+    const rewardPts = [];
+    {
+      let v = 0.04;
+      for (let i = 0; i < 36; i++) {
+        const up = 0.012 + Math.random() * 0.042;
+        const down = Math.random() < 0.22 ? Math.random() * 0.03 : 0;
+        v = clamp(v + up - down, 0, 1);
+        rewardPts.push(v);
+      }
+      rewardPts[rewardPts.length - 1] = Math.max(rewardPts[rewardPts.length - 1], 0.84);
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    }
+
+    function drawArrow(x0, y0, x1, y1, alpha = 0.28, warm = false, pulse = 0) {
+      const hue = warm ? 30 : 206;
+      const sat = warm ? 74 : 44;
+      const lit = warm ? 42 : 34;
+      ctx.strokeStyle = `hsla(${hue} ${sat}% ${lit}% / ${alpha + pulse * 0.4})`;
+      ctx.lineWidth = 1.2 + pulse * 1.3;
+      ctx.beginPath();
+      ctx.moveTo(x0, y0);
+      ctx.lineTo(x1, y1);
+      ctx.stroke();
+      const a = Math.atan2(y1 - y0, x1 - x0);
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 - Math.cos(a - 0.46) * 8, y1 - Math.sin(a - 0.46) * 8);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x1 - Math.cos(a + 0.46) * 8, y1 - Math.sin(a + 0.46) * 8);
+      ctx.stroke();
+    }
+
+    function drawEnvGlyph(x, y, w, h, difficulty = 0, alpha = 1) {
+      roundedRect(x, y, w, h, 8);
+      ctx.fillStyle = `hsla(212 36% 86% / ${0.35 * alpha})`;
+      ctx.fill();
+      ctx.strokeStyle = `hsla(208 18% 28% / ${0.30 * alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      const by = y + h * 0.68;
+      ctx.strokeStyle = `hsla(208 22% 30% / ${0.48 * alpha})`;
+      ctx.lineWidth = 1.15;
+      ctx.beginPath();
+      for (let i = 0; i <= 26; i++) {
+        const px = x + (i / 26) * w;
+        const py = by - Math.sin((i / 26) * Math.PI * (2.1 + difficulty * 2.1)) * (4 + difficulty * 6.5);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    }
+
+    function drawAgent(x, y, alpha = 1, hue = 35) {
+      ctx.fillStyle = `hsla(${hue} 76% 44% / ${0.35 + 0.55 * alpha})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 8.2, 0, TAU);
+      ctx.fill();
+      ctx.strokeStyle = `hsla(${hue} 70% 30% / ${0.28 + 0.48 * alpha})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+
+    function drawPairCard(x, y, label, difficulty, alpha = 1) {
+      // Minimal pair rendering: no card container, just env + agent.
+      drawEnvGlyph(x + 14, y + 34, 88, 42, difficulty, alpha);
+      drawAgent(x + 116, y + 55, alpha);
+      ctx.fillStyle = `hsla(208 18% 24% / ${0.65 + 0.28 * alpha})`;
+      ctx.textAlign = 'left';
+      ctx.font = '12px EB Garamond, serif';
+      ctx.fillText(label, x + 12, y + 20);
+    }
+
+    function drawRewardGraph(x, y, w, h, p) {
+      roundedRect(x, y, w, h, 8);
+      ctx.fillStyle = 'hsla(0 0% 100% / 0.50)';
+      ctx.fill();
+      ctx.strokeStyle = 'hsla(208 18% 28% / 0.24)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.translate(x + 13, y + h * 0.52);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = 'hsla(208 18% 24% / 0.74)';
+      ctx.font = '12px EB Garamond, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Reward', 0, 0);
+      ctx.restore();
+
+      const thresholdY = y + h * 0.34;
+      ctx.strokeStyle = 'hsla(8 68% 42% / 0.55)';
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(x + 8, thresholdY);
+      ctx.lineTo(x + w - 8, thresholdY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const shown = Math.max(2, Math.floor(lerp(2, rewardPts.length, p)));
+      ctx.strokeStyle = 'hsla(208 42% 36% / 0.90)';
+      ctx.lineWidth = 1.9;
+      ctx.beginPath();
+      for (let i = 0; i < shown; i++) {
+        const q = i / (rewardPts.length - 1);
+        const gx = x + 8 + q * (w - 16);
+        const gy = y + h - 10 - rewardPts[i] * (h - 22);
+        if (i === 0) ctx.moveTo(gx, gy);
+        else ctx.lineTo(gx, gy);
+      }
+      ctx.stroke();
+      return shown >= rewardPts.length - 1;
+    }
+
+    function drawGate(x, y, pass, alpha = 1) {
+      roundedRect(x - 64, y - 22, 128, 44, 8);
+      ctx.fillStyle = `hsla(0 0% 100% / ${0.35 + 0.25 * alpha})`;
+      ctx.fill();
+      ctx.strokeStyle = `hsla(208 18% 28% / ${0.20 + 0.24 * alpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = `hsla(208 18% 24% / ${0.75 + 0.20 * alpha})`;
+      ctx.font = '12px EB Garamond, serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('novel + learnable?', x, y - 2);
+      ctx.fillStyle = pass ? `hsla(132 50% 34% / ${0.85 * alpha})` : `hsla(18 62% 38% / ${0.85 * alpha})`;
+      ctx.fillText(pass ? 'pass' : 'fail', x, y + 14);
+    }
+
+    function drawTick(x, y, alpha = 1) {
+      ctx.strokeStyle = `hsla(132 56% 35% / ${0.45 + 0.45 * alpha})`;
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(x - 8, y);
+      ctx.lineTo(x - 1, y + 7);
+      ctx.lineTo(x + 10, y - 8);
+      ctx.stroke();
+    }
+
+    function drawToken(x0, y0, x1, y1, p) {
+      const x = lerp(x0, x1, p);
+      const y = lerp(y0, y1, p);
+      // Keep transfer line visually stable while token moves once.
+      drawArrow(x0, y0, x1, y1, 0.26, true, 0);
+      ctx.fillStyle = 'hsla(40 80% 48% / 0.78)';
+      ctx.beginPath();
+      ctx.arc(x, y, 4.1, 0, TAU);
+      ctx.fill();
+    }
+
+    function drawCurvedAgentTransfer(x0, y0, cx, cy, x1, y1, p, hue = 35, alpha = 1) {
+      const q = 1 - p;
+      const x = q * q * x0 + 2 * q * p * cx + p * p * x1;
+      const y = q * q * y0 + 2 * q * p * cy + p * p * y1;
+      drawAgent(x, y, alpha, hue);
+    }
+
+    function drawStage() {
+      ctx.setTransform(scaleX, 0, 0, scaleY, 0, 0);
+      ctx.fillStyle = 'hsl(39 26% 97%)';
+      ctx.fillRect(0, 0, W, H);
+      const u = Math.max(0, t - stepStartT);
+
+      if (step === 0) {
+        // Start centred; env + agent appear individually with labels, labels fade, then move as a pair left.
+        const cx = W * 0.5;
+        const cy = H * 0.5;
+        const pEnv = clamp(u / 0.7, 0, 1);
+        const pAgent = clamp((u - 0.35) / 0.7, 0, 1);
+        const pHideLabels = clamp((u - 1.2) / 0.6, 0, 1);
+        const pMove = smooth(clamp((u - 1.6) / 1.2, 0, 1));
+        // Interpolate to the exact pair-A anchor used in steps 1 and 2.
+        const envStartX = cx - 120;
+        const envStartY = cy - 24;
+        const envEndX = PAIR_A_X + 14;
+        const envEndY = PAIR_A_Y + 34;
+        const agentStartX = cx + 52;
+        const agentStartY = cy - 3;
+        const agentEndX = PAIR_A_X + 116;
+        const agentEndY = PAIR_A_Y + 55;
+        const envX = lerp(envStartX, envEndX, pMove);
+        const envY = lerp(envStartY, envEndY, pMove);
+        const agentX = lerp(agentStartX, agentEndX, pMove);
+        const agentY = lerp(agentStartY, agentEndY, pMove);
+
+        // Use the same env glyph size as steps 1/2 to avoid end-of-step snap.
+        drawEnvGlyph(envX, envY, 88, 42, 0.22, pEnv);
+        drawAgent(agentX, agentY, pAgent);
+
+        const labelAlpha = 1 - pHideLabels;
+        if (labelAlpha > 0.01) {
+          ctx.fillStyle = `hsla(208 18% 24% / ${(0.85 * labelAlpha).toFixed(3)})`;
+          ctx.font = '12px EB Garamond, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('environment', envX, envY - 10);
+          ctx.fillText('agent', agentX + 16, agentY + 5);
+        }
+
+        // Fade in pair label so step 1 starts visually identical.
+        const pairLabelAlpha = clamp((pMove - 0.55) / 0.45, 0, 1);
+        if (pairLabelAlpha > 0.01) {
+          ctx.fillStyle = `hsla(208 18% 24% / ${(0.72 * pairLabelAlpha).toFixed(3)})`;
+          ctx.font = '12px EB Garamond, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('pair A', PAIR_A_X + 12, PAIR_A_Y + 20);
+        }
+      } else if (step === 1) {
+        // Pair fixed left, reward graph grows jaggedly, then solved appears.
+        drawPairCard(PAIR_A_X, PAIR_A_Y, 'pair A', PAIR_A_DIFF, PAIR_A_ALPHA);
+        const pg = clamp((u - 0.25) / 2.4, 0, 1);
+        const solved = drawRewardGraph(300, 84, 260, 100, pg);
+        if (solved) {
+          const pulse = 0.5 + 0.5 * Math.sin((u - 2.7) * 8);
+          ctx.fillStyle = `hsla(132 52% 34% / ${(0.55 + 0.35 * pulse).toFixed(3)})`;
+          ctx.font = '16px EB Garamond, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('solved', 578, 133);
+        }
+      } else if (step === 2) {
+        // Environment search: candidates appear one-by-one; last one passes.
+        // Keep pair A anchored exactly where step 1 ends to avoid snap.
+        drawPairCard(PAIR_A_X, PAIR_A_Y, 'pair A', PAIR_A_DIFF, PAIR_A_ALPHA);
+
+        // Smooth handoff: briefly fade out prior solved reward graph.
+        const fadePrev = clamp(1 - u / 0.8, 0, 1);
+        if (fadePrev > 0.01) {
+          ctx.save();
+          ctx.globalAlpha = fadePrev;
+          drawRewardGraph(300, 84, 260, 100, 1);
+          ctx.fillStyle = 'hsla(132 52% 34% / 0.9)';
+          ctx.font = '16px EB Garamond, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText('solved', 578, 133);
+          ctx.restore();
+        }
+
+        const ys = [26, 92, 158];
+        for (let i = 0; i < 3; i++) {
+          const pa = clamp((u - i * 0.7) / 0.6, 0, 1);
+          if (pa <= 0.01) continue;
+          drawEnvGlyph(500, ys[i] + 20, 116, 54, 0.35 + i * 0.25, pa);
+          ctx.fillStyle = `hsla(208 18% 24% / ${(0.72 * pa).toFixed(3)})`;
+          ctx.font = '12px EB Garamond, serif';
+          ctx.textAlign = 'left';
+          ctx.fillText(`candidate env ${i + 1}`, 500, ys[i] + 14);
+          drawArrow(214, 132, 500, ys[i] + 47, 0.10 + pa * 0.08);
+          const pass = (i === 2) && u > 2.2;
+          drawGate(742, ys[i] + 47, pass, pa);
+          if (pass) drawTick(812, ys[i] + 46, 0.9);
+        }
+      } else if (step === 3) {
+        // Branch animation: A -> (B,C), then (B,C) -> (D,E,F).
+        const p1 = smooth(clamp(u / 0.9, 0, 1));
+        const p2 = smooth(clamp((u - 0.95) / 1.0, 0, 1));
+        const p3 = smooth(clamp((u - 2.0) / 1.1, 0, 1));
+
+        drawPairCard(PAIR_A_X, PAIR_A_Y, 'pair A', 0.22, 0.9);
+        if (p1 > 0.02) {
+          drawPairCard(306, 42, 'pair B', 0.48, p1);
+          drawPairCard(306, 140, 'pair C', 0.36, p1);
+          drawArrow(224, 116, 306, 90, 0.12 + p1 * 0.12);
+          drawArrow(224, 148, 306, 188, 0.12 + p1 * 0.12);
+        }
+        if (p2 > 0.02) {
+          drawPairCard(560, 26, 'pair D', 0.72, p2);
+          drawArrow(458, 90, 560, 74, 0.12 + p2 * 0.12);
+        }
+        if (p3 > 0.02) {
+          drawPairCard(560, 92, 'pair E', 0.62, p3);
+          drawPairCard(560, 158, 'pair F', 0.82, p3);
+          drawArrow(458, 90, 560, 140, 0.12 + p3 * 0.12);
+          drawArrow(458, 188, 560, 206, 0.12 + p3 * 0.12);
+        }
+      } else if (step === 4) {
+        // Transfer replacements: C -> E and F -> B, both successful (ticks).
+        const fade = smooth(clamp(u / 0.55, 0, 1));
+        const nodeAlpha = lerp(1.0, 0.75, fade);
+        drawPairCard(PAIR_A_X, PAIR_A_Y, 'pair A', 0.22, nodeAlpha);
+        drawPairCard(306, 42, 'pair B', 0.48, nodeAlpha);
+        drawPairCard(306, 140, 'pair C', 0.36, nodeAlpha);
+        drawPairCard(560, 26, 'pair D', 0.72, nodeAlpha);
+        drawPairCard(560, 92, 'pair E', 0.62, nodeAlpha);
+        drawPairCard(560, 158, 'pair F', 0.82, nodeAlpha);
+
+        // Fade out branching links from step 3 for continuity.
+        const oldA = (1 - fade) * 0.22;
+        if (oldA > 0.01) {
+          drawArrow(224, 116, 306, 90, oldA);
+          drawArrow(224, 148, 306, 188, oldA);
+          drawArrow(458, 90, 560, 74, oldA);
+          drawArrow(458, 90, 560, 140, oldA);
+          drawArrow(458, 188, 560, 206, oldA);
+        }
+
+        // Single-pass transfers (no bouncing), edge-to-edge connections.
+        const pCE = clamp((u - 0.35) / 1.6, 0, 1);
+        const pFB = clamp((u - 1.0) / 1.6, 0, 1);
+        const newA = fade * 0.26;
+        if (newA > 0.01) {
+          drawArrow(458, 188, 560, 140, newA, true, 0);
+          drawArrow(560, 206, 458, 90, newA, true, 0);
+        }
+        // C right-edge centre (458,188) -> E left-edge centre (560,140)
+        if (pCE > 0) drawToken(458, 188, 560, 140, pCE);
+        // F left-edge centre (560,206) -> B right-edge centre (458,90)
+        if (pFB > 0) drawToken(560, 206, 458, 90, pFB);
+
+        // Ticks appear over target environments, then fade.
+        // Show each tick only after its transfer token finishes moving.
+        const tickCEIn = clamp((u - 2.03) / 0.24, 0, 1);
+        const tickCEOut = clamp((u - 2.95) / 0.9, 0, 1);
+        const tickCE = tickCEIn * (1 - tickCEOut);
+        const tickFBIn = clamp((u - 2.70) / 0.24, 0, 1);
+        const tickFBOut = clamp((u - 3.55) / 0.9, 0, 1);
+        const tickFB = tickFBIn * (1 - tickFBOut);
+        if (tickCE > 0.01) drawTick(618, 147, tickCE);
+        if (tickFB > 0.01) drawTick(364, 97, tickFB);
+
+        // After tick confirmation, duplicate invader agents and curve them onto incumbent slots.
+        const replCE = smooth(clamp((u - 3.05) / 1.05, 0, 1));
+        const replFB = smooth(clamp((u - 3.25) / 0.9, 0, 1));
+        if (replCE > 0.01) {
+          // Duplicate marker at source (pair C agent) while one copy travels to pair E agent slot.
+          drawAgent(422, 195, 0.45 * (1 - replCE), 35);
+          drawCurvedAgentTransfer(422, 195, 560, 230, 676, 147, replCE, 35, 0.9);
+        }
+        if (replFB > 0.01) {
+          // Duplicate marker at source (pair F agent) while one copy travels to pair B agent slot.
+          drawAgent(676, 213, 0.45 * (1 - replFB), 35);
+          drawCurvedAgentTransfer(676, 213, 560, 36, 422, 97, replFB, 35, 0.9);
+        }
+      }
+
+      ctx.fillStyle = 'hsla(208 18% 24% / 0.78)';
+      ctx.textAlign = 'left';
+      ctx.font = '12px EB Garamond, serif';
+      ctx.fillText(`step ${step + 1}/${TOTAL_STEPS}`, 14, 20);
+    }
+
+    function tick(ts) {
+      if (!running) return;
+      if (!lastTs) lastTs = ts;
+      const dt = clamp((ts - lastTs) / 1000, 1 / 120, 1 / 24);
+      lastTs = ts;
+      t += dt;
+      const u = Math.max(0, t - stepStartT);
+      if (u > STEP_DURATION[step]) {
+        setStep((step + 1) % TOTAL_STEPS);
+      }
+      drawStage();
+      rafId = window.requestAnimationFrame(tick);
+    }
+
+    function setRunning(on) {
+      running = on;
+      if (playBtn) playBtn.textContent = running ? 'Pause' : 'Resume';
+      if (running) {
+        lastTs = 0;
+        rafId = window.requestAnimationFrame(tick);
+      } else if (rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    }
+
+    function setStep(n) {
+      step = clamp(n, 0, TOTAL_STEPS - 1);
+      stepStartT = t;
+      drawStage();
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const bw = Math.max(1, Math.round(rect.width * dpr));
+      const bh = Math.max(1, Math.round(rect.height * dpr));
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw;
+        canvas.height = bh;
+      }
+      scaleX = bw / W;
+      scaleY = bh / H;
+    }
+
+    if (playBtn) playBtn.addEventListener('click', () => setRunning(!running));
+    if (prevBtn) prevBtn.addEventListener('click', () => setStep(step - 1));
+    if (nextBtn) nextBtn.addEventListener('click', () => setStep(step + 1));
+    canvas.addEventListener('click', () => setRunning(!running));
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      drawStage();
+    });
+
+    resizeCanvas();
+    drawStage();
+    setRunning(true);
+  }
+
   function initAggregateFlockLab() {
     const root = document.getElementById('aggregate-flock-lab');
     if (!root) return;
@@ -1904,13 +2349,551 @@
     render();
   }
 
+  function initEpiplexityLab() {
+    const root = document.getElementById('epi-order-lab');
+    if (!root) return;
+    if (root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const trainBtn = root.querySelector('#epi-train-btn');
+    const resetBtn = root.querySelector('#epi-reset-btn');
+    const stepsEl = root.querySelector('#epi-steps');
+    const stepsOut = root.querySelector('#epi-steps-out');
+    const noiseEl = root.querySelector('#epi-noise');
+    const noiseOut = root.querySelector('#epi-noise-out');
+    const canvas = root.querySelector('#epi-loss-canvas');
+
+    const ehFinalEl = root.querySelector('#epi-eh-final');
+    const ehAucEl = root.querySelector('#epi-eh-auc');
+    const ehThreshEl = root.querySelector('#epi-eh-thresh');
+    const heFinalEl = root.querySelector('#epi-he-final');
+    const heAucEl = root.querySelector('#epi-he-auc');
+    const heThreshEl = root.querySelector('#epi-he-thresh');
+
+    function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+    function lerp(a, b, p) { return a + (b - a) * p; }
+
+    function makeRng(seed = 1234567) {
+      let s = seed >>> 0;
+      return function rng() {
+        s ^= s << 13;
+        s ^= s >>> 17;
+        s ^= s << 5;
+        return ((s >>> 0) / 4294967296);
+      };
+    }
+
+    function randn(rng) {
+      let u = 0;
+      let v = 0;
+      while (u <= 1e-9) u = rng();
+      while (v <= 1e-9) v = rng();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function shuffleInPlace(arr, rng) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        const t = arr[i];
+        arr[i] = arr[j];
+        arr[j] = t;
+      }
+      return arr;
+    }
+
+    function targetFn(x1, x2) {
+      return 0.7 * x1 + 0.25 * x2 + 0.9 * Math.tanh(1.4 * x1 * x2);
+    }
+
+    function sampleXY(rng, lo, hi) {
+      return lo + (hi - lo) * rng();
+    }
+
+    function buildData(noiseLevel) {
+      const rng = makeRng(421337);
+      const easy = [];
+      const hard = [];
+      const evalSet = [];
+      const nEasy = 240;
+      const nHard = 240;
+      for (let i = 0; i < nEasy; i++) {
+        const x1 = sampleXY(rng, -0.85, 0.85);
+        const x2 = sampleXY(rng, -0.85, 0.85);
+        const y = targetFn(x1, x2) + randn(rng) * noiseLevel * 0.12;
+        easy.push({ x1, x2, y });
+      }
+      for (let i = 0; i < nHard; i++) {
+        const x1 = sampleXY(rng, -2.7, 2.7);
+        const x2 = sampleXY(rng, -2.7, 2.7);
+        const y = targetFn(x1, x2) + randn(rng) * noiseLevel * 0.55;
+        hard.push({ x1, x2, y });
+      }
+
+      const evalRng = makeRng(424242);
+      for (let i = 0; i < 120; i++) {
+        const x1 = sampleXY(evalRng, -0.85, 0.85);
+        const x2 = sampleXY(evalRng, -0.85, 0.85);
+        evalSet.push({ x1, x2, y: targetFn(x1, x2) });
+      }
+      for (let i = 0; i < 120; i++) {
+        const x1 = sampleXY(evalRng, -2.7, 2.7);
+        const x2 = sampleXY(evalRng, -2.7, 2.7);
+        evalSet.push({ x1, x2, y: targetFn(x1, x2) });
+      }
+
+      shuffleInPlace(easy, rng);
+      shuffleInPlace(hard, rng);
+      return { easy, hard, evalSet };
+    }
+
+    const H = 22;
+    function createModel(seed = 99) {
+      const rng = makeRng(seed);
+      const w1 = new Float64Array(H * 2);
+      const b1 = new Float64Array(H);
+      const w2 = new Float64Array(H);
+      let b2 = 0;
+      for (let i = 0; i < w1.length; i++) w1[i] = randn(rng) * 0.28;
+      for (let i = 0; i < w2.length; i++) w2[i] = randn(rng) * 0.24;
+      for (let i = 0; i < b1.length; i++) b1[i] = randn(rng) * 0.03;
+      return { w1, b1, w2, b2 };
+    }
+
+    function forward(m, x1, x2) {
+      const h = new Float64Array(H);
+      for (let i = 0; i < H; i++) {
+        const z = m.w1[i * 2] * x1 + m.w1[i * 2 + 1] * x2 + m.b1[i];
+        h[i] = Math.tanh(z);
+      }
+      let out = m.b2;
+      for (let i = 0; i < H; i++) out += m.w2[i] * h[i];
+      return { out, h };
+    }
+
+    function trainOne(m, sample, lr) {
+      const f = forward(m, sample.x1, sample.x2);
+      const err = f.out - sample.y;
+      const dOut = clamp(2 * err, -6, 6);
+      for (let i = 0; i < H; i++) {
+        const h = f.h[i];
+        const dw2 = clamp(dOut * h, -6, 6);
+        const dh = dOut * m.w2[i];
+        const dz = clamp(dh * (1 - h * h), -6, 6);
+        m.w2[i] -= lr * dw2;
+        m.w1[i * 2] -= lr * dz * sample.x1;
+        m.w1[i * 2 + 1] -= lr * dz * sample.x2;
+        m.b1[i] -= lr * dz;
+      }
+      m.b2 -= lr * dOut;
+    }
+
+    function mseOn(m, data) {
+      let loss = 0;
+      for (let i = 0; i < data.length; i++) {
+        const p = forward(m, data[i].x1, data[i].x2).out;
+        const e = p - data[i].y;
+        loss += e * e;
+      }
+      return loss / data.length;
+    }
+
+    function estimatePlateaus(points, transitionStep) {
+      if (!points.length) return { pre: 0, post: 0 };
+      const pre = points.filter((p) => p.step <= transitionStep);
+      const post = points.filter((p) => p.step > transitionStep);
+      function tailMean(arr) {
+        if (!arr.length) return points[points.length - 1].loss;
+        const n = Math.max(3, Math.ceil(arr.length * 0.22));
+        const s = arr.slice(-n);
+        let sum = 0;
+        for (let i = 0; i < s.length; i++) sum += s[i].loss;
+        return sum / s.length;
+      }
+      return {
+        pre: tailMean(pre),
+        post: tailMean(post.length ? post : pre)
+      };
+    }
+
+    function aucTwoPlateau(points, transitionStep) {
+      if (!points.length) return 0;
+      const p = estimatePlateaus(points, transitionStep);
+      let auc = 0;
+      for (let i = 1; i < points.length; i++) {
+        const x0 = points[i - 1].step;
+        const y0 = points[i - 1].loss;
+        const x1 = points[i].step;
+        const y1 = points[i].loss;
+
+        function areaSeg(ax, ay, bx, by, base) {
+          if (bx <= ax) return 0;
+          const r0 = Math.max(0, ay - base);
+          const r1 = Math.max(0, by - base);
+          return (bx - ax) * (r0 + r1) * 0.5;
+        }
+
+        if (x0 < transitionStep && x1 > transitionStep) {
+          const t = (transitionStep - x0) / Math.max(1e-9, (x1 - x0));
+          const yT = lerp(y0, y1, t);
+          auc += areaSeg(x0, y0, transitionStep, yT, p.pre);
+          auc += areaSeg(transitionStep, yT, x1, y1, p.post);
+        } else if (x1 <= transitionStep) {
+          auc += areaSeg(x0, y0, x1, y1, p.pre);
+        } else {
+          auc += areaSeg(x0, y0, x1, y1, p.post);
+        }
+      }
+      return auc;
+    }
+
+    function thresholdStep(points) {
+      if (!points.length) return null;
+      const first = points[0].loss;
+      const final = points[points.length - 1].loss;
+      const thresh = final + 0.12 * (first - final);
+      for (let i = 0; i < points.length; i++) {
+        if (points[i].loss <= thresh) return points[i].step;
+      }
+      return null;
+    }
+
+    let previewData = buildData(Number(noiseEl.value));
+
+    function drawPreviewPanel(ctx, W, Hc, data, noiseLevel) {
+      const x = 16;
+      const y = 16;
+      const w = W - 32;
+      const h = Hc - 32;
+      const leftW = Math.min(360, w * 0.45);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.52)';
+      ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = 'rgba(120,120,120,0.2)';
+      ctx.strokeRect(x, y, w, h);
+
+      ctx.fillStyle = 'rgba(56,56,56,0.9)';
+      ctx.font = '15px EB Garamond, serif';
+      ctx.fillText('What this experiment is doing', x + 14, y + 22);
+      ctx.font = '12px EB Garamond, serif';
+      ctx.fillStyle = 'rgba(70,70,70,0.9)';
+      ctx.fillText('1) Target: y = 0.7*x1 + 0.25*x2 + 0.9*tanh(1.4*x1*x2) + noise.', x + 14, y + 44);
+      ctx.fillText('2) Same samples + same steps, only curriculum order differs.', x + 14, y + 62);
+      ctx.fillText('3) Easy: near origin + low noise. Hard: wider range + higher noise.', x + 14, y + 80);
+      ctx.fillText('4) Eval set is balanced: 50% easy samples, 50% hard samples.', x + 14, y + 98);
+      ctx.fillText('5) Compare final loss and AUC-above-final (epiplexity proxy).', x + 14, y + 116);
+      ctx.fillStyle = 'rgba(90,90,90,0.85)';
+      ctx.fillText(`Current noise level: ${noiseLevel.toFixed(2)}`, x + 14, y + 136);
+
+      // Dataset preview (x1/x2 distribution) on the right.
+      const px = x + leftW + 18;
+      const py = y + 14;
+      const pw = w - leftW - 32;
+      const ph = h - 28;
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillRect(px, py, pw, ph);
+      ctx.strokeStyle = 'rgba(120,120,120,0.25)';
+      ctx.strokeRect(px, py, pw, ph);
+
+      const lim = 3.0;
+      const sx = (vx) => px + ((vx + lim) / (2 * lim)) * pw;
+      const sy = (vy) => py + (1 - ((vy + lim) / (2 * lim))) * ph;
+
+      ctx.strokeStyle = 'rgba(120,120,120,0.28)';
+      ctx.beginPath();
+      ctx.moveTo(sx(0), py);
+      ctx.lineTo(sx(0), py + ph);
+      ctx.moveTo(px, sy(0));
+      ctx.lineTo(px + pw, sy(0));
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(76,122,207,0.62)';
+      for (let i = 0; i < Math.min(200, data.easy.length); i++) {
+        const p = data.easy[i];
+        ctx.fillRect(sx(p.x1) - 1, sy(p.x2) - 1, 2, 2);
+      }
+      ctx.fillStyle = 'rgba(201,125,66,0.6)';
+      for (let i = 0; i < Math.min(200, data.hard.length); i++) {
+        const p = data.hard[i];
+        ctx.fillRect(sx(p.x1) - 1, sy(p.x2) - 1, 2, 2);
+      }
+
+      ctx.fillStyle = '#4a77c9';
+      ctx.fillRect(px + 10, py + 10, 12, 3);
+      ctx.fillStyle = 'rgba(60,60,60,0.88)';
+      ctx.fillText('easy samples', px + 28, py + 14);
+      ctx.fillStyle = '#c97e42';
+      ctx.fillRect(px + 10, py + 28, 12, 3);
+      ctx.fillStyle = 'rgba(60,60,60,0.88)';
+      ctx.fillText('hard samples', px + 28, py + 32);
+      ctx.fillStyle = 'rgba(64,64,64,0.82)';
+      ctx.fillText('dataset preview in x1/x2 space', px + 10, py + ph - 8);
+    }
+
+    function drawPlot(ehPts, hePts, totalSteps, transitionStep = null) {
+      const BASE_W = 860;
+      const BASE_H = 320;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.max(1, Math.round(rect.width));
+      const cssH = Math.max(1, Math.round(cssW * (BASE_H / BASE_W)));
+      canvas.style.height = `${cssH}px`;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const bw = Math.max(1, Math.round(cssW * dpr));
+      const bh = Math.max(1, Math.round(cssH * dpr));
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw;
+        canvas.height = bh;
+      }
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      const W = cssW;
+      const Hc = cssH;
+      const pad = { l: 58, r: 18, t: 18, b: 40 };
+      ctx.clearRect(0, 0, W, Hc);
+      ctx.fillStyle = 'rgba(255,255,255,0.27)';
+      ctx.fillRect(0, 0, W, Hc);
+
+      if (!ehPts.length || !hePts.length) {
+        drawPreviewPanel(ctx, W, Hc, previewData, Number(noiseEl.value));
+        return;
+      }
+
+      const all = ehPts.concat(hePts);
+      const xMax = Math.max(1, totalSteps);
+      let yMin = Infinity;
+      let yMax = -Infinity;
+      for (let i = 0; i < all.length; i++) {
+        yMin = Math.min(yMin, all[i].loss);
+        yMax = Math.max(yMax, all[i].loss);
+      }
+      const yPad = Math.max(0.02, (yMax - yMin) * 0.14);
+      yMin = Math.max(0, yMin - yPad);
+      yMax = yMax + yPad;
+
+      const sx = (x) => pad.l + (x / xMax) * (W - pad.l - pad.r);
+      const sy = (y) => Hc - pad.b - ((y - yMin) / (yMax - yMin)) * (Hc - pad.t - pad.b);
+
+      ctx.strokeStyle = 'rgba(80,80,80,0.75)';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, Hc - pad.b);
+      ctx.lineTo(W - pad.r, Hc - pad.b);
+      ctx.moveTo(pad.l, Hc - pad.b);
+      ctx.lineTo(pad.l, pad.t);
+      ctx.stroke();
+
+      function shadeAbovePlateaus(points, color, transition) {
+        const pl = estimatePlateaus(points, transition);
+        ctx.fillStyle = color;
+        for (let seg = 0; seg < 2; seg++) {
+          const lo = seg === 0 ? -Infinity : transition;
+          const hi = seg === 0 ? transition : Infinity;
+          const base = seg === 0 ? pl.pre : pl.post;
+          const sub = points.filter((p) => p.step >= lo && p.step <= hi);
+          if (sub.length < 2) continue;
+          ctx.beginPath();
+          ctx.moveTo(sx(sub[0].step), sy(base));
+          for (let i = 0; i < sub.length; i++) ctx.lineTo(sx(sub[i].step), sy(sub[i].loss));
+          ctx.lineTo(sx(sub[sub.length - 1].step), sy(base));
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      function line(points, color) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < points.length; i++) {
+          const x = sx(points[i].step);
+          const y = sy(points[i].loss);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      if (Number.isFinite(transitionStep)) {
+        const tx = sx(transitionStep);
+        ctx.save();
+        ctx.setLineDash([4, 5]);
+        ctx.strokeStyle = 'rgba(190, 44, 44, 0.92)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(tx, pad.t);
+        ctx.lineTo(tx, Hc - pad.b);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(170, 38, 38, 0.96)';
+        ctx.font = '12px EB Garamond, serif';
+        ctx.textAlign = 'left';
+        ctx.fillText('dataset transition', Math.min(tx + 6, W - pad.r - 92), pad.t + 13);
+        ctx.restore();
+      }
+
+      shadeAbovePlateaus(ehPts, 'rgba(74, 119, 201, 0.17)', transitionStep);
+      shadeAbovePlateaus(hePts, 'rgba(201, 126, 66, 0.15)', transitionStep);
+      line(ehPts, '#4a77c9');
+      line(hePts, '#c97e42');
+
+      const ehPl = estimatePlateaus(ehPts, transitionStep);
+      const hePl = estimatePlateaus(hePts, transitionStep);
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(74, 119, 201, 0.6)';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, sy(ehPl.pre));
+      ctx.lineTo(sx(transitionStep), sy(ehPl.pre));
+      ctx.moveTo(sx(transitionStep), sy(ehPl.post));
+      ctx.lineTo(W - pad.r, sy(ehPl.post));
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(201, 126, 66, 0.55)';
+      ctx.beginPath();
+      ctx.moveTo(pad.l, sy(hePl.pre));
+      ctx.lineTo(sx(transitionStep), sy(hePl.pre));
+      ctx.moveTo(sx(transitionStep), sy(hePl.post));
+      ctx.lineTo(W - pad.r, sy(hePl.post));
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#4a77c9';
+      ctx.fillRect(W - 220, 16, 13, 2.5);
+      ctx.fillStyle = 'rgba(60,60,60,0.88)';
+      ctx.font = '12px EB Garamond, serif';
+      ctx.fillText('easy -> hard', W - 201, 21);
+      ctx.fillStyle = '#c97e42';
+      ctx.fillRect(W - 120, 16, 13, 2.5);
+      ctx.fillStyle = 'rgba(60,60,60,0.88)';
+      ctx.fillText('hard -> easy', W - 101, 21);
+
+      ctx.fillStyle = 'rgba(56,56,56,0.86)';
+      ctx.fillText('x: training steps', W - 120, Hc - 12);
+      ctx.fillText('y: eval loss', 10, 16);
+    }
+
+    function setMetricDefaults() {
+      ehFinalEl.textContent = '-';
+      ehAucEl.textContent = '-';
+      ehThreshEl.textContent = '-';
+      heFinalEl.textContent = '-';
+      heAucEl.textContent = '-';
+      heThreshEl.textContent = '-';
+    }
+
+    function nextTick() {
+      return new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    function updateSliderOutputs() {
+      stepsOut.textContent = String(stepsEl.value);
+      noiseOut.textContent = Number(noiseEl.value).toFixed(2);
+    }
+
+    let historyEH = [];
+    let historyHE = [];
+    let training = false;
+
+    function reset() {
+      if (training) return;
+      historyEH = [];
+      historyHE = [];
+      previewData = buildData(Number(noiseEl.value));
+      setMetricDefaults();
+      drawPlot(historyEH, historyHE, Number(stepsEl.value), Math.floor(Number(stepsEl.value) / 2));
+    }
+
+    async function trainBoth() {
+      if (training) return;
+      training = true;
+      trainBtn.disabled = true;
+      resetBtn.disabled = true;
+
+      const totalSteps = Number(stepsEl.value);
+      const noiseLevel = Number(noiseEl.value);
+      const data = buildData(noiseLevel);
+      previewData = data;
+      const transitionStep = Math.floor(totalSteps / 2);
+      const mEH = createModel(777);
+      const mHE = createModel(777);
+      historyEH = [];
+      historyHE = [];
+      const ehRng = makeRng(1001);
+      const heRng = makeRng(2002);
+
+      for (let step = 1; step <= totalSteps; step++) {
+        const p = step / totalSteps;
+        const lr = 0.022 * Math.pow(1 - p, 0.7) + 0.0035;
+        const ehInEasy = step <= transitionStep;
+        const heInHard = step <= transitionStep;
+        const ehPool = ehInEasy ? data.easy : data.hard;
+        const hePool = heInHard ? data.hard : data.easy;
+        const ehSample = ehPool[Math.floor(ehRng() * ehPool.length)];
+        const heSample = hePool[Math.floor(heRng() * hePool.length)];
+        trainOne(mEH, ehSample, lr);
+        trainOne(mHE, heSample, lr);
+
+        if (step === 1 || step % 24 === 0 || step === totalSteps) {
+          historyEH.push({ step, loss: mseOn(mEH, data.evalSet) });
+          historyHE.push({ step, loss: mseOn(mHE, data.evalSet) });
+        }
+
+        if (step % 72 === 0 || step === totalSteps) {
+          trainBtn.textContent = `Training ${step}/${totalSteps}`;
+          drawPlot(historyEH, historyHE, totalSteps, transitionStep);
+          await nextTick();
+        }
+      }
+
+      const ehFinal = historyEH[historyEH.length - 1].loss;
+      const heFinal = historyHE[historyHE.length - 1].loss;
+      const ehAuc = aucTwoPlateau(historyEH, transitionStep);
+      const heAuc = aucTwoPlateau(historyHE, transitionStep);
+      const ehT = thresholdStep(historyEH);
+      const heT = thresholdStep(historyHE);
+
+      ehFinalEl.textContent = ehFinal.toFixed(4);
+      heFinalEl.textContent = heFinal.toFixed(4);
+      ehAucEl.textContent = ehAuc.toFixed(2);
+      heAucEl.textContent = heAuc.toFixed(2);
+      ehThreshEl.textContent = ehT === null ? '-' : String(ehT);
+      heThreshEl.textContent = heT === null ? '-' : String(heT);
+
+      drawPlot(historyEH, historyHE, totalSteps, transitionStep);
+      trainBtn.textContent = 'Train Both';
+      trainBtn.disabled = false;
+      resetBtn.disabled = false;
+      training = false;
+    }
+
+    stepsEl.addEventListener('input', () => {
+      updateSliderOutputs();
+      if (!training) drawPlot(historyEH, historyHE, Number(stepsEl.value), Math.floor(Number(stepsEl.value) / 2));
+    });
+    noiseEl.addEventListener('input', () => {
+      updateSliderOutputs();
+      if (!training) {
+        previewData = buildData(Number(noiseEl.value));
+        drawPlot(historyEH, historyHE, Number(stepsEl.value), Math.floor(Number(stepsEl.value) / 2));
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (!training) drawPlot(historyEH, historyHE, Number(stepsEl.value), Math.floor(Number(stepsEl.value) / 2));
+    });
+    trainBtn.addEventListener('click', () => { trainBoth(); });
+    resetBtn.addEventListener('click', reset);
+
+    updateSliderOutputs();
+    setMetricDefaults();
+    drawPlot(historyEH, historyHE, Number(stepsEl.value), Math.floor(Number(stepsEl.value) / 2));
+  }
+
   function initAllLabs() {
+    initPoetFlowLab();
     initAggregateFlockLab();
     initCreativityTilesLab();
     initMulLab();
     initQuiltLab();
     initPicbreedLab();
     initMazeQDLab();
+    initEpiplexityLab();
   }
 
   document.addEventListener('post:ready', initAllLabs);
