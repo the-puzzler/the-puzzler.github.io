@@ -537,6 +537,42 @@ function getCurrentPostPath() {
   return params.get('p') || '';
 }
 
+function slugFromPostPath(postPath = '') {
+  const clean = String(postPath || '').replace(/^\/+/, '');
+  const m = clean.match(/^posts\/([^\/]+)\/\1\.html$/);
+  if (m) return m[1];
+  const noPrefix = clean.replace(/^posts\//, '').replace(/\.html$/i, '');
+  const parts = noPrefix.split('/').filter(Boolean);
+  return parts.length ? parts[parts.length - 1] : '';
+}
+
+async function getShareUrlForCurrentPost() {
+  const p = getCurrentPostPath();
+  if (!p) return location.href;
+
+  // If URL is already a short slug (?p=curriculum-is-key), use it directly.
+  if (!p.includes('/') && !p.endsWith('.html')) {
+    return `${location.origin}/share/${encodeURIComponent(p)}.html`;
+  }
+
+  // For legacy/full paths, resolve through posts.json to find canonical slug.
+  try {
+    const posts = await loadPosts();
+    let found = posts.find(x => x.path === p);
+    if (!found) {
+      found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
+    }
+    const slug = found ? slugFromPostPath(found.path || '') : slugFromPostPath(p);
+    if (slug) return `${location.origin}/share/${encodeURIComponent(slug)}.html`;
+  } catch (e) {
+    // Fall through to local slug parsing fallback.
+  }
+
+  const fallbackSlug = slugFromPostPath(p);
+  if (fallbackSlug) return `${location.origin}/share/${encodeURIComponent(fallbackSlug)}.html`;
+  return location.href;
+}
+
 // -----------------------------
 // Routing / URL Logic
 // -----------------------------
@@ -948,7 +984,33 @@ function initControls() {
     homeBtn.style.lineHeight = '1';
     container.appendChild(homeBtn);
 
-    // B. Book Mode Button
+    // B. Share Link Button (copy share/<slug>.html URL)
+    const shareBtn = document.createElement('button');
+    shareBtn.className = 'mode-btn';
+    shareBtn.type = 'button';
+    shareBtn.textContent = '🔗';
+    shareBtn.title = 'Copy share link';
+    shareBtn.style.lineHeight = '1';
+    shareBtn.addEventListener('click', async () => {
+      const prev = shareBtn.textContent;
+      const prevTitle = shareBtn.title;
+      try {
+        const shareUrl = await getShareUrlForCurrentPost();
+        await navigator.clipboard.writeText(shareUrl);
+        shareBtn.textContent = '✓';
+        shareBtn.title = 'Copied';
+      } catch (err) {
+        shareBtn.textContent = '!';
+        shareBtn.title = 'Copy failed';
+      }
+      setTimeout(() => {
+        shareBtn.textContent = prev;
+        shareBtn.title = prevTitle;
+      }, 900);
+    });
+    container.appendChild(shareBtn);
+
+    // C. Book Mode Button
     const bookBtn = document.createElement('button');
     bookBtn.className = 'mode-btn';
 
