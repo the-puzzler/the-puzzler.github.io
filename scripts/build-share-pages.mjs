@@ -39,7 +39,7 @@ function toAbsImage(src = '') {
 }
 
 function renderShareHtml({ title, description, image, slug }) {
-  const pageTitle = `${title} — ${SITE_NAME}`;
+  const pageTitle = `${title}`;
   const postUrl = `${SITE_URL}/?p=${encodeURIComponent(slug)}`;
   const shareUrl = `${SITE_URL}/share/${encodeURIComponent(slug)}.html`;
   return `<!doctype html>
