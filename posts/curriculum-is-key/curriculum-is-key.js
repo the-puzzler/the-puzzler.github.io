@@ -2,6 +2,30 @@
 // Tiny in-browser experiment: train on 1..5 multiplication, hold out 9 (OOD).
 
 (function () {
+  function bindVisibilityPause(getRunning, setRunning) {
+    let shouldResume = false;
+    const onVisibility = () => {
+      if (document.hidden) {
+        shouldResume = !!getRunning();
+        if (shouldResume) setRunning(false);
+      } else if (shouldResume) {
+        setRunning(true);
+        shouldResume = false;
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility, { passive: true });
+    window.addEventListener('pagehide', () => {
+      shouldResume = !!getRunning();
+      if (shouldResume) setRunning(false);
+    }, { passive: true });
+    window.addEventListener('pageshow', () => {
+      if (shouldResume && !document.hidden) {
+        setRunning(true);
+        shouldResume = false;
+      }
+    }, { passive: true });
+  }
+
   function initPoetFlowLab() {
     const root = document.getElementById('poet-flow-lab');
     if (!root) return;
@@ -437,6 +461,7 @@
     if (prevBtn) prevBtn.addEventListener('click', () => setStep(step - 1));
     if (nextBtn) nextBtn.addEventListener('click', () => setStep(step + 1));
     canvas.addEventListener('click', () => setRunning(!running));
+    bindVisibilityPause(() => running, setRunning);
     window.addEventListener('resize', () => {
       resizeCanvas();
       drawStage();
@@ -611,6 +636,7 @@
       draw();
     }
     canvas.addEventListener('click', () => setRunning(!running));
+    bindVisibilityPause(() => running, setRunning);
     setRunning(true);
   }
 
@@ -717,6 +743,7 @@
     }
 
     canvas.addEventListener('click', () => setRunning(!running));
+    bindVisibilityPause(() => running, setRunning);
     resetBackground();
     setRunning(true);
   }
@@ -1329,6 +1356,7 @@
     }
 
     canvas.addEventListener('click', () => setRunning(!running));
+    bindVisibilityPause(() => running, setRunning);
 
     resetWorld();
     setRunning(true);
