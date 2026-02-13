@@ -44,6 +44,7 @@
 <section id="creativity-tiles-lab" class="creativity-tiles-lab">
   <canvas id="creativity-tiles-canvas" width="900" height="260" aria-label="Depth tiles drift generative art"></canvas>
 </section>
+<h3>Why OOD Needs Creativity</h3>
 <p>
   When facing challenges that are OOD with respect to our training data, we require creativity in order to surpass them. This intuition can be used to gather insight into the key components required to make creative agents. If a challenge is not part of our training distribution, we cannot rely on memory or learned tricks. Therefore, the only way for us to overcome this obstacle is if we can reliably mobilise internalised ideas about the world, reformulating them into a new configuration that can produce a behaviour we have never even witnessed. A concrete example is in how a child can approach a maths problem they have never encountered before. A child, not knowing their 9 times tables may be stumped at first. But if they know how to count, and they know how to decompose a product into a series of additions, they can solve it. Consider a neural network on the other hand. If it is never trained on the 9 times table, it will never be able to accurately predict the solutions to such problems. This example also highlights another facet of creativity: curriculum. Generalising to all times tables problems requires already knowing counting, and ideally addition, as quasi-discrete factorised concepts that can easily be re-combined and reapplied.
 </p>
@@ -85,10 +86,12 @@
   </div>
 </section>
 
+<h3>Single-Objective Failure Mode</h3>
 <p>
   The reason a model trained on all manner of multiplication except 9 times tables will struggle with exactly pinpointing the 9 times tables, is because it has been trained on the sole objective of maximising its fitness within the remit of a single thinly sliced objective. There is no incentive to build well factorised internal representations of the world. A well factorised internal representation may not be possible due to topological/architectural constraints. It may also not be possible to approximate based on the given task’s reward mechanism. Thus the only thing it can do is maximise its current reward, under its current distribution, which is fundamentally disabling.
 </p>
 
+<h3>Open-Ended Response</h3>
 <p>
   The aim of open-endedness as a field is to remedy this problem. Common solutions involve doing away with fixed objective training and instead, relying on open-ended curiosity and learnability as a guide. If one’s goal is to solve multiplication, it is impossible ahead of time to know that addition is useful. Knowing that would mean that one has already solved multiplication and as such can assign value to it. But if one does not optimise for an objective they want, then what is the point in optimising to begin with? The fundamental assumption of open-endedness is that if we can create systems of ever evolving capability there will be some solution found along the way that can be re-purposed for a task we might have. This is in spirit the same ethos behind natural evolution. One minute you are a bird flying high in the sky, the next minute you are a penguin. One minute you evolve big brains for complex social dynamics, the next minute, you describe quantum dynamics. The list goes on and on. The common thread is: new solvable challenge, reconfiguration of existing facets, new behaviour, gain new facets, repeat.
 </p>
@@ -99,14 +102,17 @@
 <section id="quilt-lab" class="quilt-lab">
   <canvas id="quilt-canvas" width="900" height="300" aria-label="Open-ended quilt generative art"></canvas>
 </section>
+<h3>Core Claim</h3>
 <p>
   Open-endedness is an emerging domain in the field of AI research. Open-endedness focuses on ideas surrounding robust internal representations, OOD performance and creativity. The main claim of open-endedness is that the necessary steps required to achieve an optimal solution are not known ahead of time and are very unlikely to be linear steps towards a fixed goal. The critical problem that open-endedness aims to solve is the discovery of these stepping stones.
 </p>
 
+<h3>Desparsifying Reward</h3>
 <p>
   One way to conceptualise this idea is as an unsupervised method for desparsification of reward signals. Consider stone age humans optimising for radio communication. The right behaviour e.g. tinkering with magnets, is so unlikely for early humans that the behaviour will never occur, and so will never be rewarded. Hence, optimisation is practically random/blind. Another equivalent view is that of self-discovered curriculum. Instead of a human sitting and programming a set of sub-objectives/skills that are required to be learnt in a certain order to take on a greater challenge, the models/systems are expected to self-discover this curriculum. Viewed through these lenses it is easy to see how topology search methods are also often bundled into the conversation, as in and of itself topology search can be seen as a self-discovered curriculum (even with a fixed global objective).
 </p>
 
+<h3>Evidence in the Literature</h3>
 <p>
   In the literature, methods such as POET have demonstrated that by evolving populations of agents and environments in concert, agents can be produced whose skill cannot be replicated without the exact sequence of environmental adaptation. PIC-Breeder showed that topology search coupled with objective drift led to robust internal representations unwittingly selecting for parameter/architectural evolvability. <a href="https://arxiv.org/pdf/2012.04322" target="_blank" rel="noopener noreferrer">Quality-Diversity</a> generally has demonstrated the utility of diverse phenotypic exploration as essential for optimal policy selection, but also transferability. All these methods implicitly or explicitly change the reward landscape, change objectives, use local competition and preserve utile novelty.
 </p>
@@ -115,6 +121,7 @@
 
 <h2>Necessity for Stepping Stones</h2>
 <img src="posts/curriculum-is-key/images/poet-main.png" alt="POET main setup" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<h3>POET</h3>
 <p>
   One of the most prominent pieces of the open-endedness literature is POET. In which, it is shown that specific curricula can create agents that are otherwise unobtainable even under equivalent compute.
 </p>
@@ -132,18 +139,21 @@
   POET evolves pairs of agents along with their environments simultaneously. The experiment begins with a single agent-environment pair. An agent consists of a bipedal walker and an environment consists of a 2D terrain that it must traverse. The initial environment is extremely simple, likewise, the initial agent is extremely dumb. It is assumed however, that at some point, the dumb agent will be able to achieve some level of competence in this simple environment. At which point, the environment will mutate. Crucially, the mutation is not random, it is first tested for learnability and novelty. In other words, can the agent make some progress in this environment (or is it impossible?) and is this environment different to other environments we have seen before? If both conditions are satisfied, a new agent-environment pair is spawned.
 </p>
 
+<h3>Transfer as Task Switching</h3>
 <p>
   The new pair carries with it the agent from the progenitor pair, so it is not starting from scratch. This new pair, and the old one, can continuously spawn new environments and pairs, creating a branching search through the space of agents and environments. The environments, satisfying the novelty and learnability criterion, ensure that agents trained on them will learn a new skill. The final piece of the POET puzzle is the transition phases. During a transition phase, agents can compete with other agents by testing on the incumbents' environments. If the foreign agent is better, it can displace it as the agent existing in that pair and training in that environment. This actually occurs often. The transfer phases are very important, because they serve as a task switching mechanism that does not require achieving competence on the current task. It may be the case that the current task is too difficult to be solved, but in the process, the agent discovers a much more efficient solution to a different task. By allowing transfer, this information is not lost. In fact the authors emphasise that the performance of POET is much reduced without transfer.
 </p>
 
 <img src="posts/curriculum-is-key/images/poet-results.png" alt="POET results" style="display:block; margin:20px auto; max-width:100%; height:auto;">
 
+<h3>What to abstract from POET</h3>
 <p>
   Instead of focusing on the key implementation details, like how novelty and learnability are defined, it is more instructive to focus on the abstract takeaways and results. Critically, no agent trained directly or via linear curriculum on the end-stage complex environments were able to solve them. This means that the winding path taken by the agent that did solve a given challenge, was essential. It also, perhaps surprisingly, means that task switching does not necessarily mean loss of knowledge. If, from the optimisation's point of view, the agent's weights at the start of training on a new environment were irrelevant, then directly training on the new environments, without curriculum, should be solvable. Therefore, the weights must have carried valuable information from past experience. From a RL perspective, we can view the past experience as a form of pretraining that makes rewardable behaviour more likely.
 </p>
 
+
 <p>
-  From POET we should abstract that task switching is essential as well as finding new tasks that are solvable. However, another key point is the importance of local competition and focus on instructive novelty. In POET, local competition emerges in the transfer phase. We can then reframe POET as a form of ‘genetic’ optimisation with local competition. Instead of many members of a population competing globally for a single unified goal, the population competes on many different goals. To persist, one needs only be the best on a single goal. This is analogous to speciation. It means that diverse behaviours are preserved and allows for specialisation of the agents for different challenges. These aspects are essential for building robust systems as it mirrors the quasi-discretisation of ideas needed for later recombination when facing new challenges.
+  From POET we should also abstract that task switching is essential as well as finding new tasks that are solvable. Another key point is the importance of local competition and focus on instructive novelty. In POET, local competition emerges in the transfer phase. We can then reframe POET as a form of ‘genetic’ optimisation with local competition. Instead of many members of a population competing globally for a single unified goal, the population competes on many different goals. To persist, one needs only be the best on a single goal. This is analogous to speciation. It means that diverse behaviours are preserved and allows for specialisation of the agents for different challenges. These aspects are essential for building robust systems as it mirrors the quasi-discretisation of ideas needed for later recombination when facing new challenges.
 </p>
 
 <p>
@@ -172,6 +182,7 @@
 <hr>
 
 <h2>Curriculum Produces Robustness</h2>
+<h3>FERH and Picbreeder</h3>
 <p>
   Now we have seen that curriculum is essential for solving certain challenges that are otherwise unsolvable. Can we really be so sure however that the internal representations produced by these systems are robust, both at an individual agent level and at a meta population level?
 </p>
@@ -216,14 +227,17 @@
   </div>
 </section>
 
+<h3>Perturbation as a Robustness Test</h3>
 <p>
   Now, in the FERH paper, the authors trained another network by backpropagation to reproduce the above image. Its sole objective was the immediate reconstruction of this image. It was able to create an identical image. The major difference however was only revealed upon weight perturbations. Weight perturbations are a reasonable test of robustness because under new challenges, one expects robust representations to still be useful, just requiring a small amount of reconfiguration. The image produced by Picbreeder was very reasonable under different weight changes.
 </p>
 <img src="posts/curriculum-is-key/images/skull-good-perturbations.png" alt="Good perturbations in Picbreeder" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<h3>Direct Objective Entanglement</h3>
 <p>
   Different weights were clearly mixing different ideas that had been procured along the way. Another way of viewing this is as there being an easily configurable design space. On the other hand, the network trained directly to reconstruct the image had a completely uninterpretable design space. Different features of the output space were ‘entangled’ in seemingly meaningless ways.
 </p>
 <img src="posts/curriculum-is-key/images/skull-bad-perturbations.png" alt="Bad perturbations in direct reconstruction" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<h3>Why This Matters for OOD</h3>
 <p>
   This evidence directly points to the fact that even if a curriculum is not required to achieve the goal (as it's not often when the objectives are differentiable), the lack of curriculum has a devastating effect. It reiterates the multiplication extrapolation. Without having first learned how to produce eyes, then a mouth then a head as separate building blocks, these concepts simply do not exist. Thus to expect this model to provide a useful starting point for future creative recombination is futile.
 </p>
@@ -235,6 +249,7 @@
 <hr>
 
 <h2>Niches as Local Reward Basins</h2>
+<h3>Local Basins, Not One Peak</h3>
 <p>
   We can view curriculum entirely through the lens of finding different niches. A niche can be thought of as a local reward basin. Again, this ties back to desparsifying the reward mechanism by finding local solvable instantiations of it.
 </p>
@@ -242,6 +257,8 @@
 <p>
   This is shown in <a href="https://docnum.univ-lorraine.fr/public/DDOC_T_2020_0087_GAIER.pdf#page=108.32" target="_blank" rel="noopener noreferrer">Accelerating Evolutionary Design</a>[...]. In this thesis, the author re-attempts the reconstruction challenge on the skull image above. However, instead of using backpropagation, they use NEAT. NEAT is a much weaker optimisation tool compared to backpropagation for reconstruction tasks. This is due to the fact NEAT is an evolutionary method and hence does not receive gradients that directly guide to minimising the reconstruction loss. The author compares using NEAT with MAP-Elites against NEAT with a direct reconstruction objective.
 </p>
+
+<h3>MAP-Elites Intuition</h3>
 
 <section id="maze-qd-lab" class="maze-lab">
   <button class="maze-help-btn" type="button" aria-label="What is this demo doing?">?</button>
@@ -301,6 +318,7 @@
   </div>
 </section>
 
+
 <p>
   MAP-Elites is a member of a family of methods called Quality-Diversity. The aim of a Quality-Diversity algorithm is not to solve any particular objective. It is instead, to create many local competitions in the phenotypic output space allowed for by the environment. For example, in the case of a maze solving robot task.
 </p>
@@ -309,6 +327,7 @@
   Consider the following maze:
 </p>
 <img src="posts/curriculum-is-key/images/maze1.png" alt="Maze with traps and goal" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+
 
 <p>
   If one only optimised based on the distance from the end point, it would be so easy to get stuck in the various traps. In fact, it is very unlikely that the robot would be able to learn to escape them. MAP-Elites recognises this and so, in keeping with the common theme, instead creates pockets of local competition.
@@ -319,10 +338,12 @@
   The maze space is divided into cells. Now, instead of evolving agents based on who can get to the end point, the agents are allowed to evolve freely. Each agent is given a phenotypic description (whichever cell it ends up in) and a fitness (how long it took to get there). Agents only compete with other agents in their cell based on the fitness metric. By not focusing on the global objective of reaching the end position, and instead only maximising the phenotypic coverage, it's easy to see how solutions finally emerge that reach the end goal!
 </p>
 
+<h3>POET vs MAP-Elites</h3>
 <p>
   Unlike POET, the different niches are pre-defined, although variations on MAP-Elites have found ways around this. For example, one could just set a threshold endpoint distance within which solutions must compete based on fitness. Both POET and MAP-Elites rely on local competition (transfer events for POET). A superficial conceptual difference between the methods is that niches in POET are formed based on different challenges. In MAP-Elites however, niches are based on different behaviours within the remit of a challenge. This conceptual distinction is minor as in many cases, one can view the MAP-Elite phenotype as the POET environment. This is the case in the maze. The speed with which an agent reaches some destination (fitness/reward) is orthogonal information to the destination it reaches. Thus the POET equivalent would be that the MAP-Elites phenotype (destination cell) is the POET environment. Then, the MAP-Elites fitness (speed) is the POET reward within that environment.
 </p>
 
+<h3>Reconstruction Case Study</h3>
 <p>
   Linking back to the reconstruction experiment with NEAT. The MAP-Elites method defined niches based on similarity of images produced. This creates a large phenotypic space (an image is worth a thousand words). The local competition used was based on standard reconstruction loss with the target image.
   <img src="posts/curriculum-is-key/images/skull-aggregate.png" alt="Aggregate skull from MAP-Elites solutions" style="display:block; margin:20px auto; max-width:100%; height:auto;">
@@ -340,10 +361,12 @@
 <section id="aggregate-flock-lab" class="aggregate-flock-lab">
   <canvas id="aggregate-flock-canvas" width="900" height="260" aria-label="Flock weave generative art"></canvas>
 </section>
+<h3>Why Aggregate Capability Emerges</h3>
 <p>
   As highlighted at the end of the last section, with any local competition system, it is difficult to obtain a single solution that solves all parts of the reward function. One need only look toward natural evolution and see that there is not a single species on earth that occupies every niche in the food chain. Instead there are many different morphologies and phenotypes. It is not clear that some reward sources can be obtained without limiting ones ability to collect reward from another source. In aggregate however, all reward possible is being collected (as much existence as can happen).
 </p>
 
+<h3>Humanity as a Special Case</h3>
 <p>
   This phenomenon may also be true for distributions we aim to model. In fact, we know it is the case because architectures that are good for tabular data may not be good for video data. It is only in aggregate that both distributions are modelled well, representing different species (models) and niches (distributions).
 </p>
@@ -354,6 +377,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
 
 <img src="posts/curriculum-is-key/images/humans-in-niches.png" alt="Humans spanning niches" style="display:block; margin:20px auto; max-width:100%; height:auto;">
 
+<h3>Generality Across Levels</h3>
 <p>
  This raises a question for curriculum. If curriculum engines produce population level factorisation, is generality the property of individuals or of populations? I think the solution is that it can be both. The most intelligent agents have internal and online mechanisms that most resemble the intelligent system that produced them. They must have sub-networks that goal-switch, adopt niches, compete locally… Its turtles all the way down.
 </p>
@@ -361,6 +385,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
 <hr>
 
 <h2>Note on Epiplexity</h2>
+<h3>Why This Concept Matters</h3>
 <p>
   The notion that the path to a goal is as important as the goal itself has also been described recently outside the open-endedness literature. In ‘<a href="https://arxiv.org/pdf/2601.03220" target="_blank" rel="noopener noreferrer">From Entropy to Epiplexity</a>’ the authors define epiplexity as a quantity that describes the learnable content of a dataset. They derive this quantity by first describing the intuitive shortcomings of traditional statistical theory. For both Shannon entropy and Kolmogorov complexity, information cannot be increased by deterministic processes, and extractable information content is independent of factorisation order. Both of these statements are empirically false. For example, training a medical imaging model on data that has been augmented via symmetry, noise and other transformations improves out of distribution performance. Another example is that LLMs trained on text left-to-right outperform those trained in reverse (in english). This means there is a preferred directionality. They also describe show that a computationally bounded observer can uncover more structure than is in the data generating process. The given example is Conway’s game of life. The emergent structures are learnable. ‘While an unbounded observer can simply simulate the evolution of the environment exactly, a computationally-bounded observer would make use of the emergent structures and learn the different types of objects and their behaviors’. Thus likelihood modelling is not merely distribution matching.
 </p>
@@ -402,6 +427,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
   </div>
 </section>
 
+<h3>Link Back to Curriculum</h3>
 <p>
   Although they do not make mention of open-endedness in their paper, all these statements ring true and familiar. From these curriculum experiments, it is so clear that the order in which environments are observed has a profound impact on the conclusions drawn by a model. Re-iterating the POET result, the complex environments are only solvable after following a specific path. It is obvious that if one attempted to change the order of the path, starting in the most complex environment and working backwards, that no skills would be learnt at all. In order to quantify this notion of extractable information content, the authors introduced epiplexity. Epiplexity explicitly accounts for time/compute-bounded entropy (AKA information that appears as noise to the model). Thus it is a function of both the model and dataset.
 </p>
@@ -413,6 +439,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
   </p>
 </section>
 
+<h3>Implication</h3>
 <p>
   One can therefore imagine that epiplexity may become a useful measure for describing the success of curriculum based methods. Epiplexity could be used as an alternative measure of the accumulated knowledge of an agent over time or from a specific challenge.
 </p>
@@ -421,14 +448,17 @@ Thus, although local competition creates robust and intelligent systems, and lik
 
 <h2>Conclusion</h2>
 <img src="posts/curriculum-is-key/images/conclusion-image.png" alt="Conclusion visual" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<h3>Main Claim</h3>
 <p>
   The central claim of this post is that creativity under distribution shift depends on how capability is accumulated, not simply on how strongly an objective is optimised. Open-ended curriculum mechanisms such as niche discovery, local competition and transfer create stepping stones that would be inaccessible under a single fixed reward. In this view, robustness is not an optional add-on to capability; it is a direct consequence of the training process preserving diverse, recombinable structure.
 </p>
 
+<h3>Evidence Across Methods</h3>
 <p>
   POET, Picbreeder/FERH and MAP-Elites all point in the same direction. Systems that maintain many local optima can continue to discover useful behaviours long after a direct optimiser plateaus. They also tend to produce representations that are more configurable under perturbation, which is precisely what one expects if future tasks are unknown. If AGI requires reliable adaptation to novel circumstances, then curriculum generation is not peripheral machinery, it is the core problem.
 </p>
 
+<h3>Practical Implication for AGI</h3>
 <p>
 This leaves a practical and conceptual implication. We may have been treating generality as a property to be forced into one model, when in many settings it appears as an emergent property of a well-preserved population. If so, the right target may be systems that can continually produce, maintain and recombine niches, rather than systems that collapse all competence into a single endpoint policy. Or, in otherwords, not only should we target systems that meet these requirements, but they must meet these requirements at multiple levels of abstraction. Internally, the agents these systems produce must be a microcosm of the system as a whole.
 </p>
