@@ -1767,6 +1767,10 @@
     const directCanvas = root.querySelector('#maze-direct');
     const actx = archiveCanvas.getContext('2d');
     const dctx = directCanvas.getContext('2d');
+    let archiveCssW = archiveCanvas.width;
+    let archiveCssH = archiveCanvas.height;
+    let directCssW = directCanvas.width;
+    let directCssH = directCanvas.height;
 
     let W = 15;
     let H = 15;
@@ -1932,6 +1936,24 @@
     function clamp(x, lo, hi) { return Math.min(hi, Math.max(lo, x)); }
     function ixy(x, y) { return y * W + x; }
     function free(x, y) { return x >= 0 && x < W && y >= 0 && y < H && maze[y][x] === 0; }
+    function fitCanvasForDPR(canvas, ctx) {
+      const rect = canvas.getBoundingClientRect();
+      const baseW = Number(canvas.getAttribute('width')) || 340;
+      const baseH = Number(canvas.getAttribute('height')) || 340;
+      const cssW = Math.max(1, Math.round(rect.width));
+      const cssH = Math.max(1, Math.round(cssW * (baseH / baseW)));
+      canvas.style.height = `${cssH}px`;
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const bw = Math.max(1, Math.round(cssW * dpr));
+      const bh = Math.max(1, Math.round(cssH * dpr));
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw;
+        canvas.height = bh;
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      return { cssW, cssH };
+    }
 
     // Genome = simple local-sensing controller:
     // outputs for 4 actions (NESW) from features [free NESW, visited NESW, bias].
@@ -2161,8 +2183,8 @@
     }
 
     function renderArchive() {
-      const CW = archiveCanvas.width;
-      const CH = archiveCanvas.height;
+      const CW = archiveCssW;
+      const CH = archiveCssH;
       const pad = 28;
       const { cellW, cellH } = drawMazeBase(actx, CW, CH, pad);
 
@@ -2207,15 +2229,15 @@
       actx.beginPath(); actx.arc(sx, sy, Math.max(2, cellW * 0.32), 0, Math.PI * 2); actx.fill();
       actx.fillStyle = 'rgba(210,60,60,0.95)';
       actx.beginPath(); actx.arc(gx, gy, Math.max(2, cellW * 0.32), 0, Math.PI * 2); actx.fill();
-
       actx.fillStyle = 'rgba(60,60,60,0.82)';
       actx.font = '12px EB Garamond, serif';
       actx.fillText('endpoint-cell archive (blue = filled niches)', 16, 16);
+
     }
 
     function renderDirect() {
-      const CW = directCanvas.width;
-      const CH = directCanvas.height;
+      const CW = directCssW;
+      const CH = directCssH;
       const pad = 28;
       const { cellW, cellH } = drawMazeBase(dctx, CW, CH, pad);
 
@@ -2266,10 +2288,10 @@
       dctx.beginPath(); dctx.arc(sx, sy, Math.max(2, cellW * 0.32), 0, Math.PI * 2); dctx.fill();
       dctx.fillStyle = 'rgba(210,60,60,0.95)';
       dctx.beginPath(); dctx.arc(gx, gy, Math.max(2, cellW * 0.32), 0, Math.PI * 2); dctx.fill();
-
       dctx.fillStyle = 'rgba(60,60,60,0.82)';
       dctx.font = '12px EB Garamond, serif';
       dctx.fillText('direct optimiser heat + best path', 16, 16);
+
     }
 
     function renderStats() {
@@ -2289,6 +2311,12 @@
     }
 
     function render() {
+      const aSize = fitCanvasForDPR(archiveCanvas, actx);
+      archiveCssW = aSize.cssW;
+      archiveCssH = aSize.cssH;
+      const dSize = fitCanvasForDPR(directCanvas, dctx);
+      directCssW = dSize.cssW;
+      directCssH = dSize.cssH;
       renderArchive();
       renderDirect();
       renderStats();
@@ -2344,6 +2372,7 @@
         render();
       });
     }
+    window.addEventListener('resize', render);
 
     configureMazeSize(sizeEl ? sizeEl.value : W);
     render();
