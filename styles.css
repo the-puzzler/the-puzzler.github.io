@@ -330,12 +330,54 @@ h6 {
 }
 
 .toc-card {
+  position: relative;
   margin-top: 8px;
   padding: 0;
+  max-height: min(250px, calc(100vh - 170px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   opacity: 0;
   pointer-events: none;
   transform: translateY(-4px);
   transition: opacity 140ms ease, transform 140ms ease;
+}
+
+.toc-card::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.toc-card::before,
+.toc-card::after {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.toc-card::before {
+  content: "";
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--bg));
+}
+
+.toc-card::after {
+  content: "⌄";
+  right: 2px;
+  bottom: 2px;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.toc-card.is-scrollable:not(.is-scroll-end)::before,
+.toc-card.is-scrollable:not(.is-scroll-end)::after {
+  opacity: 1;
 }
 
 .post-toc:hover .toc-card,

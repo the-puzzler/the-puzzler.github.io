@@ -214,6 +214,27 @@ function buildPostTOC(contentEl) {
 
   nav.appendChild(ul);
   toc.hidden = false;
+  const tocCard = toc.querySelector('.toc-card');
+  const centerActiveLinkInTOC = () => {
+    if (!tocCard) return;
+    const activeLink = ul.querySelector('a.active') || links[0];
+    if (!activeLink) return;
+    const cardRect = tocCard.getBoundingClientRect();
+    const linkRect = activeLink.getBoundingClientRect();
+    const targetTop = tocCard.scrollTop
+      + (linkRect.top - cardRect.top)
+      - (tocCard.clientHeight / 2)
+      + (linkRect.height / 2);
+    tocCard.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
+  };
+  const updateCardScrollHint = () => {
+    if (!tocCard) return;
+    const canScroll = tocCard.scrollHeight - tocCard.clientHeight > 6;
+    const atEnd = tocCard.scrollTop + tocCard.clientHeight >= tocCard.scrollHeight - 4;
+    tocCard.classList.toggle('is-scrollable', canScroll);
+    tocCard.classList.toggle('is-scroll-end', !canScroll || atEnd);
+  };
+  if (tocCard) tocCard.addEventListener('scroll', updateCardScrollHint, { passive: true });
 
   let roller = toc.querySelector('.toc-roller');
   if (!roller) {
@@ -237,6 +258,9 @@ function buildPostTOC(contentEl) {
   const links = $$('a', ul);
   const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
   const topOffset = 120;
+  const revealTOCAtActive = () => requestAnimationFrame(centerActiveLinkInTOC);
+  toc.addEventListener('mouseenter', revealTOCAtActive);
+  toc.addEventListener('focusin', revealTOCAtActive);
 
   const updateActive = () => {
     let activeIndex = 0;
@@ -252,15 +276,20 @@ function buildPostTOC(contentEl) {
     rollerCurrent.textContent = active.textContent.trim() || 'Contents';
     rollerNext.textContent = headings[activeIndex + 1]?.textContent.trim() || '';
     rollerNext2.textContent = headings[activeIndex + 2]?.textContent.trim() || '';
+    updateCardScrollHint();
   };
 
   window.addEventListener('scroll', updateActive, { passive: true });
   window.addEventListener('resize', updateActive);
   updateActive();
+  requestAnimationFrame(updateCardScrollHint);
 
   tocTeardown = () => {
     window.removeEventListener('scroll', updateActive);
     window.removeEventListener('resize', updateActive);
+    if (tocCard) tocCard.removeEventListener('scroll', updateCardScrollHint);
+    toc.removeEventListener('mouseenter', revealTOCAtActive);
+    toc.removeEventListener('focusin', revealTOCAtActive);
   };
 }
 
