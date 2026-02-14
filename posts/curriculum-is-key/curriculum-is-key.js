@@ -472,6 +472,35 @@
     setRunning(true);
   }
 
+  function initDogDriveHover() {
+    const wrap = document.getElementById('dog-drive-wrap');
+    const gif = wrap?.querySelector('.dog-drive-gif');
+    const tip = document.getElementById('dog-drive-tip');
+    if (!wrap || !gif || !tip) return;
+    if (wrap.dataset.bound === '1') return;
+    wrap.dataset.bound = '1';
+
+    let visible = false;
+    const move = (e) => {
+      tip.style.left = `${e.clientX + 10}px`;
+      tip.style.top = `${e.clientY - 2}px`;
+      if (!visible) {
+        tip.style.opacity = '1';
+        visible = true;
+      }
+    };
+    const hide = () => {
+      tip.style.opacity = '0';
+      visible = false;
+    };
+
+    gif.addEventListener('pointerenter', move);
+    gif.addEventListener('pointermove', move);
+    gif.addEventListener('pointerleave', hide);
+    gif.addEventListener('touchstart', hide, { passive: true });
+    gif.addEventListener('touchmove', hide, { passive: true });
+  }
+
   function initAggregateFlockLab() {
     const root = document.getElementById('aggregate-flock-lab');
     if (!root) return;
@@ -2936,6 +2965,7 @@
   }
 
   function initAllLabs() {
+    initDogDriveHover();
     initPoetFlowLab();
     initAggregateFlockLab();
     initCreativityTilesLab();

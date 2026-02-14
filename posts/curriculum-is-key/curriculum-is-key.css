@@ -389,6 +389,43 @@
   font-weight: 700;
 }
 
+.dog-drive-wrap {
+  position: relative;
+  margin: 16px auto 18px;
+  width: fit-content;
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.dog-drive-gif {
+  display: block;
+  margin: 0 auto;
+  max-width: min(520px, 100%);
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--rule) 50%, transparent);
+}
+
+.dog-drive-tip {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -140%);
+  opacity: 0;
+  pointer-events: none;
+  padding: 4px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  background: rgba(255, 255, 255, 0.96);
+  color: rgba(20, 20, 20, 0.96);
+  font-size: 0.84rem;
+  font-weight: 700;
+  white-space: nowrap;
+  z-index: 2600;
+  transition: opacity 100ms ease;
+}
+
 .pic-lab {
   margin: 18px 0 22px;
   padding: 14px;

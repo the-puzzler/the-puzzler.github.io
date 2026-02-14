@@ -98,7 +98,7 @@
 
 <h3>Single-Objective Failure Mode</h3>
 <p>
-  The reason a model trained on all manner of multiplication except 9 times tables will struggle with exactly pinpointing the 9 times tables, is because it has been trained on the sole objective of maximising its fitness within the remit of a single thinly sliced objective. There is no incentive to build composable and reusable ideas about the task at hand. Thus the only thing it can do is maximise its current reward, under its current distribution, which is fundamentally disabling to OOD prediction.
+  The reason a model trained on all manner of multiplication except 9 times tables will struggle with exactly pinpointing the 9 times tables, is because it has been trained on the sole objective of maximising its fitness within the remit of a single thinly sliced objective. There is no incentive to build composable and reusable ideas about the task at hand. The only thing it can do is maximise its current reward, under its current distribution, which is fundamentally disabling to OOD prediction.
 </p>
 <p>
   On the other hand, the child that has trained on a series of different challenges, has been forced to discretise their learned ideas. This has led to a more compositional understanding of this family of challenges. So, when they come across a slightly novel challenge, like the 9 times tables, they can now reliably recombine their discrete ideas to accommodate the new task. Hence, it is the child’s curriculum that leads to their better OOD performance.
@@ -121,13 +121,22 @@
 </section>
 <h3>Core Claim</h3>
 <p>
-  Open-endedness is an emerging domain in the field of AI research. Open-endedness focuses on ideas surrounding robust internal representations, OOD performance and creativity. The main claim of open-endedness is that the necessary steps required to achieve an optimal solution are not known ahead of time and are very unlikely to be linear steps towards a fixed goal. The critical problem that open-endedness aims to solve is the discovery of these stepping stones.
+  Open-endedness is an emerging domain in the field of AI research. Open-endedness focusses on ideas surrounding OOD performance and creativity. The main claim of open-endedness is that the necessary steps required to achieve an optimal solution are not known ahead of time and are very unlikely to be linear steps towards a fixed goal. The critical problem that open-endedness aims to solve is the discovery of these stepping stones.
 </p>
+<blockquote>
+  <p>“Even if we don’t solve your task specifically, we will become so capable of solving tasks generally, that your task will become trivial”</p>
+  <cite>the-puzzler</cite>
+</blockquote>
 
 <h3>Desparsifying Reward</h3>
 <p>
-  One way to conceptualise this idea is as an unsupervised method for desparsification of reward signals. Consider stone age humans optimising for radio communication. The right behaviour e.g. tinkering with magnets, is so unlikely for early humans that the behaviour will never occur, and so will never be rewarded. Hence, optimisation is practically random/blind. Another equivalent view is that of self-discovered curriculum. Instead of a human sitting and programming a set of sub-objectives/skills that are required to be learnt in a certain order to take on a greater challenge, the models/systems are expected to self-discover this curriculum. Viewed through these lenses it is easy to see how topology search methods are also often bundled into the conversation, as in and of itself topology search can be seen as a self-discovered curriculum (even with a fixed global objective).
+  One way to conceptualise this idea is as an unsupervised method for desparsification of reward.
+  When training a dog to sit, you wait for it to sit, then give it a treat. This Pavlovian training method is simple and effective. However, if one tries to use this method to train the dog to drive a car, it will take an infinite amount of time. This is because the reward is too sparse. The dog is extremely unlikely to hop in the car and start driving to the park. This means you will have nothing to reward and as such optimisation will stall. If instead a curriculum is constructed, splitting the task of the dog driving into smaller more tenable objectives, the dog can now exhibit rewardable behaviour. This means that the dog can finally begin morphing, in response to treats, into a more capable Uber driver. Open-endedness, not knowing what the optimal path from dog to driver is, does not seek to make the dog a better driver, but instead, seeks to make the dog more capable in as many facets as possible generally. This means giving the dog as many treats as possible, simply for being able to solve any problems within reach of the dog’s current capability. At some point, the dog will be achieving such complex behaviours that driving will become trivial.
 </p>
+<div class="dog-drive-wrap" id="dog-drive-wrap">
+  <img src="posts/curriculum-is-key/images/dog-drives-car.gif" alt="Dog driving a car" class="dog-drive-gif">
+  <span class="dog-drive-tip" id="dog-drive-tip" aria-hidden="true">Its real.</span>
+</div>
 
 <h3>Evidence in the Literature</h3>
 <p>
