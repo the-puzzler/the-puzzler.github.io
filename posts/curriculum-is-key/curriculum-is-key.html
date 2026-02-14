@@ -40,10 +40,7 @@
         <td>Curriculum</td>
         <td>A sequence of training distributions.</td>
       </tr>
-      <tr>
-        <td>Robust internal representations</td>
-        <td>Internal representations for which parameter changes lead to coherent variation instead of catastrophic failure.</td>
-      </tr>
+     
     </tbody>
   </table>
 </div>
@@ -170,20 +167,22 @@
   The new pair carries with it the agent from the progenitor pair, so it is not starting from scratch. This new pair, and the old one, can continuously spawn new environments and pairs, creating a branching search through the space of agents and environments. The environments, satisfying the novelty and learnability criterion, ensure that agents trained on them will learn a new skill. The final piece of the POET puzzle is the transition phases. During a transition phase, agents can compete with other agents by testing on the incumbents' environments. If the foreign agent is better, it can displace it as the agent existing in that pair and training in that environment. This actually occurs often. The transfer phases are very important, because they serve as a task switching mechanism that does not require achieving competence on the current task. It may be the case that the current task is too difficult to be solved, but in the process, the agent discovers a much more efficient solution to a different task. By allowing transfer, this information is not lost. In fact the authors emphasise that the performance of POET is much reduced without transfer.
 </p>
 
-<img src="posts/curriculum-is-key/images/poet-results.png" alt="POET results" style="display:block; margin:20px auto; max-width:100%; height:auto;">
-
 <h3>What to abstract from POET</h3>
+<img src="posts/curriculum-is-key/images/poet-results.png" alt="POET results" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<p class="small-caption">Curriculum creates challenges that are unsolvable directly</p>
+
+
 <p>
-  Instead of focusing on the key implementation details, like how novelty and learnability are defined, it is more instructive to focus on the abstract takeaways and results. Critically, no agent trained directly or via linear curriculum on the end-stage complex environments were able to solve them. This means that the winding path taken by the agent that did solve a given challenge, was essential. It also, perhaps surprisingly, means that task switching does not necessarily mean loss of knowledge. If, from the optimisation's point of view, the agent's weights at the start of training on a new environment were irrelevant, then directly training on the new environments, without curriculum, should be solvable. Therefore, the weights must have carried valuable information from past experience. From a RL perspective, we can view the past experience as a form of pretraining that makes rewardable behaviour more likely.
+  Instead of focussing on the key implementation details, like how novelty and learnability are defined, it is more instructive to focus on the abstract takeaways and results. Critically, no agent trained directly or via linear curriculum on the end-stage complex environments was able to solve them. This means that the winding path taken by the agent that did solve a given challenge, was essential. If the agent's accrued knowledge at the start of training on a new environment was irrelevant, then directly training on the new environment, without curriculum, should be solvable. Therefore, the agent must have carried valuable information from past experience. From a RL perspective, we can view the past experience as a form of pretraining that makes rewardable behaviour more likely.
 </p>
 
 
 <p>
-  From POET we should also abstract that task switching is essential as well as finding new tasks that are solvable. Another key point is the importance of local competition and focus on instructive novelty. In POET, local competition emerges in the transfer phase. We can then reframe POET as a form of ‘genetic’ optimisation with local competition. Instead of many members of a population competing globally for a single unified goal, the population competes on many different goals. To persist, one needs only be the best on a single goal. This is analogous to speciation. It means that diverse behaviours are preserved and allows for specialisation of the agents for different challenges. These aspects are essential for building robust systems as it mirrors the quasi-discretisation of ideas needed for later recombination when facing new challenges.
+  From POET we should abstract that task switching is essential as well as finding new tasks that are solvable. In POET, the transfer phase not only presents an additional avenue for task switching, but also creates local competition. Instead of many members of a population competing globally for a single unified goal, the population competes on many different goals. To persist, one needs only be the best on a single goal. This is analogous to <span class="term-note" data-note="evolutionary creation of different species in nature">speciation</span>. It means that diverse behaviours are preserved and allows for specialisation of the agents for different challenges. These aspects are essential for building robust systems as it mirrors the quasi-discretisation of ideas needed for later recombination when facing new challenges.
 </p>
 
 <p>
-  The notion of local competition with phenotypic diversity preservation is a recurring theme.
+  The notion of local competition with diversity preservation is a recurring theme.
 </p>
 
 <hr class="principles-divider">
@@ -210,11 +209,11 @@
 <h2>Curriculum Produces Robustness</h2>
 <h3><a href="https://arxiv.org/pdf/2505.11581" target="_blank" rel="noopener noreferrer">FERH</a> and Picbreeder</h3>
 <p>
-  Now we have seen that curriculum is essential for solving certain challenges that are otherwise unsolvable. Can we really be so sure however that the internal representations produced by these systems are robust, both at an individual agent level and at a meta population level?
+  Now we have seen that curriculum is essential for solving certain challenges that are otherwise unsolvable. Can we really be so sure however that the <span class="term-note" data-note="learned ideas">internal representations</span> produced by these systems are robust, both at an individual agent level and at a meta population level?
 </p>
 
 <p>
-  ‘The Fractured Entangled Representation Hypothesis’ (FERH) interrogates this question indirectly. In this paper the authors analyse images produced by Picbreeder.
+  ‘The Fractured Entangled Representation Hypothesis’ (FERH) interrogates this question. In this paper the authors analyse images produced by Picbreeder.
 </p>
 
 <p>
