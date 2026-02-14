@@ -422,7 +422,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
 <hr>
 
 <h2>Note on Epiplexity</h2>
-<h3>Quantifying Curriculum</h3>
+<h3>Quantifying Learnable Information</h3>
 <p>
   The notion that the path to a goal is as important as the goal itself has also been described recently outside the open-endedness literature. In ‘<a href="https://arxiv.org/pdf/2601.03220" target="_blank" rel="noopener noreferrer">From Entropy to Epiplexity</a>’ the authors define epiplexity as a quantity that describes the learnable content of a dataset. They derive this quantity by first describing the intuitive shortcomings of traditional statistical theory. For both Shannon entropy and Kolmogorov complexity, information cannot be increased by deterministic processes, and extractable information content is independent of factorisation order. Both of these statements are empirically false. For example, training a medical imaging model on data that has been augmented via symmetry, noise and other transformations improves out of distribution performance. Another example is that LLMs trained on text left-to-right outperform those trained in reverse (in english). This means there is a preferred directionality. They also describe show that a computationally bounded observer can uncover more structure than is in the data generating process. The given example is Conway’s game of life. The emergent structures are learnable. ‘While an unbounded observer can simply simulate the evolution of the environment exactly, a computationally-bounded observer would make use of the emergent structures and learn the different types of objects and their behaviors’. Thus likelihood modelling is not merely distribution matching.
 </p>
