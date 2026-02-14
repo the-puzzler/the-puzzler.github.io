@@ -413,6 +413,55 @@
   color: var(--ink-dim);
 }
 
+.conclusion-video-wrap {
+  position: relative;
+  margin: 16px auto 18px;
+  max-width: min(720px, 100%);
+}
+
+.conclusion-video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--rule) 50%, transparent);
+  cursor: pointer;
+}
+
+.conclusion-audio-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  border: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+  background: color-mix(in srgb, var(--bg) 90%, #ffffff 10%);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 4px 9px;
+  font: inherit;
+  font-size: 0.82rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.conclusion-quote {
+  margin: 4px auto 14px;
+  max-width: min(720px, 100%);
+  text-align: center;
+  color: var(--ink-dim);
+}
+
+.conclusion-quote p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.25;
+}
+
+.conclusion-quote cite {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.74rem;
+}
+
 .pic-lab {
   margin: 18px 0 22px;
   padding: 14px;

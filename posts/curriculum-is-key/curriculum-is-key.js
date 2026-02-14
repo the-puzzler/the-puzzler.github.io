@@ -640,6 +640,39 @@
     setRunning(true);
   }
 
+  function initConclusionVideo() {
+    const video = document.getElementById('conclusion-penguin-video');
+    const audioBtn = document.getElementById('conclusion-penguin-audio');
+    if (!video || !audioBtn) return;
+    if (video.dataset.bound === '1') return;
+    video.dataset.bound = '1';
+
+    video.muted = true;
+    video.addEventListener('click', () => {
+      if (video.paused) video.play().catch(() => { });
+      else video.pause();
+    });
+
+    const syncAudioBtn = () => {
+      if (video.muted) {
+        audioBtn.textContent = 'Unmute';
+        audioBtn.setAttribute('aria-label', 'Unmute video');
+      } else {
+        audioBtn.textContent = 'Mute';
+        audioBtn.setAttribute('aria-label', 'Mute video');
+      }
+    };
+
+    audioBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      video.muted = !video.muted;
+      syncAudioBtn();
+    });
+
+    syncAudioBtn();
+  }
+
   function initCreativityTilesLab() {
     const root = document.getElementById('creativity-tiles-lab');
     if (!root) return;
@@ -2936,6 +2969,7 @@
   }
 
   function initAllLabs() {
+    initConclusionVideo();
     initPoetFlowLab();
     initAggregateFlockLab();
     initCreativityTilesLab();
