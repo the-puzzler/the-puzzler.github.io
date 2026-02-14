@@ -1063,7 +1063,8 @@
           const p = pairs[idx];
           const pred = preds[idx];
           const err = Math.abs(pred - p.y);
-          const t = Math.min(1, err / maxErr);
+          const tLin = Math.min(1, err / maxErr);
+          const t = Math.pow(tLin, 0.28);
           const x = gx + c * cell;
           const y = gy + r * cell;
 
