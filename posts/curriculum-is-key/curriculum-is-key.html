@@ -40,6 +40,10 @@
         <td>Curriculum</td>
         <td>A sequence of training distributions.</td>
       </tr>
+      <tr>
+        <td>Robustness (Intelligence)</td>
+        <td>Robustness in terms of intelligence typically refers to having ideas that are discretisable and compositional.</td>
+      </tr>
      
     </tbody>
   </table>
@@ -209,7 +213,7 @@
 <h2>Curriculum Produces Robustness</h2>
 <h3><a href="https://arxiv.org/pdf/2505.11581" target="_blank" rel="noopener noreferrer">FERH</a> and Picbreeder</h3>
 <p>
-  Now we have seen that curriculum is essential for solving certain challenges that are otherwise unsolvable. Can we really be so sure however that the <span class="term-note" data-note="learned ideas">internal representations</span> produced by these systems are robust, both at an individual agent level and at a meta population level?
+  Now we have seen that curriculum is essential for solving certain challenges that are otherwise unsolvable. Can we really be so sure however that the internal representations produced by these systems are robust (discretisable, recombinable), both at an individual agent level and at a meta population level? Remember this robustness is a requirement for intelligence. If the learned ideas by the agents do not form discretisable, recombinable units they cannot be easily mobilised to solve new challenges.
 </p>
 
 <p>
@@ -254,21 +258,29 @@
 
 <h3>Perturbation as a Robustness Test</h3>
 <p>
-  Now, in the FERH paper, the authors trained another network by backpropagation to reproduce the above image. Its sole objective was the immediate reconstruction of this image. It was able to create an identical image. The major difference however was only revealed upon weight perturbations. Weight perturbations are a reasonable test of robustness because under new challenges, one expects robust representations to still be useful, just requiring a small amount of reconfiguration. The image produced by Picbreeder was very reasonable under different weight changes.
+  Now, in the FERH paper, the authors trained another CPPN by backpropagation (instead of NEAT) to reproduce the above image. Its sole objective was the immediate reconstruction of this image. It was able to create an identical image. The major difference however was only revealed upon parameter perturbations. Parameter perturbations are a reasonable test of robustness because under new challenges, one expects robust representations to still be useful, just requiring a small amount of reconfiguration. The image produced by Picbreeder was very reasonable under different parameter changes.
 </p>
-<img src="posts/curriculum-is-key/images/skull-good-perturbations.png" alt="Good perturbations in Picbreeder" style="display:block; margin:20px auto; max-width:100%; height:auto;">
 <h3>Direct Objective Entanglement</h3>
 <p>
-  Different weights were clearly mixing different ideas that had been procured along the way. Another way of viewing this is as there being an easily configurable design space. On the other hand, the network trained directly to reconstruct the image had a completely uninterpretable design space. Different features of the output space were ‘entangled’ in seemingly meaningless ways.
+For the Picbreeder trained networks, different parameters were clearly mixing different solid ideas that had been procured along the way. Another way of viewing this is as there being an easily configurable design space. On the other hand, the network trained directly to reconstruct the image had a completely uninterpretable design space. Different features of the output space were ‘entangled’ in seemingly meaningless ways:
 </p>
-<img src="posts/curriculum-is-key/images/skull-bad-perturbations.png" alt="Bad perturbations in direct reconstruction" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+<div class="skull-compare">
+  <figure class="skull-fig">
+    <img src="posts/curriculum-is-key/images/skull-good-perturbations.png" alt="Good perturbations in Picbreeder">
+    <figcaption>Picbreeder perturbations (robust)</figcaption>
+  </figure>
+  <figure class="skull-fig">
+    <img src="posts/curriculum-is-key/images/skull-bad-perturbations.png" alt="Bad perturbations in direct reconstruction">
+    <figcaption>Direct objective perturbations (entangled)</figcaption>
+  </figure>
+</div>
 <h3>Why This Matters for OOD</h3>
 <p>
-  This evidence directly points to the fact that even if a curriculum is not required to achieve the goal (as it's not often when the objectives are differentiable), the lack of curriculum has a devastating effect. It reiterates the multiplication extrapolation. Without having first learned how to produce eyes, then a mouth then a head as separate building blocks, these concepts simply do not exist. Thus to expect this model to provide a useful starting point for future creative recombination is futile.
+  This evidence directly points to the fact that even if a curriculum is not required to achieve the goal (as it's not often when the objectives are differentiable), the lack of curriculum has a devastating effect. It reiterates the multiplication extrapolation struggle. Without having first learned how to produce eyes, then a mouth then a head as separate building blocks, these concepts simply do not exist. Thus to expect this model to provide a useful starting point for future creative recombination is futile.
 </p>
 
 <p>
-  If small parameter changes correspond to coherent changes in behaviour, then new tasks can be solved by small, structured reconfiguration rather than wholesale relearning. This is the mechanism by which robustness supports OOD creativity.
+If small parameter changes correspond to coherent changes in behavior, this points to a functional design space and means new tasks can be solved by small, structured reconfiguration rather than wholesale relearning. This is the mechanism by which robustness supports OOD creativity.
 </p>
 
 <hr>
@@ -276,11 +288,11 @@
 <h2>Niches as Local Reward Basins</h2>
 <h3>Local Basins, Not One Peak</h3>
 <p>
-  We can view curriculum entirely through the lens of finding different niches. A niche can be thought of as a local reward basin. Again, this ties back to desparsifying the reward mechanism by finding local solvable instantiations of it.
+We have seen that an essential component of a curriculum is the preservation of diverse behaviours solving different challenges in different niches. We have also seen that competition within these niches is important. A niche can be thought of as a local reward basin. This ties back to desparisification of the reward mechanism by finding local solvable problems.
 </p>
 
 <p>
-  This is shown in <a href="https://docnum.univ-lorraine.fr/public/DDOC_T_2020_0087_GAIER.pdf#page=108.32" target="_blank" rel="noopener noreferrer">Accelerating Evolutionary Design</a>[...]. In this thesis, the author re-attempts the reconstruction challenge on the skull image above. However, instead of using backpropagation, they use NEAT. NEAT is a much weaker optimisation tool compared to backpropagation for reconstruction tasks. This is due to the fact NEAT is an evolutionary method and hence does not receive gradients that directly guide to minimising the reconstruction loss. The author compares using NEAT with <a href="https://arxiv.org/pdf/2012.04322" target="_blank" rel="noopener noreferrer">MAP-Elites</a> against NEAT with a direct reconstruction objective.
+  The importance of niches (therefore speciation) is shown again in <a href="https://docnum.univ-lorraine.fr/public/DDOC_T_2020_0087_GAIER.pdf#page=108.32" target="_blank" rel="noopener noreferrer">Accelerating Evolutionary Design</a>[...]. In this thesis, the author re-attempts the reconstruction challenge on the skull image above. However, instead of using backpropagation, they use NEAT. NEAT is a much weaker optimisation tool compared to backpropagation for reconstruction tasks. This is due to the fact NEAT is an evolutionary method and hence does not receive gradients that directly guide to minimising the reconstruction loss. The author compares using NEAT to directly solve image reconstruction vs using NEAT within a niche-forming framework known as <a href="https://arxiv.org/pdf/2012.04322" target="_blank" rel="noopener noreferrer">MAP-Elites</a>.
 </p>
 
 <h3>MAP-Elites Intuition</h3>
@@ -365,7 +377,7 @@
 
 <h3>POET vs MAP-Elites</h3>
 <p>
-  Unlike POET, the different niches are pre-defined, although variations on MAP-Elites have found ways around this. For example, one could just set a threshold endpoint distance within which solutions must compete based on fitness. Both POET and MAP-Elites rely on local competition (transfer events for POET). A superficial conceptual difference between the methods is that niches in POET are formed based on different challenges. In MAP-Elites however, niches are based on different behaviours within the remit of a challenge. This conceptual distinction is minor as in many cases, one can view the MAP-Elite phenotype as the POET environment. This is the case in the maze. The speed with which an agent reaches some destination (fitness/reward) is orthogonal information to the destination it reaches. Thus the POET equivalent would be that the MAP-Elites phenotype (destination cell) is the POET environment. Then, the MAP-Elites fitness (speed) is the POET reward within that environment.
+  Unlike POET, the different niches are typically pre-defined, although varaitions on MAP-Elites have found ways around this. For example, one could just set a threshold endpoint distance within which solutions must compete based on fitness. Both POET and MAP-elites rely on local competition (transfer events for POET). A superficial difference between the methods is that niches in POET are formed based on different challenges not based on different behaviour like MAP-Elites. This conceptual distinction collapses in many cases, and we will again see that both methods are successful for following the core rules of curriculum. Take the maze as an example. The final cell a robot ends up in is its phenotypic descriptor and it will compete with other robots that land in that cell based on an orthogonal fitness score (speed). Translating to POET, the challenge agents are competing in is ‘move to this cell’ and the fitness is again the speed. In otherwords, different behaviours <strong>are</strong> different challenges which <strong>are</strong> different ways of being rewarded.
 </p>
 
 <h3>Reconstruction Case Study</h3>
@@ -373,7 +385,7 @@
   Linking back to the reconstruction experiment with NEAT. The MAP-Elites method defined niches based on similarity of images produced. This creates a large phenotypic space (an image is worth a thousand words). The local competition used was based on standard reconstruction loss with the target image.
   <img src="posts/curriculum-is-key/images/skull-aggregate.png" alt="Aggregate skull from MAP-Elites solutions" style="display:block; margin:20px auto; max-width:100%; height:auto;">
   
-  The results are striking yet expected. Local competition, by retaining initially suboptimal solutions, allows for much more optimal solutions to occur in future. What is also shown here however, is that the mean image (average of solutions found by MAP-Elites) is much closer to the real image than any individual. This makes sense given that the individuals are now specialised species solving particular niches. The machinery required to extract a particular reward signal from the original image, may be totally different to that required to extract reward from some other part. This interesting tension highlights a fact that, local competition systems may in aggregate approximate predefined objectives, however it is very difficult for one solution to rise and surpass all the rest in every niche.
+  The results are striking yet expected. Local competition, by retaining initially suboptimal solutions that had nothing to do with the task at hand, allows for much more optimal solutions to occur in future. What is also shown here however, is that the mean image (average of solutions found by MAP-Elites) is much closer to the real image than any individual. This makes sense given that the individuals are now specialised species solving particular niches. The machinery required to extract a particular reward signal from the original image, may be totally different to that required to extract reward from some other part. This interesting tension highlights a fact that, local competition systems may in aggregate approximate predefined objectives, however it is very difficult for one solution to rise and surpass all the rest in every niche.
 </p>
 
 <p>
@@ -388,7 +400,7 @@
 </section>
 <h3>Why Aggregate Capability Emerges</h3>
 <p>
-  As highlighted at the end of the last section, with any local competition system, it is difficult to obtain a single solution that solves all parts of the reward function. One need only look toward natural evolution and see that there is not a single species on earth that occupies every niche in the food chain. Instead there are many different morphologies and phenotypes. It is not clear that some reward sources can be obtained without limiting ones ability to collect reward from another source. In aggregate however, all reward possible is being collected (as much existence as can happen).
+  As highlighted at the end of the last section, with any local competition system, it is difficult to obtain a single solution that solves all parts of the reward function. One need only look toward natural evolution and see that there is not a single species on earth that occupies every niche in the food chain. Instead there are many different morphologies and phenotypes. It is not clear that some reward sources can be obtained, some challenges solved, without limiting ones ability to collect reward from another source. In aggregate however, all reward possible is being collected (as much existence as can happen).
 </p>
 
 <h3>Humanity as a Special Case</h3>
@@ -410,7 +422,7 @@ Thus, although local competition creates robust and intelligent systems, and lik
 <hr>
 
 <h2>Note on Epiplexity</h2>
-<h3>Why This Concept Matters</h3>
+<h3>Quantifying Curriculum</h3>
 <p>
   The notion that the path to a goal is as important as the goal itself has also been described recently outside the open-endedness literature. In ‘<a href="https://arxiv.org/pdf/2601.03220" target="_blank" rel="noopener noreferrer">From Entropy to Epiplexity</a>’ the authors define epiplexity as a quantity that describes the learnable content of a dataset. They derive this quantity by first describing the intuitive shortcomings of traditional statistical theory. For both Shannon entropy and Kolmogorov complexity, information cannot be increased by deterministic processes, and extractable information content is independent of factorisation order. Both of these statements are empirically false. For example, training a medical imaging model on data that has been augmented via symmetry, noise and other transformations improves out of distribution performance. Another example is that LLMs trained on text left-to-right outperform those trained in reverse (in english). This means there is a preferred directionality. They also describe show that a computationally bounded observer can uncover more structure than is in the data generating process. The given example is Conway’s game of life. The emergent structures are learnable. ‘While an unbounded observer can simply simulate the evolution of the environment exactly, a computationally-bounded observer would make use of the emergent structures and learn the different types of objects and their behaviors’. Thus likelihood modelling is not merely distribution matching.
 </p>
@@ -501,5 +513,5 @@ Thus, although local competition creates robust and intelligent systems, and lik
 
 <h3>Practical Implication for AGI</h3>
 <p>
-This leaves a practical and conceptual implication. We may have been treating generality as a property to be forced into one model, when in many settings it appears as an emergent property of a well-preserved population. If so, the right target may be systems that can continually produce, maintain and recombine niches, rather than systems that collapse all competence into a single endpoint policy. Or, in otherwords, not only should we target systems that meet these requirements, but they must meet these requirements at multiple levels of abstraction. Internally, the agents these systems produce must be a microcosm of the system as a whole.
+This leaves a practical and conceptual implication. We may have been treating generality as a property to be forced into one model, when in many settings it appears as an emergent property of a well-preserved population. If so, the right target may be systems that can continually produce, maintain and recombine niches, rather than systems that collapse all competence into a single endpoint policy. For true single body AGI however,  we should target systems that meet these requirements, but they must meet these requirements at multiple levels of abstraction. Internally, the individual agents these systems produce must be a microcosm of the system as a whole.
 </p>
