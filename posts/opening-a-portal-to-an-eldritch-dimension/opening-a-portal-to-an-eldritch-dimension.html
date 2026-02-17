@@ -1,0 +1,278 @@
+<h1>I tried to create AGI but accidentally opened a portal to an eldritch dimension</h1>
+
+<h2>Prologue</h2>
+<section class="cppn-explorer" aria-label="CPPN world videos">
+  <div class="cppn-row">
+    <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
+      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/trip_clip_02_latent0.mp4" type="video/mp4">
+    </video>
+    <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
+      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/blackwhite_clip_02_latent0.mp4" type="video/mp4">
+    </video>
+    <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
+      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/redpurple_clip_07_latent2.mp4" type="video/mp4">
+    </video>
+  </div>
+</section>
+<p class="visual-takeaway">Videos generated from final models.</p>
+<p>
+  There is a formula for knowledge.
+</p>
+<p>
+  With it, we could create a model that optimises for knowledge, and devours the world in search of it.
+</p>
+<p>
+  A worse thought arrives.
+</p>
+<p>
+  What if we don’t need the world for knowledge - what if knowledge has an inherent universal structure?
+</p>
+<p>
+  Can we create a model that can self-create all knowledge following some set of rules?
+</p>
+<p>
+  I began this week as an AI researcher (naive, ambitious) chasing questions like:
+</p>
+<div class="prologue-questions" role="note" aria-label="Core questions">
+  <p>What is knowledge?</p>
+  <p>What is the mathematical form of curiosity?</p>
+</div>
+<p>
+  As I write now, I am changed.
+</p>
+<p>
+  I have run countless experiments, my fingers are arthritic. With closed eyes I see only abstract patterns (you’ll see why).
+</p>
+<p>
+  I took a bite from the apple of truth.
+</p>
+<p>
+  This is my descent.
+</p>
+
+<hr>
+
+<h2>The Story</h2>
+<h3>Initial Plan</h3>
+<section id="two-models-lab" class="two-models-lab" aria-label="Two-model process visual">
+  <canvas id="two-models-canvas" width="920" height="320" aria-label="Generator and representation workflow"></canvas>
+  <div class="two-models-controls">
+    <button id="two-models-prev" type="button" aria-label="Previous step">Prev</button>
+    <button id="two-models-next" type="button" aria-label="Next step">Next</button>
+  </div>
+</section>
+
+<p>
+  My plan was simple and could be easily divided into components:
+</p>
+<ul>
+  <li>Generator Model: generates images</li>
+  <li>Representation Model: encodes images</li>
+</ul>
+<p>
+  The generator creates images. The representation model encodes them. I use the encoder’s error as a novelty signal: if it can’t encode an image well, the image is unlike what it has seen before.
+</p>
+<div class="equation-block">
+  $$L_{\text{gen}} = -L_{\text{rep}} \approx -\mathrm{MSE}$$
+</div>
+<p>
+  If this worked, the generator would keep inventing images the encoder can’t explain - until the encoder learns them.
+</p>
+<h3>First Failure</h3>
+<div class="post-image-single-right">
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image4.png" alt="First generated image 4">
+</div>
+<p class="visual-takeaway">Pure novelty pressure starts in unstructured noise with high frequency inputs.</p>
+
+<p>
+  Well... that’s not a great start. This data is totally unstructured.
+</p>
+<p>
+  Maybe the problem is I am giving the generator too much high frequency input, it spirals out of control too fast for the representation model. Let’s try to take it away:
+</p>
+<div class="post-image-flow">
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image3.png" alt="Simplified generation">
+  <span class="post-image-flow-arrow" aria-hidden="true">→</span>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image9.png" alt="Result after reducing high frequency input">
+</div>
+<p class="visual-takeaway">Reducing frequency helps briefly, then converges to a hacky attractor.</p>
+<p>
+  At first, it seemed to be working; beginning from a dull grey slate, an interesting image appeared.
+</p>
+<p>
+  Then... stagnation. The generator would always land on this X type image. But why?
+</p>
+<h3>Adversarial Novelty</h3>
+<p>
+  Maybe the problem then is that allowing the generator to focus purely on novelty, is causing it to find ways that trick the representation model. This X is actually a way of breaking the representation model...
+</p>
+<p>
+  What if I try to add a diversity pressure. This way, it must find as many ways to be novel as possible, and perhaps not fall down a hacky rabbit hole.
+</p>
+<p>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image8.gif" alt="Diversity pressure visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+</p>
+<p class="visual-takeaway">Diversity helps, but without learnability constraints it still plateaus.</p>
+<p>
+  It wanted to work. More structure appeared in the generated data with time. But again, it stagnated.
+</p>
+<p>
+  So far I had been using a simple loss: maximise the error of the representation model. But maybe this needed to be completely re-thought.
+</p>
+<h3>Shannon Detour</h3>
+<p>
+  This idea came from Shannon Information.
+</p>
+<p>
+  Formally Shannon Information is written as:
+</p>
+<div class="equation-block">
+  $$I(x) = -\log_2 p(x)\ \text{bits}$$
+</div>
+<p>
+  But what it means is: how surprising is this data point to your model. My intuition was that we could continually increase surprise and find new information forever. But clearly, there were many adversarial failure modes.
+</p>
+<p>
+  I needed a new idea and one night I was visited by a being dressed in the clothes of an angel. It said to me:
+</p>
+<blockquote class="angel-quote">
+  <p>"Maximising surprise is not the same as learning information. Learning is the difference in surprise felt when you see something for a second time."</p>
+  <cite>Angel</cite>
+</blockquote>
+<p>
+  Maybe this was what I needed and it makes sense. If the generator generated initially surprising data, but after a while, it was no longer surprising... This means that the representation model was able to learn it and so it must be structured.
+</p>
+<h3>Delta Surprise Loss</h3>
+<p>
+  So I changed my loss function: Instead of maximising surprise, I was maximising the difference in surprise after training on a batch of its data:
+</p>
+<div class="equation-block">
+  $$L_{\text{gen}} = -(L_{\text{rep, pretrain}} - L_{\text{rep, posttrain}})$$
+</div>
+<p>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image5.gif" alt="Delta surprise loss visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+</p>
+<p class="visual-takeaway">Progress looked real, but the signal was unstable.</p>
+<p>
+  It was finally working I thought! Look, clearly more structured outputs are appearing. But then again... It stagnated. Why? I investigated.
+</p>
+<p>
+  It turns out, the progress loss, no matter how hard I tried would always actually receive zero gradient. The evolution was purely driven by diversity which pushed images from the fuzzy domain to the saturated domain.
+</p>
+<p>
+  Then I hit the core problem: the objective itself was moving under my feet.
+</p>
+<h3>Why the Delta Collapsed</h3>
+<p>
+  How can this be? The angel told me the delta loss would work, it makes sense and rings true to ideas surrounding Kolmogorov complexity. If data is reducible AKA can be learned by a constrained representation model, then it has lower Kolmogorov complexity which means it has more structured information. Yet what I realised was the delta was always 0.
+</p>
+<section id="delta-collapse-lab" class="delta-collapse-lab" aria-label="Delta collapse interactive explanation">
+  <div class="delta-collapse-grid">
+    <div class="delta-collapse-explain">
+      <h4>Moving-Target Failure</h4>
+      <p>Generator: tiny MLP maps scalar <code>x</code> to <code>y_g(x)</code>.</p>
+      <p>Representation: tiny MLP maps same <code>x</code> to prediction <code>y_r(x)</code>.</p>
+      <p>
+        The loss on the generator is <code>L_gen = L_pre - L_post</code>.
+      </p>
+      <p>
+        This quickly collapses as yesterday's <code>L_post</code> tracks into today's <code>L_pre</code>.
+      </p>
+      <p class="delta-live">L_pre: <strong id="delta-collapse-pre">0.000</strong></p>
+      <p class="delta-live">L_post: <strong id="delta-collapse-post">0.000</strong></p>
+      <p class="delta-live">Δ: <strong id="delta-collapse-value">0.000</strong></p>
+    </div>
+    <div class="delta-collapse-plot">
+      <canvas id="delta-collapse-canvas" width="900" height="260" aria-label="Delta collapse timeline"></canvas>
+      <div class="delta-collapse-controls">
+        <button id="delta-collapse-start" type="button">Start</button>
+        <button id="delta-collapse-restart" type="button">Restart</button>
+        <label>Rep steps
+          <input id="delta-collapse-adapt" type="range" min="1" max="20" step="1" value="8">
+        </label>
+        <label>Gen lr
+          <input id="delta-collapse-drift" type="range" min="0.001" max="0.06" step="0.001" value="0.015">
+        </label>
+      </div>
+    </div>
+  </div>
+</section>
+<p class="visual-takeaway">Δ-loss collapses because yesterday’s post-train loss becomes today’s pre-train loss.</p>
+<p>
+  The fundamental problem was that, a change that could create something learnable cannot be predicted by what was learnable in the past. This is because the representation model was constantly adapting. Yesterday's L_post is today's L_pre. This circular loss was fundamentally flawed and unable to find novelty beyond maximising diversity.
+</p>
+<blockquote class="angel-quote">
+  <p>"Shannon Information tells you how surprised a model is. Kolmogorov complexity tells you how much structured information there is. Combine the two with an evolutionary search. Also switch to grey scale for maximum aura."</p>
+  <cite>Angel</cite>
+</blockquote>
+<p>
+  So instead of chasing this moving target with gradients, I changed the optimisation process.
+</p>
+<h3>Switch to Evolutionary Search</h3>
+<p>
+  At this point I decided to change tack. I would switch from gradient descent to an evolutionary method (OpenAI ES). This could ameliorate the problem of the backwards looking update on a moving target. My plan now was to train the representation model until convergence, then begin a search for <strong>local novelty</strong> in the generator. Then continue switching between the two. This way I could prevent adversarial novelty search by ensuring it could only find slightly new things, which would then be learned by the representation model.
+</p>
+<section id="evo-search-lab" class="evo-search-lab" aria-label="Evolutionary search process visual">
+  <canvas id="evo-search-canvas" width="920" height="300" aria-label="Current generation, local novelty, and noise search space"></canvas>
+</section>
+<p>
+  The training curve was promising. It showed many of these cycles integrating new knowledge into the representation model:
+</p>
+<section id="evo-loop-lab" class="evo-loop-lab" aria-label="Evolutionary search loop visual">
+  <canvas id="evo-loop-canvas" width="920" height="280" aria-label="Find local novelty and train representation loop"></canvas>
+</section>
+<p class="visual-takeaway">Alternate between finding local novelty and consolidating it in the representation model.</p>
+<h3>Escalation</h3>
+<p>
+  So, I generated some images and:
+</p>
+<p>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image1.gif" alt="Generated visual 1" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+</p>
+<p>
+  Could it be working? What if I increased the frequency?
+</p>
+<p>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image10.gif" alt="Generated visual 10" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+</p>
+<p>
+  No that was too much. Maybe what it needs is some parameter changes and grey scale.
+</p>
+<p>
+  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image6.gif" alt="Generated visual 6" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+</p>
+<p class="visual-takeaway"><strong>Note:</strong> these are minor parameter variations of the same setup described above.</p>
+<p>
+  Before I realised it, it was too late. I had spent a week trying countless combinations of loss functions and fixing hyperparameters. All I could see when I shut my eyes were these patterns. When I began hearing voices in my head I closed down my laptop.
+</p>
+<hr>
+<h2>The End</h2>
+<h3>I am not entertained</h3>
+<p>
+  In the end. I was still unsatisfied. I felt like I had been unable to achieve my goal: to create an endless process of increasing structure. 
+  Never did any of the images ever produce interesting texture. Just more abstract patterns.
+  It was no angel that kept me up at night, always giving me more and more experiments to try.
+   Just one more image I would cry. One more parameter change. At some point you have to know when to stop.
+</p>
+
+
+<h3>Possible Next Direction</h3>
+<p>
+  The way in which this could work well, is by using a better proxy for Kolmogorov complexity and novelty. One way to measure simultaneously the novelty and 
+  learnability content of a generator, would be to train a representation model on it to convergence. Then, the area under the curve above the final loss 
+  represents the totality of learning that has occurred for this model. This could be used as a fitness function for evolutionary search; however, it is expensive 
+  to evaluate.
+</p>
+
+<h2>
+  Appendix
+</h2>
+<p>If you are interested in the topics mentioned here, please see:</p>
+<p>
+  <a href="https://pathak22.github.io/large-scale-curiosity/resources/largeScaleCuriosity2018.pdf">Curiosity-driven learning</a><br>
+  <a href="https://arxiv.org/pdf/0812.4360">Driven by Compression Progress (Schmidhuber)</a><br>
+  <a href="https://arxiv.org/pdf/2601.03220">From Entropy to Expiplexity</a>
+</p>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>
