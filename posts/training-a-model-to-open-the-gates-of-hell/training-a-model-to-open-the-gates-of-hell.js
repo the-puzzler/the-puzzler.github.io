@@ -1285,7 +1285,7 @@ if (twoModelsCanvas) {
   // Fixed term guarantees an independent thread for this post.
   s.setAttribute(
     "issue-term",
-    "posts/opening-a-portal-to-an-eldritch-dimension/opening-a-portal-to-an-eldritch-dimension.html"
+    "posts/training-a-model-to-open-the-gates-of-hell/training-a-model-to-open-the-gates-of-hell.html"
   );
   s.setAttribute("label", "comments");
   s.setAttribute("theme", "github-light");

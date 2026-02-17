@@ -1,16 +1,16 @@
-<h1>I tried to create AGI but accidentally opened a portal to an eldritch dimension</h1>
+<h1>Training a model to open the gates of hell</h1>
 
 <h2>Prologue</h2>
 <section class="cppn-explorer" aria-label="CPPN world videos">
   <div class="cppn-row">
     <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
-      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/trip_clip_02_latent0.mp4" type="video/mp4">
+      <source src="posts/training-a-model-to-open-the-gates-of-hell/assets/trip_clip_02_latent0.mp4" type="video/mp4">
     </video>
     <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
-      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/blackwhite_clip_02_latent0.mp4" type="video/mp4">
+      <source src="posts/training-a-model-to-open-the-gates-of-hell/assets/blackwhite_clip_02_latent0.mp4" type="video/mp4">
     </video>
     <video class="cppn-video" autoplay muted loop playsinline preload="metadata">
-      <source src="posts/opening-a-portal-to-an-eldritch-dimension/assets/redpurple_clip_07_latent2.mp4" type="video/mp4">
+      <source src="posts/training-a-model-to-open-the-gates-of-hell/assets/redpurple_clip_07_latent2.mp4" type="video/mp4">
     </video>
   </div>
 </section>
@@ -80,7 +80,7 @@
 </p>
 <h3>First Failure</h3>
 <div class="post-image-single-right">
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image4.png" alt="First generated image 4">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image4.png" alt="First generated image 4">
 </div>
 <p class="visual-takeaway">Pure novelty pressure starts in unstructured noise with high frequency inputs.</p>
 
@@ -91,9 +91,9 @@
   Maybe the problem is I am giving the generator too much high frequency input, it spirals out of control too fast for the representation model. Let’s try to take it away:
 </p>
 <div class="post-image-flow">
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image3.png" alt="Simplified generation">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image3.png" alt="Simplified generation">
   <span class="post-image-flow-arrow" aria-hidden="true">→</span>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image9.png" alt="Result after reducing high frequency input">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image9.png" alt="Result after reducing high frequency input">
 </div>
 <p class="visual-takeaway">Reducing frequency helps briefly, then converges to a hacky attractor.</p>
 <p>
@@ -110,7 +110,7 @@
   What if I try to add a diversity pressure. This way, it must find as many ways to be novel as possible, and perhaps not fall down a hacky rabbit hole.
 </p>
 <p>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image8.gif" alt="Diversity pressure visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image8.gif" alt="Diversity pressure visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
 </p>
 <p class="visual-takeaway">Diversity helps, but without learnability constraints it still plateaus.</p>
 <p>
@@ -150,7 +150,7 @@
   $$L_{\text{gen}} = -(L_{\text{rep, pretrain}} - L_{\text{rep, posttrain}})$$
 </div>
 <p>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image5.gif" alt="Delta surprise loss visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image5.gif" alt="Delta surprise loss visual" style="display:block; margin:16px auto; max-width:100%; height:auto;">
 </p>
 <p class="visual-takeaway">Progress looked real, but the signal was unstable.</p>
 <p>
@@ -227,19 +227,19 @@
   So, I generated some images and:
 </p>
 <p>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image1.gif" alt="Generated visual 1" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image1.gif" alt="Generated visual 1" style="display:block; margin:16px auto; max-width:100%; height:auto;">
 </p>
 <p>
   Could it be working? What if I increased the frequency?
 </p>
 <p>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image10.gif" alt="Generated visual 10" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image10.gif" alt="Generated visual 10" style="display:block; margin:16px auto; max-width:100%; height:auto;">
 </p>
 <p>
   No that was too much. Maybe what it needs is some parameter changes and grey scale.
 </p>
 <p>
-  <img src="posts/opening-a-portal-to-an-eldritch-dimension/assets/image6.gif" alt="Generated visual 6" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <img src="posts/training-a-model-to-open-the-gates-of-hell/assets/image6.gif" alt="Generated visual 6" style="display:block; margin:16px auto; max-width:100%; height:auto;">
 </p>
 <p class="visual-takeaway"><strong>Note:</strong> these are minor parameter variations of the same setup described above.</p>
 <p>
