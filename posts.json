@@ -3,7 +3,7 @@
     "title": "Optimiser? I Hardly Know 'Er.",
     "date": "2026-03-02",
     "path": "posts/optimiser-i-hardly-know-er/optimiser-i-hardly-know-er.html",
-    "description": "How to Train a Python Function to Control Your Robot (and Why Breadth Matters)",
+    "description": "Using LLM Program Search to Build Robot Controllers Without RL Optimisers",
     "social_image": "posts/optimiser-i-hardly-know-er/assets/funny.png"
   },
 
@@ -27,7 +27,8 @@
     "title": "Microbiome Modelling",
     "date": "2025-09-29",
     "path": "posts/micro-modelling/micro-modelling.html",
-    "description": "Microbiome World Modelling."
+    "description": "Microbiome World Modelling.",
+    "social_image": "posts/micro-modelling/micro-modelling-imgs/input-space.jpg"
   },
   {
     "title": "Self-Organising Text",
