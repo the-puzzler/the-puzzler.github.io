@@ -1,0 +1,439 @@
+/* Post-specific styles for "Optimiser? I Hardly Know 'Er." */
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap');
+
+.post-subtitle {
+  margin-top: -0.3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.lead-block {
+  margin-bottom: 1.2rem;
+}
+
+.opener-video {
+  margin: 0.35rem auto 1.1rem auto;
+  width: min(760px, 96%);
+}
+
+.opener-video video {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+.prologue-questions {
+  margin: 0.55rem auto 0.95rem auto;
+  width: min(820px, 96%);
+  text-align: center;
+}
+
+.prologue-questions p {
+  margin: 0.24rem 0;
+  font-size: clamp(1.12rem, 2.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.program-loop-lab {
+  margin: 0.75rem auto 1.15rem auto;
+  width: min(760px, 100%);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+#program-loop-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.lucky-board-lab {
+  margin: 0.7rem auto 1.1rem auto;
+  width: min(760px, 100%);
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--bg) 99%, white 1%);
+  padding: 0.55rem 0.55rem 0.45rem 0.55rem;
+}
+
+.lucky-board-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.lucky-board-panel h4 {
+  margin: 0 0 0.35rem 0;
+  font-size: 1rem;
+}
+
+.lucky-board-panel canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--bg) 99%, white 1%);
+}
+
+.lucky-board-stats {
+  margin: 0.35rem 0 0 0;
+  font-size: 0.88rem;
+  color: var(--ink-dim);
+}
+
+.lucky-board-caption {
+  margin: 0.45rem 0 0.05rem 0;
+  font-size: 0.86rem;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+.island-flow-lab {
+  margin: 0.65rem auto 0.5rem auto;
+  width: min(760px, 100%);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+
+#island-flow-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.island-flow-caption {
+  margin: 0.1rem 0 0.55rem 0;
+  font-size: 0.86rem;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .lucky-board-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.placeholder-panel {
+  margin: 0.85rem auto 1.15rem auto;
+  width: min(760px, 96%);
+  min-height: 110px;
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--bg) 94%, var(--ink) 6%),
+      color-mix(in oklab, var(--bg) 87%, var(--ink) 13%)
+    );
+}
+
+.placeholder-panel figcaption {
+  padding: 0.9rem;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.algo-table-wrap {
+  margin: 0.8rem auto 1.2rem auto;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.algo-table {
+  width: auto;
+  border-collapse: collapse;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--bg) 96%, var(--ink) 4%);
+}
+
+.algo-table th,
+.algo-table td {
+  padding: 0.5rem 0.65rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--rule) 70%, transparent);
+  font-size: 0.98rem;
+}
+
+.algo-table thead th {
+  text-align: left;
+  font-weight: 700;
+  background: color-mix(in oklab, var(--bg) 89%, var(--ink) 11%);
+}
+
+.algo-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.algo-table td:nth-child(2),
+.algo-table td:nth-child(3),
+.algo-table th:nth-child(2),
+.algo-table th:nth-child(3) {
+  text-align: center;
+  width: 20%;
+}
+
+.result-pair {
+  margin: 0.85rem 0 1.15rem 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.result-pair img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.result-pair-item {
+  margin: 0;
+}
+
+.result-pair-caption {
+  margin: 0.35rem 0 0 0;
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--ink-dim);
+}
+
+.center-figure {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  justify-content: center;
+}
+
+.center-figure img {
+  width: min(340px, 100%);
+  height: auto;
+  display: block;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.code-embed {
+  margin: 0.8rem 0 1.15rem 0;
+  width: fit-content;
+  max-width: 92%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.code-embed figcaption {
+  margin: 0 0 0.4rem 0;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.code-embed-shell {
+  border: 1px solid #ccd2db;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  background: #fbfcfe;
+}
+
+.code-embed-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 0.48rem 0.75rem;
+  background: #f2f5f9;
+  color: #2a3440;
+  border-bottom: 1px solid #d9dfe8;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.code-embed-file {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.code-embed-lang {
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+.code-embed-body {
+  margin: 0;
+  padding: 0.78rem 1rem 0.88rem 1rem;
+  background: transparent;
+  color: #1f2a37;
+  overflow-x: auto;
+  line-height: 1;
+  border-top: 0;
+  border-left: 0;
+  display: block;
+}
+
+.code-embed-body code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 0.8rem;
+  font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  line-height: 1;
+}
+
+/* Override global pre/code defaults that add white bg + borders */
+.code-embed-shell pre,
+.code-embed-shell code {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.code-embed-body .token.comment,
+.code-embed-body .token.prolog,
+.code-embed-body .token.doctype,
+.code-embed-body .token.cdata {
+  color: #7a8597;
+}
+
+.code-embed-body .token.keyword {
+  color: #7c3aed;
+}
+
+.code-embed-body .token.function {
+  color: #0f766e;
+}
+
+.code-embed-body .token.string {
+  color: #b45309;
+}
+
+.code-embed-body .token.number,
+.code-embed-body .token.boolean {
+  color: #0e7490;
+}
+
+.code-embed-body .token.operator,
+.code-embed-body .token.punctuation {
+  color: #334155;
+}
+
+.code-embed-body .token.class-name {
+  color: #1d4ed8;
+}
+
+.code-embed-body .token.builtin {
+  color: #2563eb;
+}
+
+.code-embed-body .token.parameter {
+  color: #111827;
+}
+
+.post h4 {
+  margin: 0.5rem 0 0.45rem;
+  font-size: clamp(1.0rem, 2.7vw, 1.14rem);
+}
+
+.repo-embed {
+  margin: 0.35rem auto 0.9rem auto;
+  width: min(760px, 100%);
+  border: 1px solid color-mix(in oklab, var(--rule) 74%, var(--ink) 26%);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--bg) 96%, var(--ink) 4%);
+  padding: 0.55rem 0.8rem;
+}
+
+.repo-embed-kicker {
+  margin: 0 0 0.22rem 0;
+  font-size: 0.73rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.repo-embed a {
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.93rem;
+  text-decoration: none;
+  color: var(--ink);
+  word-break: break-word;
+}
+
+.repo-embed a:hover {
+  text-decoration: underline;
+}
+
+.repo-embed-bottom {
+  margin-top: 0.85rem;
+}
+
+.inline-def {
+  margin: 0.45rem 0 0.85rem 0;
+  padding: 0.45rem 0.62rem;
+  border-left: 3px solid color-mix(in oklab, var(--ink) 45%, var(--rule) 55%);
+  background: color-mix(in oklab, var(--bg) 94%, var(--ink) 6%);
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.conclusion-funny img {
+  width: min(680px, 100%);
+}
+
+.twitter-tweet {
+  margin: 0.65rem auto 1.05rem auto !important;
+}
+
+.twitter-tweet.twitter-tweet-rendered {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.tweet-main-only {
+  max-height: 270px;
+  overflow: hidden;
+  position: relative;
+}
+
+.tweet-main-only::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--bg));
+  pointer-events: none;
+}
+
+.tweet-open-link {
+  margin: -0.6rem auto 1.15rem auto;
+  text-align: center;
+  font-size: 0.98rem;
+}
+
+@media (max-width: 700px) {
+  .placeholder-panel {
+    min-height: 90px;
+  }
+
+  .result-pair {
+    grid-template-columns: 1fr;
+  }
+}

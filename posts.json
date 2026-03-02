@@ -1,5 +1,13 @@
 [
   {
+    "title": "Optimiser? I Hardly Know 'Er.",
+    "date": "2026-03-02",
+    "path": "posts/optimiser-i-hardly-know-er/optimiser-i-hardly-know-er.html",
+    "description": "How to Train a Python Function to Control Your Robot (and Why Breadth Matters)",
+    "social_image": "posts/optimiser-i-hardly-know-er/assets/funny.png"
+  },
+
+  {
     "title": "Training a model to open the gates of hell",
     "date": "2026-02-17",
     "path": "posts/training-a-model-to-open-the-gates-of-hell/training-a-model-to-open-the-gates-of-hell.html",

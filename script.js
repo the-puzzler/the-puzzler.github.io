@@ -53,11 +53,21 @@ async function renderList() {
   listEl.innerHTML = posts.map(p => {
     const href = makeHref(p.path || "");
     const attrs = linkAttrs(p.path || "");
+    const thumb = p.social_image
+      ? `
+        <a class="item-thumb-link" href="${href}" ${attrs} aria-label="${p.title}">
+          <img class="item-thumb" src="${p.social_image}" alt="${p.title}" loading="lazy" decoding="async">
+        </a>
+      `
+      : '';
     return `
       <li class="item">
-        <h3><a href="${href}" ${attrs}>${p.title}</a></h3>
-        <small>${formatDate(p.date)}</small>
-        ${p.description ? `<p>${p.description}</p>` : ``}
+        <div class="item-main">
+          <h3><a href="${href}" ${attrs}>${p.title}</a></h3>
+          <small>${formatDate(p.date)}</small>
+          ${p.description ? `<p>${p.description}</p>` : ``}
+        </div>
+        ${thumb}
       </li>
     `;
   }).join('');
