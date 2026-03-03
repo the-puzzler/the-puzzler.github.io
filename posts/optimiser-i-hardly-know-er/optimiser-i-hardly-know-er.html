@@ -66,6 +66,45 @@
   its program. We generate N programs per round, in practice I do this 10 times. Each of the 10 programs are evaluated and the best 
   of the bunch is added to the archive.
 </p>
+<figure class="code-embed">
+  <figcaption>Example SimpleShinka prompt</figcaption>
+  <div class="code-embed-shell">
+    <div class="code-embed-bar">
+      <span class="code-embed-file">prompt.txt</span>
+      <span class="code-embed-lang">Template</span>
+    </div>
+<pre class="code-embed-body"><code class="language-python">Output exactly ONE fenced Python code block and nothing else.
+Do not write comments.
+Define exactly:
+def main(obs: list[float]) -> list[float]:
+
+Contract:
+- `obs` is a list of floats.
+- Return a list of 4 floats.
+- Floats will be clipped to [-1, 1].
+- Imports allowed: `math` only.
+- No file I/O, no network, no printing.
+
+Goal:
+Maximise two scores: `score_a` and `score_b`.
+Higher is better for both.
+
+Previous attempts to build from:
+BEST: score_a=... score_b=...
+def main(obs: list[float]) -> list[float]:
+    ...
+
+RANDOM_1: ...
+RANDOM_2: ...
+RANDOM_3: ...
+LAST_1: ...
+LAST_2: ...
+LAST_3: ...</code></pre>
+  </div>
+</figure>
+<p>
+  In practice, the evaluator defines what these scores mean for each environment. You can use any number of scores, not just two. For example, in BipedalWalker, <span class="score-pill">score_a</span> tracked distance travelled and <span class="score-pill">score_b</span> tracked speed, so the prompt nudged the model towards both progress and pace rather than a single metric.
+</p>
 
 <hr>
 <h2>Experiments</h2>

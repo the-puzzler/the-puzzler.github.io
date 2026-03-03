@@ -392,6 +392,18 @@
   font-size: 0.95rem;
 }
 
+.score-pill {
+  display: inline-block;
+  padding: 0.02rem 0.42rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 20%, var(--rule) 80%);
+  background: color-mix(in oklab, var(--bg) 90%, var(--ink) 10%);
+  font-family: "Roboto Mono", monospace;
+  font-size: 0.82em;
+  line-height: 1.1;
+  vertical-align: baseline;
+}
+
 .conclusion-funny img {
   width: min(680px, 100%);
 }
