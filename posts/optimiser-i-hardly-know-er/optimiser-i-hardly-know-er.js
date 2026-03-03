@@ -5,14 +5,18 @@ function ensureTwitterEmbeds() {
   if (!hasTweet) return;
 
   const CROP_PX = 594;
+  const MOBILE_CROP_RATIO = 0.9;
+  const isMobile = () => window.matchMedia && window.matchMedia('(max-width: 700px)').matches;
+  const getCropPx = () => (isMobile() ? Math.round(CROP_PX * MOBILE_CROP_RATIO) : CROP_PX);
 
   const cropRenderedTweets = () => {
+    const cropPx = getCropPx();
     const embeds = root.querySelectorAll(
       'iframe.twitter-tweet-rendered, iframe[src*="platform.twitter.com/embed/Tweet.html"]'
     );
     embeds.forEach((iframe) => {
-      iframe.style.height = `${CROP_PX}px`;
-      iframe.style.maxHeight = `${CROP_PX}px`;
+      iframe.style.height = `${cropPx}px`;
+      iframe.style.maxHeight = `${cropPx}px`;
       iframe.style.overflow = 'hidden';
       iframe.style.display = 'block';
     });
