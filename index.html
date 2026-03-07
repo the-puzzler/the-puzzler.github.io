@@ -79,7 +79,16 @@
 
       <div class="hr"></div>
 
-      <h1>Blogs</h1>
+      <div class="blogs-head">
+        <h1>Blogs</h1>
+      </div>
+      <div class="tag-filter-row">
+        <label class="blog-search-wrap" for="blog-search">
+          <span class="sr-only">Search blogs</span>
+          <input id="blog-search" class="blog-search" type="search" placeholder="Search blogs..." autocomplete="off">
+        </label>
+        <div id="blog-tag-filters" class="tag-filters" aria-label="Filter blogs by topic"></div>
+      </div>
       <ul id="post-list" class="list"></ul>
     </section>
 

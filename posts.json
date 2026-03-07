@@ -4,7 +4,8 @@
     "date": "2026-03-02",
     "path": "posts/optimiser-i-hardly-know-er/optimiser-i-hardly-know-er.html",
     "description": "Using LLM Program Search to Build Robot Controllers Without RL Optimisers",
-    "social_image": "posts/optimiser-i-hardly-know-er/assets/funny.png"
+    "social_image": "posts/optimiser-i-hardly-know-er/assets/funny.png",
+    "tags": ["LLM", "Robotics"]
   },
 
   {
@@ -12,7 +13,8 @@
     "date": "2026-02-17",
     "path": "posts/training-a-model-to-open-the-gates-of-hell/training-a-model-to-open-the-gates-of-hell.html",
     "description": "This is a short fun blog in which I showcase an experiment in creating endless learnable content.",
-    "social_image": "posts/training-a-model-to-open-the-gates-of-hell/assets/blackwhite_clip_02_latent0_thumb.jpg"
+    "social_image": "posts/training-a-model-to-open-the-gates-of-hell/assets/blackwhite_clip_02_latent0_thumb.jpg",
+    "tags": ["World Modelling"]
   },
 
   {
@@ -20,7 +22,8 @@
     "date": "2026-02-12",
     "path": "posts/curriculum-is-key/curriculum-is-key.html",
     "description": "Exploratory post on curriculum as the missing ingredient required for true intelligence and creativity.",
-    "social_image": "posts/curriculum-is-key/images/opener.png"
+    "social_image": "posts/curriculum-is-key/images/opener.png",
+    "tags": ["Robotics"]
   },
 
   {
@@ -28,19 +31,24 @@
     "date": "2025-09-29",
     "path": "posts/micro-modelling/micro-modelling.html",
     "description": "Microbiome World Modelling.",
-    "social_image": "posts/micro-modelling/micro-modelling-imgs/input-space.jpg"
+    "social_image": "posts/micro-modelling/micro-modelling-imgs/input-space.jpg",
+    "tags": ["Biology", "World Modelling"]
   },
   {
     "title": "Self-Organising Text",
     "date": "2025-09-07",
     "path": "posts/self-org-text/self-org-text.html",
-    "description": "Cellular Automata Inspired Self Organising Text"
+    "description": "Cellular Automata Inspired Self Organising Text",
+    "social_image": "posts/self-org-text/self-org-text-imgs/cover.png",
+    "tags": ["LLM"]
   },
   {
     "title": "Sample Efficient AR Diffusion",
     "date": "2025-08-22",
     "path": "https://francesco215.github.io/autoregressive_diffusion/",
-    "description": "Oniris: Autoregressive and Sample-Efficient Next-Gen Video Diffusion"
+    "description": "Oniris: Autoregressive and Sample-Efficient Next-Gen Video Diffusion",
+    "social_image": "posts/sample-efficient-ar-diffusion/thumbnail.png",
+    "tags": ["World Modelling"]
   }
   
 ]

@@ -28,31 +28,120 @@ function formatDate(iso) {
   }
 }
 
-// Treat http(s) and protocol-relative (//) as external
-function isExternalPath(path = "") {
-  return /^(https?:)?\/\//i.test(path);
+const HOME_FILTER_TAGS = ['LLM', 'Robotics', 'Biology', 'World Modelling'];
+let homePostsCache = [];
+let activeHomeTags = new Set();
+let homeSearchQuery = '';
+
+function normalizePostTags(tags) {
+  if (!Array.isArray(tags)) return [];
+  return tags.map(t => String(t || '').trim()).filter(Boolean);
 }
 
-function makeHref(path = "") {
-  return isExternalPath(path)
-    ? path
-    : `post.html?p=${encodeURIComponent(path)}`;
+function postMatchesActiveTag(post) {
+  if (!activeHomeTags.size) return true;
+  const normalized = normalizePostTags(post.tags).map(t => t.toLowerCase());
+  for (const selectedTag of activeHomeTags) {
+    if (normalized.includes(selectedTag.toLowerCase())) return true;
+  }
+  return false;
 }
 
-function linkAttrs(path = "") {
-  return isExternalPath(path)
-    ? 'target="_blank" rel="noopener noreferrer"'
-    : '';
+function postTagMatchScore(post) {
+  if (!activeHomeTags.size) return 0;
+  const normalized = new Set(normalizePostTags(post.tags).map(t => t.toLowerCase()));
+  let score = 0;
+  for (const selectedTag of activeHomeTags) {
+    if (normalized.has(selectedTag.toLowerCase())) score += 1;
+  }
+  return score;
 }
 
-async function renderList() {
+function postMatchesSearch(post) {
+  if (!homeSearchQuery) return true;
+  const haystack = [
+    post.title || '',
+    post.description || '',
+    ...normalizePostTags(post.tags)
+  ].join(' ').toLowerCase();
+  return haystack.includes(homeSearchQuery);
+}
+
+function initHomeSearch() {
+  const searchEl = $('#blog-search');
+  if (!searchEl || searchEl.dataset.bound === 'true') return;
+  searchEl.dataset.bound = 'true';
+  searchEl.value = homeSearchQuery;
+
+  const onInput = debounce(() => {
+    homeSearchQuery = (searchEl.value || '').trim().toLowerCase();
+    renderHomePostList(homePostsCache);
+  }, 120);
+  searchEl.addEventListener('input', onInput);
+}
+
+function renderTagFilters(posts) {
+  const filterEl = $('#blog-tag-filters');
+  if (!filterEl) return;
+
+  const counts = new Map(HOME_FILTER_TAGS.map(tag => [tag, 0]));
+  posts.forEach(post => {
+    normalizePostTags(post.tags).forEach(tag => {
+      const canonical = HOME_FILTER_TAGS.find(t => t.toLowerCase() === tag.toLowerCase());
+      if (canonical) counts.set(canonical, counts.get(canonical) + 1);
+    });
+  });
+
+  const buttons = [
+    { tag: '', label: `All (${posts.length})` },
+    ...HOME_FILTER_TAGS.map(tag => ({ tag, label: `${tag} (${counts.get(tag) || 0})` }))
+  ];
+
+  filterEl.innerHTML = buttons.map(({ tag, label }) => {
+    const isActive = tag ? activeHomeTags.has(tag) : activeHomeTags.size === 0;
+    return `<button class="tag-chip${isActive ? ' is-active' : ''}" data-tag="${tag}" type="button" aria-pressed="${isActive}">${label}</button>`;
+  }).join('');
+
+  $$('.tag-chip', filterEl).forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tag = btn.dataset.tag || '';
+      if (!tag) {
+        activeHomeTags.clear();
+      } else if (activeHomeTags.has(tag)) {
+        activeHomeTags.delete(tag);
+      } else {
+        activeHomeTags.add(tag);
+      }
+      renderTagFilters(homePostsCache);
+      renderHomePostList(homePostsCache);
+    });
+  });
+}
+
+function renderHomePostList(posts) {
   const listEl = $('#post-list');
   if (!listEl) return;
 
-  const posts = await loadPosts();
-  listEl.innerHTML = posts.map(p => {
+  const filtered = posts
+    .filter(postMatchesActiveTag)
+    .filter(postMatchesSearch)
+    .sort((a, b) => {
+      const scoreDiff = postTagMatchScore(b) - postTagMatchScore(a);
+      if (scoreDiff !== 0) return scoreDiff;
+      return new Date(b.date) - new Date(a.date);
+    });
+  if (!filtered.length) {
+    listEl.innerHTML = '<li class="item"><div class="item-main"><p>No posts match the current filters.</p></div></li>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(p => {
     const href = makeHref(p.path || "");
     const attrs = linkAttrs(p.path || "");
+    const tags = normalizePostTags(p.tags);
+    const tagsHtml = tags.length
+      ? `<span class="item-tags">${tags.map(tag => `<span class="item-tag">${tag}</span>`).join('')}</span>`
+      : '';
     const thumb = p.social_image
       ? `
         <a class="item-thumb-link" href="${href}" ${attrs} aria-label="${p.title}">
@@ -64,13 +153,26 @@ async function renderList() {
       <li class="item">
         <div class="item-main">
           <h3><a href="${href}" ${attrs}>${p.title}</a></h3>
-          <small>${formatDate(p.date)}</small>
+          <div class="item-meta">
+            <small>${formatDate(p.date)}</small>
+            ${tagsHtml}
+          </div>
           ${p.description ? `<p>${p.description}</p>` : ``}
         </div>
         ${thumb}
       </li>
     `;
   }).join('');
+}
+
+async function renderList() {
+  const listEl = $('#post-list');
+  if (!listEl) return;
+
+  homePostsCache = await loadPosts();
+  initHomeSearch();
+  renderTagFilters(homePostsCache);
+  renderHomePostList(homePostsCache);
 }
 
 
