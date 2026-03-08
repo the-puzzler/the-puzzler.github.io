@@ -115,41 +115,28 @@
   causality, because it means that future token information would begin mixing with past token information during the
   downstep.
 </p>
+<figure class="inline-video-demo">
+  <video class="click-pause-video" autoplay loop muted playsinline preload="metadata" aria-label="Causal attention illustration">
+    <source src="posts/tokens-who-needs-them/assets/CausalAttentionScene.mp4" type="video/mp4">
+  </video>
+</figure>
 
 <p>
   Thus, in order to maintain causality, I decided to take the simplest route, which was to just drop tokens.
-</p>
-<div class="phrase-quote phrase-quote-full">“The Cat Sat in the Hat”</div>
-<p>
-  The intuition behind this can be seen by considering the phrase above. If every second word was removed:
-</p>
-<div class="phrase-quote phrase-quote-dropped">“The _ Sat _ the _”</div>
-<p>
-  it is probably still possible to figure out what was said and to reason about predicting the next token.
 </p>
 <p>
   Every layer would have a compression factor, e.g. 2x would mean that half the number of tokens would be dropped. By
   dropping them, causality is surely maintained as there is no chance for information mixing.
 </p>
-<section id="causality-demo" class="causality-demo" aria-label="Causality and downsampling token flow comparison">
-  <div class="cds-phrase">
-    <h4>Phrase</h4>
-    <div id="cds-phrase-list" class="cds-token-column"></div>
-  </div>
-
-  <div class="cds-views">
-    <article class="cds-panel">
-      <h4>Transformer</h4>
-      <div id="cds-transformer-cols" class="cds-cols"></div>
-    </article>
-
-    <article class="cds-panel">
-      <h4>U-Net</h4>
-      <div id="cds-unet-cols" class="cds-cols"></div>
-    </article>
-  </div>
-</section>
-<p class="causality-caption">Causal attention pairs grow with token count. Transformer keeps token count constant across layers, while U-Net reduces token count through depth and then restores it, reducing causal pair cost in compressed layers.</p>
+<p>
+  Concretely, for 2x compression at a given layer, we keep token positions 0, 2, 4, ... and drop positions 1, 3, 5,
+  ... before the next layer.
+</p>
+<figure class="inline-video-demo">
+  <video class="click-pause-video" autoplay loop muted playsinline preload="metadata" aria-label="Downsampling token flow">
+    <source src="posts/tokens-who-needs-them/assets/DownsampleColumnFlow.mp4" type="video/mp4">
+  </video>
+</figure>
 <p>
   My concerns at this stage were that dropping tokens would result in catastrophic information loss, but I was not
   deterred because of two things:
@@ -170,11 +157,17 @@
   skip connection to the previous layers will then add to these tokens, recovering any lost fine detail from the
   downsampling.
 </p>
+<p>
+  In practice, each kept token is projected from D to 2D, split into two D vectors, and then aligned with skip
+  features at matching positions so the full token count is reconstructed.
+</p>
 
-<section id="upsample-demo" class="upsample-demo" aria-label="Upsampling animation">
-  <canvas id="upsample-demo-canvas" width="900" height="260" aria-label="Token vector expansion and split animation"></canvas>
-</section>
-<p class="upsample-caption">A single token is linearly expanded, split into two D-dimensional vectors, and stacked as two output tokens.</p>
+<figure class="inline-video-demo">
+  <video class="click-pause-video" autoplay loop muted playsinline preload="metadata" aria-label="Upsampling token flow">
+    <source src="posts/tokens-who-needs-them/assets/UpsampleColumnFlow.mp4" type="video/mp4">
+  </video>
+</figure>
+<p class="upsample-caption">Tokens are dropped by index during compression, then re-expanded by D->2D split and skip-merged to reconstruct full sequence length.</p>
 
 <h3>Full model</h3>
 <p>

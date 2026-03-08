@@ -1015,6 +1015,17 @@ function initArchitectureTableToggle() {
   });
 }
 
+function initClickPauseVideos() {
+  document.querySelectorAll('.click-pause-video').forEach((video) => {
+    if (video.dataset.bound === '1') return;
+    video.dataset.bound = '1';
+    video.addEventListener('click', () => {
+      if (video.paused) video.play();
+      else video.pause();
+    });
+  });
+}
+
 function initPostComments() {
   const host = document.getElementById('post-comments-thread');
   if (!host) return;
@@ -1043,6 +1054,7 @@ document.addEventListener('post:ready', (evt) => {
   initUpsampleDemo();
   initBottleneckLab();
   initArchitectureTableToggle();
+  initClickPauseVideos();
   initPostComments();
 });
 
@@ -1064,6 +1076,9 @@ if (document.getElementById('bottleneck-lab')) {
 }
 if (document.getElementById('arch-table-wrap')) {
   initArchitectureTableToggle();
+}
+if (document.querySelector('.click-pause-video')) {
+  initClickPauseVideos();
 }
 if (document.getElementById('post-comments-thread')) {
   initPostComments();

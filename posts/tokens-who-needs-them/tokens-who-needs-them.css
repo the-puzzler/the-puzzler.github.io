@@ -193,6 +193,21 @@
   cursor: pointer;
 }
 
+.inline-video-demo {
+  margin: 8px auto 10px;
+  width: min(96%, 900px);
+}
+
+.inline-video-demo video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--rule) 55%, transparent);
+  background: color-mix(in srgb, var(--bg) 96%, #ffffff 4%);
+  cursor: pointer;
+}
+
 .causality-demo {
   margin: 10px 0 14px;
   padding: 10px;
