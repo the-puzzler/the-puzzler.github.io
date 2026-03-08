@@ -1,0 +1,385 @@
+<h1>Tokens, who needs them?</h1>
+<p class="post-subtitle">Improving transformer memory efficiency by 2.7x</p>
+
+<aside class="repo-embed" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Code</p>
+  <a href="https://github.com/the-puzzler/enwik8unet" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/enwik8unet</a>
+  <br>
+  <a href="https://huggingface.co/spaces/basilboy/simple-unet-transformer" target="_blank" rel="noopener noreferrer">huggingface.co/spaces/basilboy/simple-unet-transformer</a>
+</aside>
+
+<section class="top-metric-collage" aria-label="Model comparison metrics collage">
+  <img src="posts/tokens-who-needs-them/assets/metric_infer_memory.png" alt="Inference memory metric comparison">
+  <img src="posts/tokens-who-needs-them/assets/metric_test_bpb.png" alt="Test BPB metric comparison">
+</section>
+
+<section class="lead-block">
+  <p>I began this project with three questions:</p>
+  <div class="prologue-questions" role="note" aria-label="Core questions">
+    <p>Do language transformers really need all those tokens?</p>
+    <p>What happens if we just drop tokens from context and add them back later?</p>
+    <p>Can we save on memory without affecting quality?</p>
+  </div>
+
+  <p>
+    The U-Net architecture is incredibly useful for vision tasks. It has proven to be extremely efficient, especially
+    when compared to transformers, whilst nearly matching in performance.
+  </p>
+  <p>
+    Here I show that simply by predictably dropping tokens, then adding them back in later, for the same inference
+    compute you can get about 2.7x lower memory allocation.
+  </p>
+  <p>
+    I will also show that the bottleneck tokens of the simple unet transformer capture meaningful semantic information,
+    and could be used as an alterntive for semantic embeddings.
+  </p>
+  <p class="skip-results-row">
+    <a class="skip-results-btn" href="#results-section">--&gt; Skip to results &lt;--</a>
+    &nbsp;|&nbsp;
+    <a class="skip-results-btn" href="#live-demo-section">--&gt; Skip to live demo &lt;--</a>
+  </p>
+</section>
+
+<hr>
+
+<h2>Introduction</h2>
+<h3>Transformer</h3>
+<p>
+  Transformers are memory and compute-intensive architectures because of attention.
+</p>
+
+<div class="attention-equation">
+  \[
+    \mathrm{Attention}(Q,K,V)=\mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V
+  \]
+</div>
+
+<p>
+  Attention scales as \(O(n^2)\) due to the all-vs-all token operation. This causes both memory and
+  compute to explode. Whilst the compute can often be justified by enhanced performance, the memory and throughput
+  drawback is significant. It would be great if we could harness the power of attention whilst minimising these
+  bottlenecks.
+</p>
+<figure class="attention-scaling-figure">
+  <svg viewBox="0 0 520 280" role="img" aria-label="Quadratic attention scaling with sequence length">
+    <line x1="40" y1="240" x2="500" y2="240" stroke="rgba(0,0,0,0.34)" stroke-width="1.2"></line>
+    <line x1="40" y1="240" x2="40" y2="30" stroke="rgba(0,0,0,0.34)" stroke-width="1.2"></line>
+    <path d="M40,240 C170,238 270,214 350,166 C420,124 462,82 500,40" fill="none" stroke="rgba(40,95,170,0.95)" stroke-width="3.4"></path>
+    <text x="505" y="244" text-anchor="start" font-size="13" fill="rgba(0,0,0,0.7)">n</text>
+    <text x="36" y="24" text-anchor="end" font-size="13" fill="rgba(0,0,0,0.7)">cost</text>
+    <text x="356" y="68" font-size="14" fill="rgba(40,95,170,0.9)">~ n²</text>
+  </svg>
+</figure>
+<p class="results-metric-caption">Attention compute grows quadratically with sequence length, so longer contexts rapidly increase cost.</p>
+<p>
+  One way might be to take inspiration from the visual processing field. The U-Net architecture originates from there,
+  and shows that you can save on computation and memory by using compression as part of the architecture. This allows
+  the model to compute in a more abstract but reduced dimensionality space.
+</p>
+
+<hr>
+
+<h3>U-Net</h3>
+<p>
+  The U-Net was originally designed for biomedical image segmentation but proved to be a very powerful architecture for
+  many vision tasks. The key architectural innovation was the reasoning by compression. Instead of computing in the
+  high-dimensional pixel space, the U-Net compresses the input layer by layer before expanding it back to its original
+  size. Those lower-dimensional layers also learn to capture more abstract aspects of the input space. The second
+  innovation was the use of skip connections. Skip connections allowed information to pass through the model without
+  requiring it to go through the 'U', the compressive pathway. This means that any high-frequency detail that may have
+  been lost during compression can be recovered.
+</p>
+
+<section id="unet-flow-lab" class="unet-flow-lab" aria-label="U-Net flow animation">
+  <canvas id="unet-flow-canvas" width="900" height="250" aria-label="U-Net encoder, bottleneck, decoder, and skip connections"></canvas>
+</section>
+
+<p>
+  The efficiencies of the U-Net come from the fact that the dimensionality of the problem is reduced during
+  compression. This means that the total number of FLOPs for a forward pass is much reduced with respect to if each
+  layer held the original image's (C, H, W) dimensionality.
+</p>
+<p>
+  The question is, how can we change the transformer architecture to maintain causality during this compressive
+  process?
+</p>
+
+<hr>
+
+
+
+<h2>Simple U-Transformer</h2>
+<h3>Causality and Downsampling</h3>
+<p>
+  Language modelling transformers are causal. This means that each token can only attend to all previous tokens.
+  Naively, one could achieve layer-wise compression by just averaging groups of tokens. However, this would break
+  causality, because it means that future token information would begin mixing with past token information during the
+  downstep.
+</p>
+
+<p>
+  Thus, in order to maintain causality, I decided to take the simplest route, which was to just drop tokens.
+</p>
+<div class="phrase-quote phrase-quote-full">“The Cat Sat in the Hat”</div>
+<p>
+  The intuition behind this can be seen by considering the phrase above. If every second word was removed:
+</p>
+<div class="phrase-quote phrase-quote-dropped">“The _ Sat _ the _”</div>
+<p>
+  it is probably still possible to figure out what was said and to reason about predicting the next token.
+</p>
+<p>
+  Every layer would have a compression factor, e.g. 2x would mean that half the number of tokens would be dropped. By
+  dropping them, causality is surely maintained as there is no chance for information mixing.
+</p>
+<section id="causality-demo" class="causality-demo" aria-label="Causality and downsampling token flow comparison">
+  <div class="cds-phrase">
+    <h4>Phrase</h4>
+    <div id="cds-phrase-list" class="cds-token-column"></div>
+  </div>
+
+  <div class="cds-views">
+    <article class="cds-panel">
+      <h4>Transformer</h4>
+      <div id="cds-transformer-cols" class="cds-cols"></div>
+    </article>
+
+    <article class="cds-panel">
+      <h4>U-Net</h4>
+      <div id="cds-unet-cols" class="cds-cols"></div>
+    </article>
+  </div>
+</section>
+<p class="causality-caption">Causal attention pairs grow with token count. Transformer keeps token count constant across layers, while U-Net reduces token count through depth and then restores it, reducing causal pair cost in compressed layers.</p>
+<p>
+  My concerns at this stage were that dropping tokens would result in catastrophic information loss, but I was not
+  deterred because of two things:
+</p>
+<ul>
+  <li>Causal attention before dropping means group 'leaders' can absorb information from the tokens behind them before they are dropped.</li>
+  <li>Skip connections mean that missing information can be recovered later.</li>
+</ul>
+
+<hr>
+
+<h3>Upsampling</h3>
+<p>
+  Once tokens are dropped, how can they be recovered again during upsampling so that informaiton can be mixed from the
+  skip connection and from the compressed representation? For this I adopted a strategy analogous to pixel shuffle.
+  Each upsampling layer has a linear head that can expand a tokens dimensionality. For example, in a 2x expansion
+  layer, a token of dims D, will be expanded to 2D. Then simply, it is split in half to create two dim D tokens. The
+  skip connection to the previous layers will then add to these tokens, recovering any lost fine detail from the
+  downsampling.
+</p>
+
+<section id="upsample-demo" class="upsample-demo" aria-label="Upsampling animation">
+  <canvas id="upsample-demo-canvas" width="900" height="260" aria-label="Token vector expansion and split animation"></canvas>
+</section>
+<p class="upsample-caption">A single token is linearly expanded, split into two D-dimensional vectors, and stacked as two output tokens.</p>
+
+<h3>Full model</h3>
+<p>
+  The full model looked like this:
+</p>
+<figure class="fullmodel-figure">
+  <img src="posts/tokens-who-needs-them/assets/fullmodel.png" alt="Full model architecture diagram">
+</figure>
+<p>
+  Before and after each downsampling or upsampling block there would be a regular causal attention block.
+</p>
+
+<hr>
+
+<h2>Experiment</h2>
+<p>
+  In order to test whether this U-Net transformer would be performant, I decided to train on enwik8, a Wikipedia
+  excerpt dataset. The task would be simple next-token prediction using byte-level tokenisation. I would then also
+  train two baselines:
+</p>
+<ul>
+  <li>Parameter-matched baseline.</li>
+  <li>Compute-matched baseline (so fewer parameters).</li>
+</ul>
+<p>
+  As standard, the first 90% of enwik8 was used for training, the next 5% for validation and selecting the best
+  checkpoint, and the final 5% for test evaluation.
+</p>
+
+<p>
+  These experiments would allow me to understand the different trade-offs:
+</p>
+<ul>
+  <li>Performance trade-off with equal parameters.</li>
+  <li>Compute cost and speed with equal parameters.</li>
+  <li>Performance with equal compute.</li>
+</ul>
+
+<hr>
+
+<h3>Architectures</h3>
+<p>
+  The parameter-matched and compute-matched baselines use the same core architecture as the U-Net model, but without
+  the upsampling and downsampling pathway. The compute-matched baseline uses fewer parameters overall.
+</p>
+
+<div class="table-wrap" id="arch-table-wrap">
+  <table class="arch-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Baseline (Parameter Match)</th>
+        <th>Small Baseline (Compute Match)</th>
+        <th>U-Net</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Vocab Size</td><td>256</td><td>256</td><td>256</td></tr>
+      <tr><td>Model Dim</td><td>512</td><td>240</td><td>512</td></tr>
+      <tr><td>Num Heads</td><td>8</td><td>8</td><td>8</td></tr>
+      <tr><td>MLP</td><td>SwiGLU</td><td>SwiGLU</td><td>SwiGLU</td></tr>
+      <tr><td>MLP Ratio</td><td>4</td><td>4</td><td>4</td></tr>
+      <tr><td>Dropout Ratio</td><td>0.1</td><td>0.1</td><td>0.1</td></tr>
+      <tr><td>Norm</td><td>RMSNorm</td><td>RMSNorm</td><td>RMSNorm</td></tr>
+      <tr><td>Positional Encoding</td><td>RoPE</td><td>RoPE</td><td>RoPE</td></tr>
+      <tr><td>Attention</td><td>Rotary MHA</td><td>Rotary MHA</td><td>Rotary MHA</td></tr>
+      <tr><td>Depth</td><td>10 layers</td><td>10 layers</td><td>9 layers</td></tr>
+      <tr><td>Window Sizes (up/down)</td><td>n/a</td><td>n/a</td><td>[4, 4, 2, 2]</td></tr>
+      <tr><td>Skip Connections</td><td>Residual in Blocks</td><td>Residual in Blocks</td><td>Residual and U-Net Skips</td></tr>
+      <tr><td>Causal Mask</td><td>Full Length</td><td>Full Length</td><td>Sliced per level</td></tr>
+      <tr><td>Param Count (M)</td><td>~42</td><td>~9.3</td><td>~42</td></tr>
+      <tr><td>FLOPs per forward pass (estimate)</td><td>~107 GFLOPs</td><td>29 GFLOPs</td><td>~28 GFLOPs</td></tr>
+      <tr><td>Total inference memory allocation</td><td>1676.50 MiB</td><td>1269.22 MiB</td><td><strong>473.25 MiB</strong></td></tr>
+    </tbody>
+  </table>
+  <div class="arch-toggle-row">
+    <button id="arch-table-toggle" class="arch-toggle" type="button" aria-expanded="false" aria-label="Expand architecture table">
+      <span class="arch-toggle-icon">▾</span>
+    </button>
+  </div>
+</div>
+
+<hr>
+
+<h2 id="results-section">Results</h2>
+<h3>Parameter and Compute vs Test Loss comparison</h3>
+<figure class="results-curve-figure">
+  <img src="posts/tokens-who-needs-them/assets/tradeoff_panel_vs_unet.png" alt="Trade-off panel comparing U-Net and baseline models">
+</figure>
+<p class="results-metric-caption">
+  Relative tradeoffs versus UNet: compared to baseline_small and baseline, we show differences in inference compute,
+  test performance (2^Δbpb−1), single-forward memory allocation, and train compute to best validation (all as % vs
+  UNet).
+</p>
+<p>
+  Despite having ~4.1% less compute than the compute-matched baseline, the baseline is only 2.25% better
+  (\(2^{\Delta \text{BPB}} - 1\)). This shows that for approximately the same compute, the U-Net does not deteriorate in
+  performance.
+</p>
+<p>
+  On the other hand, the U-Net uses 2.7x less memory than the compute-matched model, and 3.54x less memory than the
+  parameter-matched model.
+</p>
+<p>
+  The parameter-matched model shows 2.9% better performance, but uses significantly more compute than both the
+  compute-matched baseline and the U-Net.
+</p>
+<p>
+  The similarity in performance between the compute-matched and parameter-matched baselines suggests diminishing
+  returns from additional compute on this dataset. In the lower-compute regime where the compute-matched baseline and
+  U-Net operate, small compute differences appear to produce larger performance differences. In the higher-compute
+  regime, larger compute differences produce much smaller performance gains. This likely explains why the small compute
+  gap between U-Net and compute-matched baseline is still visible in performance, while the much larger compute gap
+  from compute-matched to parameter-matched yields a comparatively modest improvement.
+</p>
+
+<h3>Bottleneck Analysis</h3>
+<p>
+  In theory, if the model is using compression to help calculate the next token, the bottleneck dimension should
+  contain easily identifiable abstract information about the input sequence. To see whether this is the case or not, I
+  investigated:
+</p>
+<ul>
+  <li>From the test set I created non-overlapping sequences.</li>
+  <li>I pass the sequences through the U-Net model.</li>
+  <li>I extract the bottleneck tokens during the forward pass.</li>
+  <li>Once all have been collected I visualise the bottleneck tokens with UMAP and cluster them (HDBSCAN).</li>
+  <li>For each cluster, I see whether there are any words enriched in that cluster vs the rest of the dataset.</li>
+</ul>
+<section id="bottleneck-lab" class="bottleneck-lab" aria-label="Bottleneck UMAP clusters and enriched terms">
+  <div class="bottleneck-grid">
+    <article id="bottleneck-map-panel" class="bottleneck-panel">
+      <h4>UMAP clusters</h4>
+      <p class="bottleneck-map-note">Click on a coloured cluster to see the enriched terms of this group.</p>
+      <canvas id="bottleneck-umap-canvas" width="700" height="460" aria-label="UMAP points coloured by cluster"></canvas>
+    </article>
+    <article id="bottleneck-terms-panel" class="bottleneck-panel bottleneck-terms-panel">
+      <h4 id="bottleneck-cloud-title">Cluster terms</h4>
+      <div id="bottleneck-terms-cloud" class="bottleneck-terms-cloud" aria-live="polite"></div>
+      <p id="bottleneck-cloud-empty" class="bottleneck-cloud-empty">Click a point to see enriched terms.</p>
+    </article>
+  </div>
+  <p id="bottleneck-span-preview" class="bottleneck-span-preview">Associated text (first 50 chars):</p>
+</section>
+<p>
+  As you can see from playing with the above demo, the bottleneck embeddings capture real semantic information with
+  clear themes per cluster. For example, cluster 25 is clearly on religious topics. Meanwhile, clusters 22 and 21 are
+  mathematical and 9 is computing.
+</p>
+<p>
+  This is strong evidence that the simple unet model is actually utilising the bottleneck as an abstract reasoning
+  space.
+</p>
+
+<h3>Training Compute Curves</h3>
+<figure class="results-curve-figure">
+  <img src="posts/tokens-who-needs-them/assets/val_vs_flops.png" alt="Validation BPB against cumulative training compute">
+</figure>
+<p class="results-metric-caption">Validation bpb against cumulative training compute, stopping at best checkpoint</p>
+<p>
+  Baseline, being the largest compute model, converged with the least training compute and to the lowest loss. This
+  is quite consistent with empirical results from the literature about how scale generally leads to faster convergence
+  and better performance. The compute-matched U-Net and baseline_small take about the same amount of compute to
+  converge to their best values, though it is interesting to note that the U-Net's curve is quite different from the
+  traditional curves, exhibiting a kink around the 150 PFLOPs mark where the trajectory changes significantly.
+</p>
+
+<hr>
+
+<h2 id="live-demo-section">Live Demo</h2>
+<p>
+  You can try the model live below. Click 'compare' and scroll down in the widget to see the difference in memory
+  allocation curves.
+</p>
+<figure class="live-demo-embed">
+  <iframe
+    src="https://basilboy-simple-unet-transformer.hf.space"
+    title="Simple U-Net Transformer Live Demo"
+    loading="lazy"
+    allow="clipboard-write; fullscreen"
+  ></iframe>
+</figure>
+
+<hr>
+
+<h2>Conclusion</h2>
+<figure class="results-curve-figure conclusion-meme-figure">
+  <img src="posts/tokens-who-needs-them/assets/meme.jpg" alt="Conclusion meme">
+</figure>
+<p>
+  A simple U-Net style token compression strategy can reduce transformer memory allocation substantially without a large
+  quality drop. In these experiments, the U-Net achieved 2.7x lower inference memory than the compute-matched baseline
+  and 3.54x lower than the parameter-matched baseline, while staying close in test BPB. The bottleneck analysis also
+  shows that compressed representations retain meaningful semantic structure, supporting the idea that this bottleneck
+  acts as a useful abstract reasoning space. Overall, this suggests there is practical headroom in token-space
+  compression for more memory-efficient language modelling.
+</p>
+
+<aside class="repo-embed repo-embed-bottom" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Repository</p>
+  <a href="https://github.com/the-puzzler/enwik8unet" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/enwik8unet</a>
+  <br>
+  <a href="https://huggingface.co/spaces/basilboy/simple-unet-transformer" target="_blank" rel="noopener noreferrer">huggingface.co/spaces/basilboy/simple-unet-transformer</a>
+</aside>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>

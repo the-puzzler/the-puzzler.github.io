@@ -1,5 +1,14 @@
 [
   {
+    "title": "Tokens, who needs them?",
+    "date": "2026-03-07",
+    "path": "posts/tokens-who-needs-them/tokens-who-needs-them.html",
+    "description": "Improving transformer memory efficiency by 2.7x",
+    "social_image": "posts/tokens-who-needs-them/assets/meme.jpg",
+    "tags": ["LLM"]
+  },
+
+  {
     "title": "Optimiser? I Hardly Know 'Er.",
     "date": "2026-03-02",
     "path": "posts/optimiser-i-hardly-know-er/optimiser-i-hardly-know-er.html",

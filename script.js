@@ -327,18 +327,6 @@ function buildPostTOC(contentEl) {
   nav.appendChild(ul);
   toc.hidden = false;
   const tocCard = toc.querySelector('.toc-card');
-  const centerActiveLinkInTOC = () => {
-    if (!tocCard) return;
-    const activeLink = ul.querySelector('a.active') || links[0];
-    if (!activeLink) return;
-    const cardRect = tocCard.getBoundingClientRect();
-    const linkRect = activeLink.getBoundingClientRect();
-    const targetTop = tocCard.scrollTop
-      + (linkRect.top - cardRect.top)
-      - (tocCard.clientHeight / 2)
-      + (linkRect.height / 2);
-    tocCard.scrollTo({ top: Math.max(0, targetTop), behavior: 'auto' });
-  };
   const updateCardScrollHint = () => {
     if (!tocCard) return;
     const canScroll = tocCard.scrollHeight - tocCard.clientHeight > 6;
@@ -370,9 +358,21 @@ function buildPostTOC(contentEl) {
   const links = $$('a', ul);
   const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
   const topOffset = 120;
-  const revealTOCAtActive = () => requestAnimationFrame(centerActiveLinkInTOC);
-  toc.addEventListener('mouseenter', revealTOCAtActive);
-  toc.addEventListener('focusin', revealTOCAtActive);
+  // Keep TOC opening position aligned to the current section without
+  // continuously re-centering during regular scrolling/clicking.
+  const revealActiveOnOpen = () => {
+    if (!tocCard) return;
+    const activeLink = tocCard.querySelector('.toc-list a.active');
+    if (!activeLink) return;
+    const top = tocCard.scrollTop;
+    const bottom = top + tocCard.clientHeight;
+    const linkTop = activeLink.offsetTop - 8;
+    const linkBottom = linkTop + activeLink.offsetHeight + 16;
+    if (linkTop < top || linkBottom > bottom) {
+      tocCard.scrollTop = Math.max(0, activeLink.offsetTop - tocCard.clientHeight * 0.42);
+      updateCardScrollHint();
+    }
+  };
 
   const updateActive = () => {
     let activeIndex = 0;
@@ -393,6 +393,7 @@ function buildPostTOC(contentEl) {
 
   window.addEventListener('scroll', updateActive, { passive: true });
   window.addEventListener('resize', updateActive);
+  if (tocCard) tocCard.addEventListener('mouseenter', revealActiveOnOpen);
   updateActive();
   requestAnimationFrame(updateCardScrollHint);
 
@@ -400,8 +401,7 @@ function buildPostTOC(contentEl) {
     window.removeEventListener('scroll', updateActive);
     window.removeEventListener('resize', updateActive);
     if (tocCard) tocCard.removeEventListener('scroll', updateCardScrollHint);
-    toc.removeEventListener('mouseenter', revealTOCAtActive);
-    toc.removeEventListener('focusin', revealTOCAtActive);
+    if (tocCard) tocCard.removeEventListener('mouseenter', revealActiveOnOpen);
   };
 }
 
