@@ -1,0 +1,365 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500&display=swap');
+
+.post-subtitle {
+  margin-top: -0.3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.demo-cta {
+  margin: 0.8rem auto 1.2rem auto;
+  width: min(760px, 96%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0.9rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--rule) 68%, transparent);
+  border-radius: 14px;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--bg) 92%, #dbe7f4 8%),
+      color-mix(in oklab, var(--bg) 90%, #f3d8c6 10%)
+    );
+}
+
+.demo-cta-copy {
+  min-width: 0;
+}
+
+.demo-cta-kicker {
+  margin: 0 0 0.18rem 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.demo-cta-text {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  line-height: 1.05;
+}
+
+.demo-cta-subtext {
+  margin: 0.35rem 0 0 0;
+  color: var(--ink-dim);
+  font-size: 0.98rem;
+  max-width: 34rem;
+}
+
+.demo-cta-button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.72rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 28%, transparent);
+  background: color-mix(in oklab, var(--bg) 78%, white 22%);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.demo-cta-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.demo-cta-button:hover {
+  text-decoration: none;
+  background: color-mix(in oklab, var(--bg) 68%, white 32%);
+}
+
+.lead-block {
+  margin-bottom: 1.2rem;
+}
+
+.opener-video {
+  margin: 0.35rem auto 1.1rem auto;
+  width: min(760px, 96%);
+}
+
+.prologue-questions {
+  margin: 0.55rem auto 0.95rem auto;
+  width: min(820px, 96%);
+  text-align: center;
+}
+
+.prologue-questions p {
+  margin: 0.24rem 0;
+  font-size: clamp(1.12rem, 2.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.placeholder-panel {
+  margin: 0.85rem auto 1.15rem auto;
+  width: min(760px, 96%);
+  min-height: 118px;
+  border: 1px dashed var(--rule);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--bg) 95%, #dbe7f4 5%),
+      color-mix(in oklab, var(--bg) 87%, #f3d8c6 13%)
+    );
+}
+
+.placeholder-panel figcaption {
+  padding: 1rem;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.96rem;
+  max-width: 52ch;
+}
+
+.compare-grid {
+  margin: 0.8rem auto 1.2rem auto;
+  width: min(820px, 100%);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.compare-card {
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  padding: 0.95rem 0.95rem 0.85rem 0.95rem;
+  background: color-mix(in oklab, var(--bg) 97%, white 3%);
+}
+
+.compare-card h4 {
+  margin: 0 0 0.35rem 0;
+}
+
+.compare-card p {
+  margin: 0;
+}
+
+.compare-card-accent {
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--bg) 82%, #d7ecff 18%),
+      color-mix(in oklab, var(--bg) 92%, #fff2db 8%)
+    );
+  border-color: color-mix(in oklab, var(--rule) 45%, #7aa8d8 55%);
+}
+
+.equation-intro {
+  margin-bottom: 0.3rem;
+}
+
+.equation-figure {
+  margin: 0.55rem auto 1rem auto;
+  width: min(760px, 96%);
+  text-align: center;
+}
+
+.equation-figure mjx-container[jax="CHTML"][display="true"] {
+  font-size: 200% !important;
+}
+
+.equation-figure.equation-figure-small mjx-container[jax="CHTML"][display="true"] {
+  font-size: 140% !important;
+}
+
+.equation-figure figcaption {
+  margin-top: 0.4rem;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+.image-figure {
+  margin: 0.55rem auto 1rem auto;
+}
+
+.image-figure figcaption {
+  margin-top: 0.4rem;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.96rem;
+  max-width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.loss-table {
+  margin: 0.85rem auto 1.15rem auto;
+  width: min(820px, 100%);
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.loss-table th,
+.loss-table td {
+  padding: 0.65rem 0.75rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  vertical-align: top;
+}
+
+.loss-table th {
+  text-align: left;
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+
+.loss-table td code {
+  white-space: nowrap;
+}
+
+.loss-table td mjx-container {
+  font-size: 1em !important;
+}
+
+.planning-deck {
+  margin: 0.9rem auto 1.15rem auto;
+  width: min(900px, 100%);
+}
+
+.planning-deck video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  background: #000;
+}
+
+.planning-deck-media {
+  position: relative;
+}
+
+.planning-deck-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font-size: 0.82rem;
+  color: #f9f7f1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
+}
+
+.planning-deck-label {
+  position: absolute;
+  padding: 0.18rem 0.42rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(2px);
+  line-height: 1.1;
+}
+
+.planning-deck-label-left {
+  top: 5%;
+  left: 4%;
+}
+
+.planning-deck-label-mid-top {
+  top: 5%;
+  left: 52%;
+}
+
+.planning-deck-label-mid-bottom {
+  top: 53%;
+  left: 52%;
+}
+
+.planning-deck-label-right-top {
+  top: 5%;
+  right: 4%;
+}
+
+.planning-deck-label-right-bottom {
+  top: 53%;
+  right: 4%;
+}
+
+.planning-deck-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 0.65rem;
+}
+
+.planning-deck-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.planning-deck button {
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg) 96%, white 4%);
+  color: var(--ink);
+  padding: 0.45rem 0.9rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.planning-deck button:hover {
+  background: color-mix(in oklab, var(--bg) 90%, white 10%);
+}
+
+.planning-deck-status {
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  text-align: right;
+}
+
+.planning-deck figcaption {
+  margin-top: 0.4rem;
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.96rem;
+  max-width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 760px) {
+  .demo-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .demo-cta-button {
+    width: 100%;
+  }
+
+  .demo-cta-actions {
+    width: 100%;
+  }
+
+  .compare-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .planning-deck-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planning-deck-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .planning-deck-status {
+    text-align: center;
+  }
+
+  .planning-deck-overlay {
+    font-size: 0.7rem;
+  }
+}

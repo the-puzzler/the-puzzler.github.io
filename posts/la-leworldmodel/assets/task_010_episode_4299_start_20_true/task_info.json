@@ -1,0 +1,8 @@
+{
+  "task_index": 10,
+  "episode_idx": 4299,
+  "start_step": 20,
+  "goal_offset_steps": 25,
+  "eval_budget": 50,
+  "success": true
+}

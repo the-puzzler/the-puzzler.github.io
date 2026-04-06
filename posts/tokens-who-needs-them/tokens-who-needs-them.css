@@ -64,35 +64,6 @@
   background: color-mix(in srgb, var(--bg) 96%, #ffffff 4%);
 }
 
-.repo-embed {
-  margin: 0.35rem auto 0.9rem auto;
-  width: min(760px, 100%);
-  border: 1px solid color-mix(in oklab, var(--rule) 74%, var(--ink) 26%);
-  border-radius: 10px;
-  background: color-mix(in oklab, var(--bg) 96%, var(--ink) 4%);
-  padding: 0.55rem 0.8rem;
-}
-
-.repo-embed-kicker {
-  margin: 0 0 0.22rem 0;
-  font-size: 0.73rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-dim);
-}
-
-.repo-embed a {
-  font-family: "Roboto Mono", monospace;
-  font-size: 0.93rem;
-  text-decoration: none;
-  color: var(--ink);
-  word-break: break-word;
-}
-
-.repo-embed a:hover {
-  text-decoration: underline;
-}
-
 .lead-block p {
   margin-left: 0.2rem;
 }

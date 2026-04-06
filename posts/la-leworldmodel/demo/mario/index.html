@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mario la dynamics sim</title>
+    <meta name="description" content="Interactive Mario browser demo for la leWorldModel" />
+    <style>
+      :root {
+        --bg: #f9f7f1;
+        --paper: #fffdf8;
+        --ink: #2c2925;
+        --muted: #8a847e;
+        --line: #d8cfbf;
+        --accent: #0f766e;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .shell {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 22px clamp(16px, 4vw, 40px) 34px;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+      .crumb {
+        color: var(--muted);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 15px;
+        border: 1px solid color-mix(in oklab, var(--line) 72%, transparent);
+        border-radius: 999px;
+        background: var(--bg);
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .back:hover {
+        background: var(--paper);
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 4.6vw, 3.5rem);
+        line-height: 0.96;
+      }
+      p, li, button, .meta, .note {
+        font-size: 16px;
+      }
+      .hero-kicker {
+        margin: 0 0 0.2rem 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .lead-intro {
+        margin: 1.05rem 0 0.8rem 0;
+        max-width: 42rem;
+      }
+      .meta {
+        color: var(--muted);
+      }
+      .status {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(15,118,110,0.08);
+        color: #0b4f4a;
+        border: 1px solid rgba(15,118,110,0.12);
+      }
+      .status.error {
+        background: rgba(185,28,28,0.08);
+        color: #7f1d1d;
+        border-color: rgba(185,28,28,0.12);
+      }
+      .subpanel {
+        margin-top: 18px;
+      }
+      .subpanel h2,
+      .viewer-head h2,
+      .observations h2 {
+        margin: 0 0 0.22rem 0;
+        font-size: 1.1rem;
+      }
+      .subpanel p,
+      .viewer-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .history {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: stretch;
+        margin-top: 16px;
+      }
+      .history-box {
+        padding: 12px;
+        border: 1px solid color-mix(in oklab, var(--line) 76%, transparent);
+        border-radius: 16px;
+        background: var(--paper);
+      }
+      .history-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        justify-content: stretch;
+      }
+      button {
+        appearance: none;
+        border: 1px solid color-mix(in oklab, var(--line) 76%, transparent);
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 12px 10px;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+        font-family: inherit;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent);
+      }
+      button.secondary {
+        background: color-mix(in oklab, var(--paper) 96%, #f3d8c6 4%);
+      }
+      .viewer {
+        margin-top: 14px;
+      }
+      .viewer-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      canvas {
+        width: min(100%, 540px);
+        aspect-ratio: 1 / 1;
+        display: block;
+        margin: 0 auto;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        image-rendering: pixelated;
+      }
+      .controls {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      button.action {
+        font-weight: 700;
+        background: color-mix(in oklab, var(--paper) 88%, #dbe7f4 12%);
+        min-height: 52px;
+        font-size: 0.95rem;
+      }
+      .seed-strip {
+        margin-top: 18px;
+      }
+      .seed-options {
+        display: grid;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .seed-option {
+        border-radius: 16px;
+        border: 1px solid color-mix(in oklab, var(--line) 76%, transparent);
+        background: var(--paper);
+        padding: 10px;
+        text-align: left;
+      }
+      .seed-option.active {
+        border-color: var(--accent);
+      }
+      .seed-option-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+      }
+      .seed-option-title {
+        font-weight: 700;
+      }
+      .seed-option-meta {
+        color: var(--muted);
+      }
+      .seed-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+        max-width: 240px;
+      }
+      .seed-grid img {
+        width: 100%;
+        display: block;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+      }
+      .observations {
+        margin-top: 28px;
+      }
+      .observations p {
+        margin: 0 0 0.85rem 0;
+        max-width: 42rem;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .history {
+          grid-template-columns: 1fr;
+        }
+        .history-actions {
+          flex-direction: row;
+        }
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <div class="crumb">Interactive Demo</div>
+        <a class="back" href="../../../../?p=la-leworldmodel">Back to post</a>
+      </div>
+
+      <section>
+        <p class="hero-kicker">Browser Runtime</p>
+        <h1>Mario la dynamics sim</h1>
+        <p class="lead-intro">Step a one-step Mario world model directly in the browser with learned action codes. This one is still a work in progress: the decoder is weak, the visuals are rough, and it probably suffers from having too many codes available relative to the quality of the learned semantics.</p>
+        <p class="meta" id="meta"></p>
+        <div class="status" id="status">Loading ONNX model…</div>
+
+        <div class="subpanel">
+          <h2>Control State</h2>
+          <p>Past context from the dataset and the sequence you choose here.</p>
+          <div class="history">
+            <div class="history-box">
+              <strong>Past learned codes</strong>
+              <div id="pastCodes" class="meta">loading…</div>
+            </div>
+            <div class="history-box">
+              <strong>Chosen sequence</strong>
+              <div id="chosenCodes" class="meta">none yet</div>
+            </div>
+            <div class="history-actions">
+              <button class="secondary" id="reset-btn">Reset</button>
+              <button class="secondary" id="undo-btn">Undo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="viewer">
+          <div class="viewer-head">
+            <div>
+              <h2>Decoded Rollout View</h2>
+              <p>The model predicts the next latent step and renders it directly as an RGB frame.</p>
+            </div>
+          </div>
+          <canvas id="screen" width="224" height="224" aria-label="Predicted Mario frame"></canvas>
+          <div id="primitive-grid" class="controls"></div>
+        </div>
+
+        <div class="seed-strip">
+          <div class="viewer-head">
+            <div>
+              <h2>Initial States</h2>
+              <p>Choose the three-frame context used to start the rollout.</p>
+            </div>
+          </div>
+          <div id="seed-frames" class="seed-options"></div>
+        </div>
+      </section>
+
+      <section class="observations">
+        <h2>Observation Notes</h2>
+        <p>This Mario demo is much more forward-looking than the PushT one. The basic idea is already there, but the decoder is still weak enough that the model’s imagined futures look rough and unstable.</p>
+        <p>I also suspect the action space is over-fragmented here. With too many codes available and only a weak decoder to make their consequences legible, the semantic differences between buttons are harder to read than they should be.</p>
+      </section>
+    </div>
+
+    <script src="./vendor/ort.min.js"></script>
+    <script>
+      const screen = document.getElementById("screen");
+      const ctx = screen.getContext("2d");
+      const statusEl = document.getElementById("status");
+      const pastCodesEl = document.getElementById("pastCodes");
+      const chosenCodesEl = document.getElementById("chosenCodes");
+      const primitiveGrid = document.getElementById("primitive-grid");
+      const seedFramesEl = document.getElementById("seed-frames");
+      const resetBtn = document.getElementById("reset-btn");
+      const undoBtn = document.getElementById("undo-btn");
+      const metaEl = document.getElementById("meta");
+
+      const state = {
+        session: null,
+        manifest: null,
+        activeSeedId: 0,
+        historyEmb: null,
+        historyCodes: null,
+        chosenCodes: [],
+        historyStack: [],
+        lastPrimitive: null,
+        busy: false,
+      };
+
+      ort.env.wasm.numThreads = 1;
+      ort.env.wasm.wasmPaths = {
+        "ort-wasm.wasm": "./vendor/ort-wasm.wasm",
+        "ort-wasm-simd.wasm": "./vendor/ort-wasm-simd.wasm",
+        "ort-wasm-simd-threaded.wasm": "./vendor/ort-wasm-simd-threaded.wasm",
+        "ort-wasm-simd-threaded.jsep.mjs": "./vendor/ort-wasm-simd-threaded.jsep.mjs",
+        "ort-wasm-simd-threaded.jsep.wasm": "./vendor/ort-wasm-simd-threaded.jsep.wasm",
+        "ort-wasm-simd-threaded.mjs": "./vendor/ort-wasm-simd-threaded.mjs",
+      };
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.className = isError ? "status error" : "status";
+      }
+
+      function renderFrameFromTensor(data, width, height) {
+        const rgba = new Uint8ClampedArray(width * height * 4);
+        const plane = width * height;
+        for (let i = 0; i < plane; i += 1) {
+          rgba[i * 4 + 0] = Math.round(Math.max(0, Math.min(1, data[i])) * 255);
+          rgba[i * 4 + 1] = Math.round(Math.max(0, Math.min(1, data[plane + i])) * 255);
+          rgba[i * 4 + 2] = Math.round(Math.max(0, Math.min(1, data[plane * 2 + i])) * 255);
+          rgba[i * 4 + 3] = 255;
+        }
+        const imageData = new ImageData(rgba, width, height);
+        ctx.putImageData(imageData, 0, 0);
+      }
+
+      function renderSeedLastFrame() {
+        const activeSeed = state.manifest.seeds[state.activeSeedId];
+        const img = new Image();
+        img.onload = () => {
+          ctx.clearRect(0, 0, screen.width, screen.height);
+          ctx.drawImage(img, 0, 0, screen.width, screen.height);
+        };
+        img.src = activeSeed.seedFrames[activeSeed.seedFrames.length - 1];
+      }
+
+      function syncHud() {
+        pastCodesEl.textContent = state.historyCodes.join(", ");
+        chosenCodesEl.textContent = state.chosenCodes.length ? state.chosenCodes.join(" → ") : "none yet";
+        for (const btn of primitiveGrid.querySelectorAll("button")) {
+          btn.style.borderColor = Number(btn.dataset.code) === state.lastPrimitive ? "var(--accent)" : "";
+        }
+        for (const btn of seedFramesEl.querySelectorAll("button")) {
+          btn.classList.toggle("active", Number(btn.dataset.seedId) === state.activeSeedId);
+        }
+      }
+
+      function resetState() {
+        const activeSeed = state.manifest.seeds[state.activeSeedId];
+        state.historyEmb = new Float32Array(activeSeed.historyEmb);
+        state.historyCodes = [...activeSeed.historyCodes];
+        state.chosenCodes = [];
+        state.historyStack = [];
+        state.lastPrimitive = null;
+        renderSeedLastFrame();
+        syncHud();
+        setStatus("Ready. Pick a code to step the dynamics.");
+      }
+
+      function pushSnapshot() {
+        state.historyStack.push({
+          historyEmb: Array.from(state.historyEmb),
+          historyCodes: [...state.historyCodes],
+          chosenCodes: [...state.chosenCodes],
+          lastPrimitive: state.lastPrimitive,
+        });
+      }
+
+      function restoreSnapshot(snapshot) {
+        state.historyEmb = new Float32Array(snapshot.historyEmb);
+        state.historyCodes = [...snapshot.historyCodes];
+        state.chosenCodes = [...snapshot.chosenCodes];
+        state.lastPrimitive = snapshot.lastPrimitive;
+        syncHud();
+      }
+
+      async function stepPrimitive(code) {
+        if (state.busy || !state.session) return;
+        state.busy = true;
+        setStatus(`Running code ${code}…`);
+        try {
+          pushSnapshot();
+          const nextCodes = [...state.historyCodes.slice(1), code];
+          const feeds = {
+            history_emb: new ort.Tensor("float32", state.historyEmb, [1, state.manifest.historySize, state.manifest.embedDim]),
+            history_codes: new ort.Tensor(
+              "int64",
+              BigInt64Array.from(nextCodes.map((value) => BigInt(value))),
+              [1, state.manifest.historySize],
+            ),
+          };
+          const outputs = await state.session.run(feeds);
+          const nextEmb = outputs.next_emb.data;
+          const frame = outputs.frame_rgb.data;
+
+          const shiftedEmb = new Float32Array(state.historyEmb.length);
+          shiftedEmb.set(state.historyEmb.slice(state.manifest.embedDim), 0);
+          shiftedEmb.set(nextEmb, state.historyEmb.length - state.manifest.embedDim);
+
+          state.historyEmb = shiftedEmb;
+          state.historyCodes = nextCodes;
+          state.chosenCodes.push(code);
+          state.lastPrimitive = code;
+
+          renderFrameFromTensor(frame, state.manifest.frameSize, state.manifest.frameSize);
+          syncHud();
+          setStatus(`Code ${code} applied.`);
+        } catch (error) {
+          console.error(error);
+          setStatus(`ONNX Runtime error: ${error.message}`, true);
+        } finally {
+          state.busy = false;
+        }
+      }
+
+      function buildPrimitiveButtons() {
+        state.manifest.primitiveLabels.forEach((label, code) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "action";
+          btn.dataset.code = String(code);
+          btn.textContent = `Code ${code}`;
+          btn.addEventListener("click", () => {
+            void stepPrimitive(code);
+          });
+          primitiveGrid.appendChild(btn);
+        });
+      }
+
+      function selectSeed(seedId) {
+        state.activeSeedId = seedId;
+        resetState();
+      }
+
+      function buildSeedStrip() {
+        state.manifest.seeds.forEach((seed) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "seed-option";
+          button.dataset.seedId = String(seed.id);
+          button.innerHTML = `
+            <div class="seed-option-header">
+              <span class="seed-option-title">${seed.label}</span>
+              <span class="seed-option-meta">${seed.sourceEpisode ?? "mario"}</span>
+            </div>
+            <div class="seed-grid">
+              ${seed.seedFrames.map((src, index) => `<img src="${src}" alt="${seed.label} frame ${index + 1}">`).join("")}
+            </div>
+          `;
+          button.addEventListener("click", () => {
+            selectSeed(seed.id);
+          });
+          seedFramesEl.appendChild(button);
+        });
+      }
+
+      async function init() {
+        try {
+          setStatus("Loading seed state…");
+          const manifestResponse = await fetch("./assets/initial_state.json");
+          state.manifest = await manifestResponse.json();
+          state.activeSeedId = state.manifest.defaultSeedId ?? 0;
+          metaEl.textContent = `${state.manifest.seeds.length} initial states, ${state.manifest.primitiveLabels.length} learned codes, history size ${state.manifest.historySize}.`;
+
+          buildSeedStrip();
+          buildPrimitiveButtons();
+
+          setStatus("Loading ONNX Runtime session…");
+          state.session = await ort.InferenceSession.create("./assets/mario_primitive_step.onnx", {
+            executionProviders: ["wasm"],
+            graphOptimizationLevel: "all",
+          });
+
+          resetState();
+        } catch (error) {
+          console.error(error);
+          setStatus(`Failed to initialize: ${error.message}`, true);
+        }
+      }
+
+      resetBtn.addEventListener("click", resetState);
+      undoBtn.addEventListener("click", () => {
+        const snapshot = state.historyStack.pop();
+        if (!snapshot) {
+          setStatus("Nothing to undo yet.");
+          return;
+        }
+        restoreSnapshot(snapshot);
+        setStatus("Undid the last learned action.");
+      });
+
+      window.addEventListener("keydown", (event) => {
+        const code = Number(event.key) - 1;
+        if (Number.isInteger(code) && code >= 0 && code < 8) {
+          event.preventDefault();
+          void stepPrimitive(code);
+        }
+      });
+
+      void init();
+    </script>
+  </body>
+</html>

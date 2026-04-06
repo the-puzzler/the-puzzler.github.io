@@ -1,5 +1,14 @@
 [
   {
+    "title": "la leWorldModel",
+    "date": "2026-03-30",
+    "path": "posts/la-leworldmodel/la-leworldmodel.html",
+    "description": "Simultaneous latent action and world model learning from passive video for controllable prediction.",
+    "social_image": "posts/la-leworldmodel/assets/thumbnail.png",
+    "tags": ["World Modelling", "Robotics"]
+  },
+
+  {
     "title": "Tokens, who needs them?",
     "date": "2026-03-07",
     "path": "posts/tokens-who-needs-them/tokens-who-needs-them.html",

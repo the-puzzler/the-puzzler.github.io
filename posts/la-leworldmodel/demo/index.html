@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PushT la dynamics sim</title>
+    <meta name="description" content="Interactive browser demo for la leWorldModel" />
+    <style>
+      :root {
+        --bg: #f9f7f1;
+        --paper: #fffdf8;
+        --ink: #2c2925;
+        --muted: #8a847e;
+        --line: #d8cfbf;
+        --accent: #0f766e;
+        --accent-2: #d97706;
+      }
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      .shell {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 22px clamp(16px, 4vw, 40px) 34px;
+      }
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 10px;
+      }
+      .crumb {
+        color: var(--muted);
+        font-size: 14px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 15px;
+        border: 1px solid color-mix(in oklab, var(--line) 72%, transparent);
+        border-radius: 999px;
+        background: var(--bg);
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .back:hover {
+        background: var(--paper);
+      }
+      .hero {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        align-items: start;
+      }
+      .lead {
+        padding: 0;
+      }
+      h1 {
+        margin: 0;
+        font-size: clamp(2.2rem, 4.6vw, 3.5rem);
+        line-height: 0.96;
+      }
+      p, li, button, .meta, .note {
+        font-size: 16px;
+      }
+      .lead-intro {
+        margin: 1.05rem 0 0.8rem 0;
+        max-width: 42rem;
+      }
+      .hero-kicker {
+        margin: 0 0 0.2rem 0;
+        color: var(--muted);
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .meta {
+        color: var(--muted);
+      }
+      .viewer {
+        padding: 0;
+      }
+      canvas {
+        width: min(100%, 540px);
+        aspect-ratio: 1 / 1;
+        display: block;
+        margin: 0 auto;
+        border-radius: 14px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        image-rendering: pixelated;
+      }
+      .viewer-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      .viewer-head h2,
+      .subpanel h2 {
+        margin: 0 0 0.22rem 0;
+        font-size: 1.1rem;
+      }
+      .viewer-head p,
+      .subpanel p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+      .controls {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+      }
+      button {
+        appearance: none;
+        border: 1px solid color-mix(in oklab, var(--line) 76%, transparent);
+        background: var(--paper);
+        color: var(--ink);
+        border-radius: 999px;
+        padding: 12px 10px;
+        cursor: pointer;
+        transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      }
+      button:hover {
+        transform: translateY(-1px);
+        border-color: var(--accent);
+      }
+      button.action {
+        font-weight: 700;
+        background: color-mix(in oklab, var(--paper) 88%, #dbe7f4 12%);
+        min-height: 52px;
+        font-size: 0.95rem;
+      }
+      button.secondary {
+        background: color-mix(in oklab, var(--paper) 96%, #f3d8c6 4%);
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+      .subpanel {
+        padding: 0;
+      }
+      .strip {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 8px;
+      }
+      .thumb {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+      }
+      .thumb img {
+        width: 100%;
+        display: block;
+      }
+      .thumb span {
+        display: block;
+        padding: 6px 8px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .status {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        background: rgba(15,118,110,0.08);
+        color: #0b4f4a;
+        border: 1px solid rgba(15,118,110,0.12);
+      }
+      .status.error {
+        background: rgba(185,28,28,0.08);
+        color: #7f1d1d;
+        border-color: rgba(185,28,28,0.12);
+      }
+      .history {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: stretch;
+      }
+      .history-box {
+        padding: 12px;
+        border: 1px solid color-mix(in oklab, var(--line) 76%, transparent);
+        border-radius: 16px;
+        background: var(--paper);
+      }
+      .history-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        justify-content: stretch;
+      }
+      .note {
+        color: var(--muted);
+      }
+      .observations {
+        margin-top: 28px;
+      }
+      .observations h2 {
+        margin: 0 0 0.45rem 0;
+        font-size: 1.25rem;
+      }
+      .observations p {
+        margin: 0 0 0.85rem 0;
+        max-width: 42rem;
+      }
+      @media (max-width: 900px) {
+        .controls {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .history {
+          grid-template-columns: 1fr;
+        }
+        .history-actions {
+          flex-direction: row;
+        }
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="topbar">
+        <div class="crumb">Interactive Demo</div>
+        <a class="back" href="../../../?p=la-leworldmodel">Back to post</a>
+      </div>
+      <section class="hero">
+        <div class="lead">
+          <p class="hero-kicker">Browser Runtime</p>
+          <h1>PushT la dynamics sim</h1>
+          <p class="lead-intro">Step the latent dynamics model in-browser with learned action codes. Each step corresponds to roughly five frames of underlying continuous control.</p>
+          <p class="meta" id="meta"></p>
+          <div class="status" id="status">Loading ONNX models…</div>
+          <div class="subpanel" style="margin-top:18px;">
+            <h2>Control State</h2>
+            <p>Past context from the dataset and the sequence you choose here.</p>
+            <div class="history" style="margin-top:16px;">
+              <div class="history-box">
+                <strong>Past learned codes</strong>
+                <div id="pastCodes" class="meta">loading…</div>
+              </div>
+              <div class="history-box">
+                <strong>Chosen sequence</strong>
+                <div id="chosenCodes" class="meta">none yet</div>
+              </div>
+              <div class="history-actions">
+                <button class="secondary" id="resetBtn">Reset</button>
+                <button class="secondary" id="undoBtn">Undo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="viewer">
+          <div class="viewer-head">
+            <div>
+              <h2>Decoded Rollout View</h2>
+              <p>The latent state is decoded after each dynamics step.</p>
+            </div>
+          </div>
+          <canvas id="frame" width="224" height="224"></canvas>
+          <div class="controls" id="controls"></div>
+          <div class="strip" id="strip"></div>
+        </div>
+      </section>
+
+      <section class="observations">
+        <h2>Observation Notes</h2>
+        <p>From the first frame, nearly every button sends the blue controller directly toward the T. That is not because the buttons are meaningless. It is because the dynamics model has absorbed a very strong regularity from the training data: the blue controller usually needs to get to the T before it can do anything useful to it.</p>
+        <p>So in the data there are very few examples of the controller just wandering around aimlessly away from the T. As a result, the earliest step is dominated by this shared “go to the T” behaviour across almost all learned action codes.</p>
+        <p>After that first move, the buttons begin to separate into more distinct semantic roles. Once the controller has reached the T, the training distribution contains many more possibilities: pushing it, moving around it, approaching it from different sides, or setting up for the next contact. That is where the learned codes start to look less like a single attractor and more like reusable action types.</p>
+      </section>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    <script>
+      const state = {
+        metadata: null,
+        initial: null,
+        dynamicsSession: null,
+        decoderSession: null,
+        latentHistory: null,
+        pastCodes: null,
+        chosenCodes: [],
+        snapshots: [],
+      };
+
+      const canvas = document.getElementById("frame");
+      const ctx = canvas.getContext("2d");
+      const controls = document.getElementById("controls");
+      const statusEl = document.getElementById("status");
+      const strip = document.getElementById("strip");
+      const pastCodesEl = document.getElementById("pastCodes");
+      const chosenCodesEl = document.getElementById("chosenCodes");
+      const metaEl = document.getElementById("meta");
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.className = isError ? "status error" : "status";
+      }
+
+      function deepCopy(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function flatten2d(rows) {
+        return new Float32Array(rows.flat());
+      }
+
+      function flattenCodes(values) {
+        return BigInt64Array.from(values.map((v) => BigInt(v)));
+      }
+
+      async function loadJson(path) {
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${path}: ${response.status}`);
+        }
+        return await response.json();
+      }
+
+      function renderImage(chwArray) {
+        const imageData = ctx.createImageData(224, 224);
+        const pixels = imageData.data;
+        const channelSize = 224 * 224;
+        for (let i = 0; i < channelSize; i += 1) {
+          pixels[i * 4 + 0] = Math.max(0, Math.min(255, Math.round(((chwArray[i] * 0.229) + 0.485) * 255)));
+          pixels[i * 4 + 1] = Math.max(0, Math.min(255, Math.round(((chwArray[channelSize + i] * 0.224) + 0.456) * 255)));
+          pixels[i * 4 + 2] = Math.max(0, Math.min(255, Math.round(((chwArray[channelSize * 2 + i] * 0.225) + 0.406) * 255)));
+          pixels[i * 4 + 3] = 255;
+        }
+        ctx.putImageData(imageData, 0, 0);
+        return canvas.toDataURL("image/png");
+      }
+
+      function updateCodeText() {
+        pastCodesEl.textContent = state.pastCodes.join(", ");
+        chosenCodesEl.textContent = state.chosenCodes.length ? state.chosenCodes.join(" → ") : "none yet";
+      }
+
+      function renderStrip() {
+        strip.innerHTML = "";
+        state.snapshots.slice(-12).forEach((item, index) => {
+          const card = document.createElement("div");
+          card.className = "thumb";
+          const img = document.createElement("img");
+          img.src = item.url;
+          const label = document.createElement("span");
+          label.textContent = item.label || `step ${index}`;
+          card.appendChild(img);
+          card.appendChild(label);
+          strip.appendChild(card);
+        });
+      }
+
+      async function decodeCurrentFrame(label = "start") {
+        const current = state.latentHistory[state.latentHistory.length - 1];
+        const latentTensor = new ort.Tensor("float32", new Float32Array(current), [1, state.metadata.embed_dim]);
+        const outputs = await state.decoderSession.run({ latent: latentTensor });
+        const image = outputs.image.data;
+        const url = renderImage(image);
+        state.snapshots.push({ label, url });
+        renderStrip();
+      }
+
+      function pushSnapshot() {
+        state.historyStack = state.historyStack || [];
+        state.historyStack.push({
+          latentHistory: deepCopy(state.latentHistory),
+          pastCodes: deepCopy(state.pastCodes),
+          chosenCodes: deepCopy(state.chosenCodes),
+          snapshots: deepCopy(state.snapshots),
+        });
+      }
+
+      function restoreSnapshot(snapshot) {
+        state.latentHistory = snapshot.latentHistory;
+        state.pastCodes = snapshot.pastCodes;
+        state.chosenCodes = snapshot.chosenCodes;
+        state.snapshots = snapshot.snapshots;
+        updateCodeText();
+        renderStrip();
+        if (state.snapshots.length) {
+          const img = new Image();
+          img.onload = () => ctx.drawImage(img, 0, 0, 224, 224);
+          img.src = state.snapshots[state.snapshots.length - 1].url;
+        }
+      }
+
+      async function stepWithCode(code) {
+        pushSnapshot();
+        const latentHistoryTensor = new ort.Tensor(
+          "float32",
+          flatten2d(state.latentHistory),
+          [1, state.metadata.history_size, state.metadata.embed_dim]
+        );
+        const pastCodesTensor = new ort.Tensor("int64", flattenCodes(state.pastCodes), [1, state.metadata.history_size - 1]);
+        const nextCodeTensor = new ort.Tensor("int64", BigInt64Array.from([BigInt(code)]), [1]);
+        const outputs = await state.dynamicsSession.run({
+          latent_history: latentHistoryTensor,
+          past_codes: pastCodesTensor,
+          next_code: nextCodeTensor,
+        });
+        const nextLatent = Array.from(outputs.next_latent.data);
+        state.latentHistory = [...state.latentHistory.slice(1), nextLatent];
+        state.pastCodes = [...state.pastCodes.slice(1), code];
+        state.chosenCodes.push(code);
+        updateCodeText();
+        await decodeCurrentFrame(`code ${code}`);
+      }
+
+      async function init() {
+        try {
+          state.metadata = await loadJson("./assets/metadata.json");
+          state.initial = await loadJson("./assets/initial_state.json");
+          metaEl.textContent = `Source episode ${state.metadata.episode_idx}, start step ${state.metadata.start_step}, ${state.metadata.num_codes} learned codes.`;
+          state.latentHistory = deepCopy(state.initial.latent_history);
+          state.pastCodes = deepCopy(state.initial.past_codes);
+          state.historyStack = [];
+
+          const sessionOptions = { executionProviders: ["webgpu", "wasm"] };
+          state.decoderSession = await ort.InferenceSession.create("./models/decoder.onnx", sessionOptions);
+          state.dynamicsSession = await ort.InferenceSession.create("./models/dynamics_step.onnx", sessionOptions);
+
+          controls.innerHTML = "";
+          for (let code = 0; code < state.metadata.num_codes; code += 1) {
+            const button = document.createElement("button");
+            button.className = "action";
+            button.textContent = `Code ${code}`;
+            button.addEventListener("click", async () => {
+              setStatus(`Applying code ${code}…`);
+              await stepWithCode(code);
+              setStatus(`Code ${code} applied.`);
+            });
+            controls.appendChild(button);
+          }
+
+          document.getElementById("resetBtn").addEventListener("click", async () => {
+            state.latentHistory = deepCopy(state.initial.latent_history);
+            state.pastCodes = deepCopy(state.initial.past_codes);
+            state.chosenCodes = [];
+            state.snapshots = [];
+            state.historyStack = [];
+            updateCodeText();
+            await decodeCurrentFrame("start");
+            setStatus("Reset to the exported initial latent state.");
+          });
+
+          document.getElementById("undoBtn").addEventListener("click", () => {
+            const snapshot = state.historyStack.pop();
+            if (!snapshot) {
+              setStatus("Nothing to undo yet.");
+              return;
+            }
+            restoreSnapshot(snapshot);
+            setStatus("Undid the last learned action.");
+          });
+
+          updateCodeText();
+          await decodeCurrentFrame("start");
+          setStatus("Ready. Pick a code to step the dynamics.");
+        } catch (error) {
+          console.error(error);
+          setStatus(String(error), true);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

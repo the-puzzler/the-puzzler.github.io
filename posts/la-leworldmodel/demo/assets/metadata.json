@@ -1,0 +1,11 @@
+{
+  "title": "LeWM Learned Action Browser Demo",
+  "num_codes": 8,
+  "history_size": 3,
+  "embed_dim": 192,
+  "source_task_dir": "/workspace/le-wm/runs/20260328-132542-pusht/eval_tasks/20260405-090059/task_044_episode_16019_start_72_true",
+  "episode_idx": 16019,
+  "start_step": 72,
+  "decoder_checkpoint": "/workspace/le-wm/runs/20260403-171752-decoder/lewm_decoder_epoch_3_object.ckpt",
+  "model_checkpoint": "/workspace/le-wm/runs/20260328-132542-pusht/lewm_epoch_13_object.ckpt"
+}

@@ -1,0 +1,400 @@
+<h1>la leWorldModel</h1>
+<p class="post-subtitle">Simultaneous latent action and world model learning from passive video for controllable prediction.</p>
+
+<aside class="repo-embed" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Code</p>
+  <a href="https://github.com/the-puzzler/le-wm" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/le-wm</a>
+</aside>
+
+<section class="opener-video" aria-label="Hero media">
+  <video controls autoplay muted loop playsinline preload="metadata" style="display:block; width:100%; height:auto; border-radius:10px; background:#000;">
+    <source src="posts/la-leworldmodel/assets/rollout_tophalf_collage.mp4" type="video/mp4">
+  </video>
+</section>
+
+<section class="demo-cta" aria-label="Interactive demo link">
+  <div class="demo-cta-copy">
+    <p class="demo-cta-kicker">Interactive Demo</p>
+    <p class="demo-cta-text">Try the model in your browser.</p>
+    <p class="demo-cta-subtext">Step the latent dynamics yourself and watch the decoder render the rollout live.</p>
+  </div>
+  <div class="demo-cta-actions">
+    <a class="demo-cta-button" href="posts/la-leworldmodel/demo/">PushT</a>
+    <a class="demo-cta-button" href="posts/la-leworldmodel/demo/mario/">Mario Demo (WIP)</a>
+  </div>
+</section>
+
+<section class="lead-block">
+  <p>I began this project with three questions:</p>
+  <div class="prologue-questions" role="note" aria-label="Core questions">
+    <p>Can a world model become controllable without ever seeing environment actions?</p>
+    <p>Can we recover those actions directly from passive video?</p>
+    <p>Can we do it all in one training run, without a clunky multi-stage pipeline?</p>
+  </div>
+
+  <p>
+    <a href="https://arxiv.org/abs/2603.19312" target="_blank" rel="noopener noreferrer">leWorldModel</a> is already a very nice idea, but it still assumes you have access to the environment actions. That is fine if you live inside a benchmark, but much less fine if you want to train on the actual internet, gameplay footage, robotics videos, or whatever other suspicious collection of pixels you have lying around.
+  </p>
+
+  <p>
+    I call the resulting model <em>la leWorldModel</em>, short for <em>latent action leWorldModel</em>.
+  </p>
+
+  <p>
+    This post is about a very simple extension: instead of conditioning on environment actions, we learn a discrete latent action space directly from video and train that jointly with the world model. The result is a controllable world model trained from passive video alone.
+  </p>
+
+  <p>
+    The fun part is that this is not a separate latent-action-pretrain-then-world-model recipe. The latent actions and the world model are learned simultaneously, end to end, in one run. Here I focus on the PushT results.
+  </p>
+</section>
+
+<hr>
+
+<h2>The Problem</h2>
+<p>
+  Most controllable world models quietly rely on one very expensive luxury: labelled actions. If your data comes from a simulator or an instrumented environment, that is easy. If your data is just video, you suddenly have dynamics but no control signal.
+</p>
+
+<p>
+  That is the bottleneck. Video is abundant. Action-labelled video is not. So if we want world models that scale beyond neat little RL datasets, they need a way to infer control from observation alone.
+</p>
+
+<figure class="image-figure" style="width:min(88%, 1120px);">
+  <img src="posts/la-leworldmodel/assets/expensive_vs_cheap.png" alt="Comparison between expensive action-labelled trajectories and cheap passive video" style="display:block; margin:16px auto; max-width:100%; height:auto;">
+  <figcaption>Left: a robot arm in a lab, with precisely known movements and idealised action-labelled trajectories. Right: real-world video, with no action input at all, just observed world dynamics.</figcaption>
+</figure>
+
+<hr>
+
+<h2>The Idea</h2>
+<p>
+  The core trick is very simple. We replace the observed action with a learned latent action.
+</p>
+
+<ul>
+  <li>An inverse-dynamics-style module looks at neighbouring observations and predicts a discrete latent action.</li>
+  <li>A VQ-style codebook forces those actions into a compact reusable set.</li>
+  <li>The world model conditions on those learned actions instead of environment-provided ones.</li>
+  <li>Everything is trained jointly, so the action space is shaped directly by what helps prediction and control.</li>
+</ul>
+
+<p>
+  In other words: rather than asking the dataset what action happened, we ask the model to invent an action vocabulary that makes the video controllable.
+</p>
+
+<figure class="image-figure" style="width:min(80%, 980px);">
+  <img src="posts/la-leworldmodel/assets/laelwm.png" alt="Main method diagram showing video encoder, latent action predictor and codebook, and action-conditioned world model" style="display:block; margin:16px auto; max-width:100%; height:auto; border:none; box-shadow:none;">
+  <figcaption>Main method: encode video into latent states, infer a discrete latent action with an inverse-dynamics style module and codebook, then condition the world model on that learned action.</figcaption>
+</figure>
+
+<hr>
+
+<h2>Why This Is Different</h2>
+<h3>Compared with leWorldModel</h3>
+<p>
+  leWorldModel assumes the action is available and then learns to predict the future under that action. Here the action is no longer given. It has to be discovered.
+</p>
+
+<h3>Compared with <a href="https://arxiv.org/abs/2402.15391" target="_blank" rel="noopener noreferrer">Genie</a>-style Pipelines</h3>
+<p>
+  Genie introduces the term LAM, for latent action modelling, and the basic philosophy is close to what I want here: recover actions from passive video rather than asking the environment to hand them to you. The main difference is where that action model lives and how it is trained.
+</p>
+
+<p>
+  In Genie, the LAM is trained in pixel space. Effectively, it behaves like a VQ-VAE: an encoder takes \(x_{1:t}, x_{t+1}\) and produces a discrete action \(a_t\), then a decoder takes \(x_{1:t}, a_t\) and reconstructs \(x_{t+1}\). The main world model is then trained separately, using a different VAE and the predicted latent actions. It works, but it is naturally a staged pipeline.
+</p>
+
+<p class="equation-intro">
+  In shorthand, the latent action model in Genie looks like this:
+</p>
+
+<figure class="equation-figure">
+  \[
+    x_{1:t}, x_{t+1} \rightarrow a_t,
+    \qquad
+    x_{1:t}, a_t \rightarrow \hat{x}_{t+1}
+  \]
+  <figcaption>The action is inferred from pixels and then used to reconstruct the next frame, still in pixel space.</figcaption>
+</figure>
+
+<p>
+  Here I avoid that split. The latent action model operates directly in the learned latent space of the world model, which is I think the key reason joint training becomes natural rather than awkward.
+</p>
+
+<figure class="compare-grid">
+  <div class="compare-card">
+    <h4>leWorldModel</h4>
+    <p>Needs environment actions.</p>
+  </div>
+  <div class="compare-card">
+    <h4>Genie-style</h4>
+    <p>Video-only, but often multi-stage.</p>
+  </div>
+  <div class="compare-card compare-card-accent">
+    <h4>la leWorldModel</h4>
+    <p>Video-only and jointly learns latent actions plus the world model in one run.</p>
+  </div>
+</figure>
+
+<hr>
+
+<h2>How It Works</h2>
+<h3>The Objective</h3>
+<p>
+  At a high level, the model observes video, compresses it into a learned latent space, predicts a discrete latent action between frames, and uses that action to drive future prediction. The action codebook is trained at the same time as the world model, so the two parts co-adapt.
+</p>
+
+<p>
+  Concretely, I use an inverse dynamics model that peeks one step ahead. It takes \(z_{1:t}, z_{t+1}\), where the \(z\)'s are latents produced by the encoder rather than raw pixels, and outputs a discrete latent action \(a_t\). That action is then what the world model conditions on.
+</p>
+
+<p class="equation-intro">
+  In my setup, the same idea moves into latent space:
+</p>
+
+<figure class="equation-figure">
+  \[
+    z_{1:t}, z_{t+1} \rightarrow a_t,
+    \qquad
+    z_{1:t}, a_t \rightarrow \hat{z}_{t+1}
+  \]
+  <figcaption>The action is inferred from latents, and the dynamics model predicts the next latent rather than reconstructing pixels.</figcaption>
+</figure>
+
+<p>
+  This is similar in spirit to Genie’s LAM, but importantly it is not trained with its own pixel reconstruction objective. There is no separate decoder trying to rebuild the next frame from pixels. Instead, the latent action model is trained entirely through the overall world-model objective. In other words, the action space only has permission to exist insofar as it helps prediction.
+</p>
+
+<p>
+  I think this latent-space formulation is also why the whole thing is so stable. Jointly learning actions and dynamics would be much more brittle in pixel space, where the model is constantly entangled with reconstruction details. In latent space the optimisation problem is cleaner, and in practice the dynamics model turns out to be easier to train than the visual decoder.
+</p>
+
+<p>
+  I still use a small codebook, with 8 primitives, to stop the latent actions from quietly becoming arbitrary information carriers. That bottleneck is a good inductive bias here: if you want something that behaves like character control, you should force the model to express itself through a small reusable action vocabulary rather than a secret side-channel.
+</p>
+
+<p>
+  Written out more explicitly, the training objective is:
+</p>
+
+<figure class="equation-figure">
+  \[
+    \mathcal{L}
+    =
+    \mathcal{L}_{\mathrm{pred}}
+    +
+    w_{\mathrm{sigreg}} \, \mathcal{L}_{\mathrm{sigreg}}
+    +
+    \mathcal{L}_{\mathrm{codebook}}
+    +
+    \mathcal{L}_{\mathrm{commit}}
+  \]
+  <figcaption>The world model is trained with a prediction loss, a latent regulariser, and the usual VQ-style alignment terms.</figcaption>
+</figure>
+
+<p>
+  In implementation terms:
+</p>
+
+<figure class="equation-figure equation-figure-small">
+  \[
+    \mathcal{L}_{\mathrm{pred}}
+    =
+    \mathrm{mean}\!\left( \left( \mathrm{pred\_emb} - \mathrm{tgt\_emb} \right)^2 \right),
+    \qquad
+    \mathcal{L}_{\mathrm{sigreg}}
+    =
+    \mathrm{sigreg}\!\left( \mathrm{emb}^{\top} \right)
+  \]
+  <figcaption>Here \(w_{\mathrm{sigreg}}\) is a configurable scalar, set to 0.09 by default.</figcaption>
+</figure>
+
+<table class="loss-table">
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>\(\mathcal{L}_{\mathrm{pred}}\)</td>
+      <td>The main world-model objective. It makes the action-conditioned predictor match the target next embedding.</td>
+    </tr>
+    <tr>
+      <td>\(w_{\mathrm{sigreg}} \, \mathcal{L}_{\mathrm{sigreg}}\)</td>
+      <td>A regulariser on the learned embeddings that prevents trivial collapse.</td>
+    </tr>
+    <tr>
+      <td>\(\mathcal{L}_{\mathrm{codebook}}^{*}\)</td>
+      <td>Moves the codebook toward the inverse-dynamics outputs.</td>
+    </tr>
+    <tr>
+      <td>\(\mathcal{L}_{\mathrm{commit}}^{*}\)</td>
+      <td>Moves the inverse-dynamics outputs toward the selected codebook entry.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p style="margin-top:-0.5rem; color:var(--ink-dim); font-size:0.9rem; text-align:center;">
+  * Quantisation is kept differentiable with the straight-through approximation.
+</p>
+
+<h3>Visual Decoder</h3>
+<p>
+  Because the model works directly in embedding space, unlike Genie, there is no free visual simulator attached to the latent action model. That is part of what makes the setup elegant: the dynamics model only has to represent what matters for dynamics, rather than wasting capacity on pixel reconstruction.
+</p>
+
+<p>
+  The price is that if I want to actually visualise imagined rollouts, I need to train a separate visual decoder afterwards to map latent states back into frames. Fortunately this part is not too hard once the latent space is already structured.
+</p>
+
+<p class="equation-intro">
+  For that decoder, I use a reconstruction loss of the form:
+</p>
+
+<figure class="equation-figure">
+  \[
+    \mathcal{L}_{\mathrm{vis}}
+    =
+    \mathcal{L}_{\mathrm{TopK\text{-}MSE}}
+  \]
+  <figcaption>A separate visual decoder is trained after the world model using a pure top-k reconstruction loss.</figcaption>
+</figure>
+
+<p>
+  The top-k term is the useful trick here. I originally used that idea in my older post on <a href="https://francesco215.github.io/autoregressive_diffusion/" target="_blank" rel="noopener noreferrer">sample efficient AR diffusion</a>, and it works well again here: it lets the decoder focus on the hardest regions rather than averaging all reconstruction errors into harmless blur. This is especially helpful in environments with very unbalanced pixels, for example a small moving object on a plain coloured background, where a reconstruction loss can otherwise be dominated by the already-correct easy pixels.
+</p>
+
+<h3>Action Decoder for PushT</h3>
+<p>
+  For PushT I also trained a simple decoder that translates learned latent actions back into the environment's accepted actions. This makes it possible to plan in latent action space, then execute those plans in the actual environment.
+</p>
+
+<p>
+  This translator is needed because PushT is a continuous-control environment, whereas my method deliberately forces control through a discrete latent action space. So even if the world model learns a good latent action vocabulary, there is no obvious direct mapping back to the real-valued action that PushT expects.
+</p>
+
+<p>
+  There is also a second complication. Following the original leWorldModel setup, each state is spaced 5 frames apart. So a single latent action is effectively standing in for 5 frames of continuous control, during which both direction and magnitude can change. The translator therefore has to infer a plausible continuous action from the current state together with the chosen latent action, rather than merely looking up a one-to-one correspondence.
+</p>
+
+<figure class="equation-figure">
+  \[
+    a_t, z_t \rightarrow \text{real action}
+  \]
+  <figcaption>Concretely, the PushT action decoder takes the discrete latent action \(a_t\) together with the current latent state \(z_t\), and predicts the continuous environment action that will actually be executed.</figcaption>
+</figure>
+
+<hr>
+
+<h2>Experiments</h2>
+<h3>PushT</h3>
+<p>
+  PushT is a nice testbed because controllability matters immediately. It is not enough to merely model the video distribution; the learned actions need to support actual useful behaviour.
+</p>
+
+<p>
+  Here I train on video, infer latent actions, learn the world model jointly, and then decode latent actions back into environment actions for control and planning.
+</p>
+
+<h4>Training</h4>
+<p>
+  These are the training curves from the PushT run.
+</p>
+
+<figure class="image-figure" style="width:min(88%, 1120px);">
+  <img src="posts/la-leworldmodel/assets/training_pushT.png" alt="PushT training curves for the main losses" style="display:block; margin:16px auto; max-width:100%; height:auto; border:none; box-shadow:none;">
+  <figcaption>PushT training curves for the main losses.</figcaption>
+</figure>
+
+<p>
+  The nice part is that learning latent actions does not seem to disrupt training dynamics much at all. These curves look very similar to the ones in the supplementary material of leWorldModel, which suggests the latent-action extension slots into the original optimisation story fairly cleanly.
+</p>
+
+<h4>Planning</h4>
+<p>
+  Under the PushT planning challenge, following the evaluation style of the original leWorldModel paper, success hovered around 30% over 50 trials. That is much lower than the number reported in the paper, and my guess is that the extra latent-to-real-action translation layer is the main reason. Even so, the qualitative behaviour is still fairly reasonable: the model often does the right kind of thing, even when it fails to complete the task reliably enough to score as a full success.
+</p>
+
+<figure class="planning-deck" aria-label="PushT planning cases">
+  <div class="planning-deck-media">
+    <video id="planning-deck-video" controls playsinline preload="metadata"></video>
+    <div class="planning-deck-overlay" aria-hidden="true">
+      <div class="planning-deck-label planning-deck-label-left">Imagined trajectory</div>
+      <div class="planning-deck-label planning-deck-label-mid-top">Enacted trajectory</div>
+      <div class="planning-deck-label planning-deck-label-mid-bottom">Ideal trajectory</div>
+      <div class="planning-deck-label planning-deck-label-right-top">Target T position</div>
+      <div class="planning-deck-label planning-deck-label-right-bottom">Target T position</div>
+    </div>
+  </div>
+  <div class="planning-deck-controls">
+    <div class="planning-deck-buttons">
+      <button type="button" id="planning-deck-prev">Back</button>
+      <button type="button" id="planning-deck-next">Next</button>
+    </div>
+    <div class="planning-deck-status" id="planning-deck-status"></div>
+  </div>
+  <figcaption>Imagined trajectories from search over the learned latent actions, shown alongside the enacted trajectory, ideal trajectory, and target T position.</figcaption>
+</figure>
+
+<p>
+  In the above videos, the imagined trajectories are first found inside the latent world model by CEM search over the learned latent action primitives, and only then rendered into frames by the visual decoder. The enacted trajectory is what happens when those latent decisions are translated back into real environment actions and executed in PushT. The ideal trajectory is the ground-truth rollout that reaches the shown final T position.
+</p>
+
+<h4>Comparison</h4>
+<p>
+  For reference, here is the fixed-FLOPs comparison against the baselines.
+</p>
+
+<figure class="image-figure" style="width:min(52%, 560px);">
+  <img src="posts/la-leworldmodel/assets/graph.png" alt="PushT success rate at fixed FLOPs comparing leWorldModel, DINO-WM, and la leWorldModel" style="display:block; margin:16px auto; max-width:100%; height:auto; border:none; box-shadow:none;">
+  <figcaption>PushT success rate at fixed FLOPs, comparing leWorldModel, DINO-WM, and la leWorldModel.</figcaption>
+</figure>
+
+<p>
+  la leWorldModel comes in well below the fully action-conditioned leWorldModel baseline, but I do not think this is the core method failing. In this setup the weak point is the discretisation-and-translation stack: PushT is a continuous-control problem, yet the planner operates over a small discrete latent action vocabulary, and each latent action has to stand in for five frames of underlying control rather than a single clean environment step. Those latent choices then still have to be translated back into executable continuous actions. That makes this comparison harsher than the original leWorldModel setting, where the true actions are already available.
+</p>
+
+<h2>What Actually Matters</h2>
+<p>
+  The point is not just that the model can simulate video. The point is that the learned latent actions become operationally useful for control and planning.
+</p>
+
+<ul>
+  <li>The model can be trained on passive video rather than action-labelled trajectories.</li>
+  <li>The latent actions are learned jointly with the dynamics rather than in a separate pipeline stage.</li>
+  <li>The latent dynamics model and latent action model train in a surprisingly stable way; in practice, the visual decoder is harder to train than the dynamics.</li>
+  <li>The resulting latent actions are useful enough to support real planning and execution in PushT.</li>
+</ul>
+
+<hr>
+
+<h2>Limitations</h2>
+<p>
+  The latent actions are useful, but they are not guaranteed to line up with human-interpretable actions. Their semantics are whatever the model finds convenient for prediction and control. That is probably the right inductive bias, but it does mean the action vocabulary may be strange.
+</p>
+
+<p>
+  The other obvious limitation is coverage. If the video data does not contain enough variation, the model cannot recover control modes that never appear. Passive video is abundant, but it still only teaches the possibilities it actually shows.
+</p>
+
+<hr>
+
+<h2>Takeaway</h2>
+<p>
+  leWorldModel becomes much more interesting once you remove the requirement for environment actions. A small latent-action extension is enough to train on arbitrary video and recover a controllable world model.
+</p>
+
+<p>
+  The main thing I like about this result is its simplicity. It feels like the natural generalisation: if actions are the missing ingredient in passive video, then learn them. Better yet, learn them jointly with the world model so the whole system has to agree on what an action is for.
+</p>
+
+<aside class="repo-embed repo-embed-bottom" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Repository</p>
+  <a href="https://github.com/the-puzzler/le-wm" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/le-wm</a>
+</aside>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>
