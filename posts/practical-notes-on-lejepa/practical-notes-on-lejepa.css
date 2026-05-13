@@ -1,0 +1,332 @@
+.goto-link {
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.45;
+  margin-left: 0.55em;
+  vertical-align: middle;
+}
+
+.goto-link:hover {
+  opacity: 0.85;
+}
+
+.post-subtitle {
+  margin-top: -0.3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.lead-block {
+  margin-bottom: 1.2rem;
+}
+
+.prologue-questions {
+  margin: 0.55rem auto 0.95rem auto;
+  width: min(820px, 96%);
+  text-align: center;
+}
+
+.prologue-questions p {
+  margin: 0.24rem 0;
+  font-size: clamp(1.12rem, 2.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.sigreg-lab {
+  margin: 0.95rem auto 0.55rem auto;
+  width: min(980px, 100%);
+}
+
+.sigreg-lab-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.sigreg-lab-actions {
+  display: flex;
+  gap: 0.55rem;
+}
+
+.sigreg-lab-head h3 {
+  margin: 0;
+}
+
+.sigreg-lab-kicker {
+  margin: 0 0 0.18rem 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+#sigreg-reset-btn,
+#sigreg-step-btn,
+#sigreg-auto-btn,
+.lab-radio,
+.lab-toggle,
+.lab-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.48rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+  background: color-mix(in oklab, var(--bg) 78%, white 22%);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+#sigreg-reset-btn:hover,
+#sigreg-step-btn:hover,
+#sigreg-auto-btn:hover,
+.lab-radio:hover,
+.lab-toggle:hover,
+.lab-btn:hover {
+  background: color-mix(in oklab, var(--bg) 68%, white 32%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 30, 30, 0.08);
+}
+
+#sigreg-reset-btn:active,
+#sigreg-step-btn:active,
+#sigreg-auto-btn:active,
+.lab-radio:active,
+.lab-toggle:active,
+.lab-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+}
+
+#sigreg-canvas,
+#norm-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--bg) 98%, white 2%),
+      color-mix(in oklab, var(--bg) 94%, #edf2f7 6%)
+    );
+}
+
+.lab-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.lab-radio-group,
+.lab-toggle-group {
+  display: inline-flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.lab-radio,
+.lab-toggle,
+.lab-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.48rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+  background: color-mix(in oklab, var(--bg) 78%, white 22%);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.lab-radio:hover,
+.lab-toggle:hover,
+.lab-btn:hover {
+  background: color-mix(in oklab, var(--bg) 68%, white 32%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 30, 30, 0.08);
+}
+
+.lab-radio:active,
+.lab-toggle:active,
+.lab-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+}
+
+.lab-radio.active {
+  border-color: color-mix(in oklab, var(--ink) 48%, transparent);
+}
+
+.lab-toggle:not(.active) {
+  opacity: 0.50;
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+}
+
+.lab-slider-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.lab-slider {
+  width: clamp(160px, 32vw, 320px);
+  accent-color: var(--ink);
+}
+
+.lab-slider-val {
+  min-width: 3.5ch;
+  font-family: 'Roboto Mono', monospace;
+  color: var(--ink-dim);
+  font-weight: 500;
+}
+
+.lab-help {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  text-align: right;
+}
+
+.sigreg-lab-head h3,
+.sigreg-lab-head h4 {
+  margin: 0;
+}
+
+.sigreg-legend {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 0.55rem;
+  color: var(--ink-dim);
+  font-size: 0.92rem;
+}
+
+.sigreg-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.sigreg-swatch {
+  width: 0.82rem;
+  height: 0.82rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.sigreg-swatch-blue {
+  background: #4c6ef5;
+}
+
+.sigreg-swatch-gold {
+  background: #cc8d26;
+}
+
+.sigreg-swatch-gray {
+  background: #7c7c7c;
+}
+
+.sigreg-caption {
+  margin-top: 0.4rem;
+  margin-bottom: 0;
+  color: var(--ink-dim);
+  font-size: 0.96rem;
+  text-align: center;
+  max-width: 78%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+
+.post .failure-modes {
+  padding-left: 1.4rem;
+  margin: 1rem 0;
+}
+
+.post .failure-modes li + li {
+  margin-top: 0.7rem;
+}
+
+.equation-figure {
+  margin: 1.2rem auto;
+  text-align: center;
+  overflow-x: auto;
+  font-size: 1.35rem;
+}
+
+.equation-figure figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  font-style: italic;
+}
+
+/* ── Pull-quote callout ── */
+.callout {
+  margin: 1.5rem 0;
+  padding: 0.95rem 1.15rem 0.95rem 1.2rem;
+  border-left: 3px solid color-mix(in oklab, var(--ink) 34%, transparent);
+  background: color-mix(in oklab, var(--bg) 96%, var(--ink) 4%);
+  border-radius: 0 10px 10px 0;
+  font-size: clamp(1rem, 2vw, 1.08rem);
+  line-height: 1.65;
+  color: var(--ink);
+  font-style: normal;
+}
+
+
+@media (max-width: 760px) {
+  .sigreg-lab-head {
+    align-items: start;
+    flex-direction: column;
+  }
+
+  .sigreg-lab-actions,
+  .lab-controls,
+  .lab-radio-group,
+  .lab-toggle-group {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .lab-controls {
+    align-items: flex-start;
+  }
+
+  .lab-help {
+    text-align: left;
+  }
+
+  .lab-slider {
+    width: 100%;
+    flex: 1 1 auto;
+  }
+}

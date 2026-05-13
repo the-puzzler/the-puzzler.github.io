@@ -1,5 +1,15 @@
 [
   {
+    "title": "Practical notes on leJEPA",
+    "date": "2026-05-11",
+    "path": "posts/practical-notes-on-lejepa/practical-notes-on-lejepa.html",
+    "description": "Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.",
+    "social_image": "posts/practical-notes-on-lejepa/thumbnail.png",
+    "tags": ["World Modelling"],
+    "type": "research"
+  },
+
+  {
     "title": "la leWorldModel",
     "date": "2026-03-30",
     "path": "posts/la-leworldmodel/la-leworldmodel.html",

@@ -99,6 +99,7 @@
 html {
   scrollbar-color: var(--scroll-thumb) var(--scroll-track);
   scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
 
 /* Removed old theme blocks */
@@ -554,6 +555,8 @@ a:hover {
 /* Home list */
 .blogs-head {
   display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
   margin-bottom: 6px;
 }
 
@@ -562,11 +565,27 @@ a:hover {
   line-height: 1.05;
 }
 
+.section-tab {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.18s ease;
+}
+
+.section-tab:not(.is-active) {
+  opacity: 0.35;
+  font-size: clamp(1.05rem, 2.8vw, 1.4rem);
+}
+
+.section-tab.is-active {
+  cursor: default;
+}
+
 .tag-filter-row {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+  min-height: 42px;
 }
 
 .blog-search-wrap {
@@ -647,7 +666,11 @@ a:hover {
 .list {
   list-style: none;
   padding: 0;
-  margin: 0
+  margin: 0;
+  height: 72vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .item {

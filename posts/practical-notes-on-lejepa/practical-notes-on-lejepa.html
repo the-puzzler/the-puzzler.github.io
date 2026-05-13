@@ -1,0 +1,228 @@
+<h1>Practical notes on leJEPA</h1>
+<p class="post-subtitle">What SIGReg is actually checking, what it is not, and what two failed experiments taught me about both.</p>
+
+<section class="lead-block">
+  <p>This is a short research note based on my own experiments with <a href="https://arxiv.org/pdf/2511.08544" target="_blank" rel="noreferrer">leJEPA</a>. It tries to answer three questions:</p>
+  <div class="prologue-questions" role="note" aria-label="Core questions">
+    <p>What is SIGReg actually checking? <a href="#SIGReg" class="goto-link">GO TO</a></p>
+    <p>How does a well-behaved loss hide a broken model? <a href="#problems" class="goto-link">GO TO</a></p>
+    <p>What did two specific failures teach me about those limits? <a href="#failed-experiments" class="goto-link">GO TO</a></p>
+  </div>
+
+  <p>
+    leJEPA is appealing because it promises useful predictive structure without forcing reconstruction of every pixel. That same freedom is also what makes failure so easy to hide. Losses look clean, latent geometry looks tidy, and the thing you actually wanted to learn was never learnt. Most of this post is about that. It is also worth saying upfront that many of these failures are dataset problems as much as method problems. A dataset with enough variation and no dominant shortcuts removes the conditions for most of them.
+  </p>
+</section>
+
+<hr>
+
+<h2 id="SIGReg">What is SIGReg, and how does it work?</h2>
+<p>
+  SIGReg is the regularisation term that sits at the heart of leJEPA. The idea is simple. Sample random directions in embedding space, project all embeddings onto each 1D axis, and measure how far the resulting 1D distribution is from a standard Gaussian. Average that measurement across directions and you have a differentiable loss term. Optimising it pushes the joint distribution of embeddings toward an isotropic Gaussian.
+</p>
+
+
+<blockquote class="callout">
+  Most self-supervised losses can be minimised by the encoder cheating, mapping everything to a single point. SIGReg makes that hard: if embeddings cluster, some sampled direction will reveal a non-Gaussian marginal, and the regulariser pushes back.
+</blockquote>
+
+<p>
+  The key thing to understand is that SIGReg is a probe, not a guarantee. It samples directions and checks those directions. It has no opinion about what lies along the axes it did not sample, and no opinion about whether the variation it finds is meaningful. That distinction is what connects every failure mode in this post.
+</p>
+
+<section id="sigreg-lab" class="sigreg-lab" aria-label="SIGReg visual explanation">
+  <div class="sigreg-lab-head">
+    <div>
+      <p class="sigreg-lab-kicker">Visual intuition</p>
+      <h3>Sample a direction, then regularise that 1D slice</h3>
+    </div>
+    <div class="sigreg-lab-actions">
+      <button id="sigreg-step-btn" type="button">Step</button>
+      <button id="sigreg-auto-btn" type="button">Auto step</button>
+      <button id="sigreg-reset-btn" type="button">Reset</button>
+    </div>
+  </div>
+
+  <canvas id="sigreg-canvas" width="1200" height="560" aria-label="SIGReg two-panel sketch"></canvas>
+
+  <div class="sigreg-legend" aria-hidden="true">
+    <span><i class="sigreg-swatch sigreg-swatch-blue"></i> raw embeddings</span>
+    <span><i class="sigreg-swatch sigreg-swatch-gold"></i> Gaussian-regularised shape</span>
+    <span><i class="sigreg-swatch sigreg-swatch-gray"></i> sampled directions</span>
+  </div>
+</section>
+
+<p class="sigreg-caption">
+  Press <em>Step</em> to sample one random direction. For visual clarity, the demo uses quantile transport to move the projected values toward a Gaussian arrangement directly. The real SIGReg achieves the same goal as a differentiable loss, but the geometry of what it is pushing the cloud toward is the same.
+</p>
+
+<hr>
+
+<h2 id="problems">Problems</h2>
+<p>
+  Each of the four problems below fails the same way. The metric looks satisfied. SIGReg was never actually looking at the thing that broke.
+</p>
+
+<h3>Normalisation</h3>
+<p>
+  Whatever constraint you impose on embeddings before SIGReg runs, you are defining the space SIGReg gets to work with. If that space cannot reach a Gaussian shape, SIGReg cannot Gaussianise it, and no amount of training will change that.
+</p>
+
+<p>
+  Layernorm is the obvious culprit. It is generally the right choice for transformer architectures, but applied before SIGReg it forces \(\|z_i\| = 1\), placing all embeddings on a unit sphere. A unit sphere cannot be Gaussianised: for any unit direction \(v\), the projection \(p_i = z_i^\top v\) is bounded to \([-1,\,1]\), but a Gaussian is not. SIGReg appears to run, the loss comes down a little, and nothing useful happens.
+</p>
+
+<p>
+  Batchnorm works, but it introduces a train-mode versus eval-mode mismatch. I ran into this on my <a href="?p=la-leworldmodel">la leWorldModel</a> project. In my experience it fades with more training, but it is worth knowing about. The <a href="https://arxiv.org/pdf/2603.19312" target="_blank" rel="noreferrer">leWorldModel</a> paper handles this with a small MLP between the visual encoder and SIGReg: linear, activation, batchnorm, linear. That buffer is doing important work.
+</p>
+
+<section id="norm-lab" class="sigreg-lab" aria-label="Normalisation interactive">
+  <div class="sigreg-lab-head">
+    <div>
+      <p class="sigreg-lab-kicker">Try it</p>
+      <h3>Different normalisers, different ceilings</h3>
+    </div>
+    <div class="lab-controls">
+      <div class="lab-radio-group" role="group" aria-label="Normalisation mode">
+        <button data-mode="none" class="lab-radio active" type="button">No norm</button>
+        <button data-mode="layer" class="lab-radio" type="button">Layernorm</button>
+        <button data-mode="batch" class="lab-radio" type="button">Batchnorm</button>
+      </div>
+      <div class="sigreg-lab-actions">
+        <button id="norm-step-btn" class="lab-btn" type="button">Step</button>
+        <button id="norm-auto-btn" class="lab-btn" type="button">Auto step</button>
+        <button id="norm-reset-btn" class="lab-btn" type="button">Reset</button>
+      </div>
+    </div>
+  </div>
+  <canvas id="norm-canvas" width="1200" height="560" aria-label="Normalisation sketch"></canvas>
+</section>
+
+<p class="sigreg-caption">
+  Pick a mode and step the regulariser. With layernorm, the embeddings are stuck on a unit circle, so projecting onto any axis gives bounded values, meaning the marginal can never reach the Gaussian tails. With batchnorm or no norm, the marginal converges to the target.
+</p>
+
+<h3>Invertibility</h3>
+<p>
+  Nothing in the leJEPA objective requires embeddings to be invertible back to pixel space. For many tasks that is fine. But for world modelling it matters: if you want to check whether your model has actually learned to represent the objects you care about, decoding the latents is one of the few ways to find out. Non-invertible embeddings are often a sign that the model found something else entirely.
+</p>
+
+<p>
+  The instinct is to force invertibility by training a reconstruction decoder alongside the world model. The <a href="https://arxiv.org/pdf/2603.19312" target="_blank" rel="noreferrer">leWorldModel</a> paper tries this and notes that it hurts performance. I think I understand why.
+</p>
+
+<blockquote class="callout">
+  Instead of finding a geometry that serves both prediction and reconstruction, the model takes the easier path and partitions the latent space. Some dimensions go to prediction. Some go to reconstruction. The two objectives are solved as separate problems, and the main task loses capacity.
+</blockquote>
+
+<p>
+  It is not a failure of training. It is the model doing exactly what is rational given two independent objectives. The problem is the setup, not the optimiser.
+</p>
+
+<h3>Not what you want</h3>
+<p>
+  SIGReg cares that your embeddings vary. It does not care what they vary along. That distinction is the source of a lot of grief.
+</p>
+
+<p>
+  If your dataset has any easy source of variation, the model will find it. Training on CelebA? Background hues vary more reliably than faces. Training on video of a domestic scene? Lighting shifts frame to frame, but the objects barely move. The loss converges, SIGReg is satisfied, and you have learned nothing useful. The only way to find out is to look at what the embeddings are actually separating, which usually means decoding, which, as above, is harder than it sounds.
+</p>
+
+<blockquote class="callout">
+  Nothing forces the model to choose the most complex task. It will always learn the simplest feature that satisfies the objective, and in any real modest dataset there are always simpler features than the one you care about.
+</blockquote>
+
+<p>
+  I hit this problem most directly in the <a href="#control-anything">Control Anything</a> experiment below.
+</p>
+
+<h3>Finding the right place to apply it</h3>
+<p>
+  The question I ask myself when setting up SIGReg is: <em>what wants to collapse that should not be allowed to?</em>
+</p>
+
+<p>
+  For a simple image encoder producing a single embedding per image, the answer is obvious. In other cases it is not. If you want each image represented as several tokens, you need SIGReg across the tokens within an image as well as across the batch. Batch-level SIGReg alone lets within-sample tokens collapse freely, and the batch-level metric will never report a problem.
+</p>
+
+<p>
+  World modelling is where this gets serious. A sequence of similar frames can collapse along the time axis while SIGReg across the batch remains satisfied. Both MSE and SIGReg appear to converge. The model has learned nothing about dynamics, and the only signal you have says everything is fine. I ran into exactly this in the <a href="#multi-agent">multi-agent</a> experiment below.
+</p>
+
+<hr>
+
+<h2 id="failed-experiments">Failed experiments</h2>
+<p>
+  Both of these experiments taught me more than most of my successes. The failures were specific and diagnostic in a way that clean results rarely are.
+</p>
+
+<h3 id="multi-agent">Multi-agent leWorldModel</h3>
+<p>
+  The aim was a la leWorldModel that lets me control two agents in a shared environment from video alone. The environment was simple: two agents, low visual complexity, adjacent frames almost identical.
+</p>
+
+<p>
+  The losses converged beautifully but not everything was as it seemed. The model had figured out that adjacent states barely differ, so predicting the next state was trivially easy: just copy the current one. SIGReg was satisfied because the embeddings varied across sequences. That they were static within each sequence was a direction it was never checking.
+</p>
+
+<p>
+  The fix was to add a SIGReg term across timesteps as well. It is not a principled solution, since there is no particular reason sequential states should be Gaussian-distributed, but it was the only way I found to close that gap. The project still failed in the end: the decoder could not separate the two agents, which suggests the embeddings were not representing them distinctly. With leJEPA you often cannot know that until after you have trained a model you were certain would work.
+</p>
+
+<h3 id="control-anything">Control Anything</h3>
+<p>
+  I am still a bit upset this one did not work.
+</p>
+
+<p>
+  The idea was to apply latent-action world modelling to any static dataset. Normal world modelling assumes temporal structure: one frame plus an action predicts the next frame. I wanted to ask whether you could do the same thing without time. Presume that one datapoint plus a hint is predictive of another datapoint in the same dataset. That hint, discovered without supervision, would be a reusable primitive describing a relationship between the two points.
+</p>
+
+<p>
+  If it worked, you could do genuinely interesting things. Write the embedding of an image as \(z\) and the latent action the model discovers as \(a\). Training on a clothing dataset:
+</p>
+
+<figure class="equation-figure">
+  \[
+    z_{\text{long sleeve}} + a_{\text{shorten}} \;\approx\; z_{\text{short sleeve}}
+  \]
+  <figcaption>The latent action \(a\) is a vector discovered by the model to describe the relationship between two points.</figcaption>
+</figure>
+
+<p>
+  It learns this not by rendering pixels but by working entirely in embedding space. At inference the same primitive composes with any new input: \(z_{\text{coat}} + a_{\text{shorten}}\). You get the result as a latent, and if you have a decoder, you can render it.
+</p>
+
+<p>
+  I tried this on CelebA and hit two bootstrapping problems in sequence.
+</p>
+
+<p>
+  The first is a data problem. Random pairing is hopeless: if you pair arbitrary images, the source tells you almost nothing about the target. The model learns that the latent action should basically encode the target itself, which is a prototype rather than a primitive. SIGReg converges. MSE does not.
+</p>
+
+<p>
+  The second is what I think is a more fundamental leJEPA problem. If you instead use the current embeddings to find similar pairs, the prototype issue goes away. Both losses converge. But the model has taken the path of least resistance: it learns to represent the easiest variation in the dataset. On CelebA that meant lighting and background hue. The embeddings were not representing faces at all.
+</p>
+
+<p>
+  This is the "not what you want" pitfall taken to its logical conclusion. Given a static dataset with no temporal structure to lean on, the model had total freedom to decide what counted as an interesting relationship. It chose the most boring thing that satisfied the objective. Given the setup, that was the rational thing to do.
+</p>
+
+<p>
+  I do not know of a clean solution to the bootstrapping cycle. If you have ideas, I would like to hear them.
+</p>
+
+<hr>
+
+<h2>Conclusion</h2>
+<p>
+  The thread running through all of this is that SIGReg is a metric, not a guarantee. It reports whether embeddings vary in the directions it happens to check. Whether that variation is meaningful, whether it covers the right axes, whether the model is actually representing what you care about, is a separate question that SIGReg never asks.
+</p>
+
+<p>
+  leJEPA and SIGReg are a powerful combination, and I think they are underused. But they reward careful setup and the failure modes are quiet ones. Many of them are also dataset problems in disguise: the richer and more complete your data, the fewer shortcuts exist for the model to exploit, and the less of this applies.
+</p>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>
