@@ -860,10 +860,10 @@
     const img = $('#cifar-solution-image');
     if (!img || !btn) return;
     if (mode === 'baseline') {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_baseline.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_baseline.png';
       img.alt = 'CIFAR-10 reconstructions under MSE baseline';
     } else {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_crop.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_crop.png';
       img.alt = 'CIFAR-10 reconstructions under crop-and-resize showing improved colour and structure';
     }
     setActiveToggle(btn);
@@ -873,16 +873,16 @@
     const img = $('#celeba-solution-image');
     if (!img || !btn) return;
     if (mode === 'baseline') {
-      img.src = 'posts/masked-latent-consistency/assets/celeba_baseline_6x.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/celeba_baseline_6x.png';
       img.alt = 'CelebA 6x compression MSE baseline';
     } else if (mode === 'algo2_crop') {
-      img.src = 'posts/masked-latent-consistency/assets/celeba_stepfrozen_crop.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/celeba_stepfrozen_crop.png';
       img.alt = 'CelebA step-frozen crop-resize result';
     } else if (mode === 'detail_transforms') {
-      img.src = 'posts/masked-latent-consistency/assets/celeba_stepfrozen_5stack.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/celeba_stepfrozen_5stack.png';
       img.alt = 'CelebA detail-transform result';
     } else {
-      img.src = 'posts/masked-latent-consistency/assets/celeba_algo1_crop.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/celeba_algo1_crop.png';
       img.alt = 'CelebA crop-resize result';
     }
     setActiveToggle(btn);
@@ -892,19 +892,19 @@
     const img = $('#cifar-ema-image');
     if (!img || !btn) return;
     if (mode === 'baseline') {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_baseline.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_baseline.png';
       img.alt = 'CIFAR-10 MSE baseline';
     } else if (mode === 'crop_resize') {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_stepfrozen_crop.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_stepfrozen_crop.png';
       img.alt = 'CIFAR-10 crop-resize result under the step-frozen formulation';
     } else if (mode === 'gaussian') {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_stepfrozen_gaussian.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_stepfrozen_gaussian.png';
       img.alt = 'CIFAR-10 gaussian result under the step-frozen formulation';
     } else if (mode === 'no_corruption') {
-      img.src = 'posts/masked-latent-consistency/assets/ema_private_code.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/ema_private_code.png';
       img.alt = 'CIFAR-10 private-code failure with no corruption';
     } else {
-      img.src = 'posts/masked-latent-consistency/assets/cifar_emaenc.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/cifar_emaenc.png';
       img.alt = 'CIFAR-10 reconstructions under the step-frozen detail-bundle formulation';
     }
     setActiveToggle(btn);
@@ -914,10 +914,10 @@
     const img = $('#hard-challenge-image');
     if (!img || !btn) return;
     if (mode === 'latent512') {
-      img.src = 'posts/masked-latent-consistency/assets/our_method_vs_baseline_latent512_checkpoint100.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/our_method_vs_baseline_latent512_checkpoint100.png';
       img.alt = 'CelebA masked autoencoding comparison at latent 512, showing original images, masked inputs, our method masked and clean reconstructions, and baseline masked and clean reconstructions';
     } else {
-      img.src = 'posts/masked-latent-consistency/assets/our_method_vs_baseline_latent128_checkpoint100.png';
+      img.src = 'posts/self-teaching-autoencoder/assets/our_method_vs_baseline_latent128_checkpoint100.png';
       img.alt = 'CelebA masked autoencoding comparison at latent 128, showing original images, masked inputs, our method masked and clean reconstructions, and baseline masked and clean reconstructions';
     }
     setActiveToggle(btn);
@@ -942,7 +942,7 @@
       drawSynth(demo.src.getContext('2d'), 180, 180);
       updateDemo();
     };
-    img.src = 'posts/masked-latent-consistency/assets/example.png';
+    img.src = 'posts/self-teaching-autoencoder/assets/example.png';
   }
 
   function initComments() {
@@ -952,7 +952,7 @@
     s.src = 'https://utteranc.es/client.js';
     s.async = true;
     s.setAttribute('repo', 'the-puzzler/the-puzzler.github.io');
-    s.setAttribute('issue-term', 'posts/masked-latent-consistency/masked-latent-consistency.html');
+    s.setAttribute('issue-term', 'posts/self-teaching-autoencoder/self-teaching-autoencoder.html');
     s.setAttribute('label', 'comments');
     s.setAttribute('theme', 'github-light');
     s.setAttribute('crossorigin', 'anonymous');

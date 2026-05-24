@@ -2,9 +2,9 @@
   {
     "title": "Self-Teaching Autoencoder",
     "date": "2026-05-19",
-    "path": "posts/masked-latent-consistency/masked-latent-consistency.html",
+    "path": "posts/self-teaching-autoencoder/self-teaching-autoencoder.html",
     "description": "A self-training autoencoder. Trained without reconstruction losses, pixel or otherwise, and no image-space supervision of any kind.",
-    "social_image": "posts/masked-latent-consistency/assets/cover.png",
+    "social_image": "posts/self-teaching-autoencoder/assets/cover.png",
     "tags": ["Self-Supervision"]
   },
 

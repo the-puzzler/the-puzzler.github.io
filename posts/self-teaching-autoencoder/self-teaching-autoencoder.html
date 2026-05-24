@@ -7,6 +7,11 @@
   </p>
 </header>
 
+<aside class="repo-embed" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Code</p>
+  <a href="https://github.com/the-puzzler/leautoencoder" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/leautoencoder</a>
+</aside>
+
 <section class="mlc-lead-block">
   <p>This project began with one question:</p>
   <div class="mlc-prologue-questions" role="note" aria-label="Core questions">
@@ -154,7 +159,7 @@
     On grayscale shapes over black backgrounds, sparse pixel masking worked well. It preserved enough local structure for the model to recover the shape without introducing obvious artefacts, so in that regime the basic transformed objective already looked clean.
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img src="posts/masked-latent-consistency/assets/synthetic_pixel.png" alt="Synthetic grayscale-shape reconstructions showing the pixel transformation as the only clean method">
+    <img src="posts/self-teaching-autoencoder/assets/synthetic_pixel.png" alt="Synthetic grayscale-shape reconstructions showing the pixel transformation as the only clean method">
     <figcaption>On the synthetic grayscale data, the pixel transformation was the only method that reconstructed cleanly without obvious artefacts.</figcaption>
   </figure>
   <p>
@@ -169,7 +174,7 @@
     In practice, the grayscale shape of the scene was often roughly right while colour remained weak or washed out. So the synthetic result was informative, but it did not scale.
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img src="posts/masked-latent-consistency/assets/cifar_pixel.png" alt="CIFAR-10 reconstructions under the pixel transformation showing luminance structure without correct colour detail">
+    <img src="posts/self-teaching-autoencoder/assets/cifar_pixel.png" alt="CIFAR-10 reconstructions under the pixel transformation showing luminance structure without correct colour detail">
     <figcaption>On CIFAR-10, the pixel transformation mostly preserved luminance and coarse structure, but it did not constrain colour and finer detail well enough.</figcaption>
   </figure>
 
@@ -178,7 +183,7 @@
     Crop-resize was the first version that really worked on CIFAR-10. Small natural crops force agreement on colour and local texture as well as coarse shape, so they constrain exactly the parts that pixel masking was missing. It was the first latent-consistency variant that produced reconstructions with both sensible structure and sensible colour.
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img id="cifar-solution-image" src="posts/masked-latent-consistency/assets/cifar_crop.png" alt="CIFAR-10 reconstructions under crop-and-resize showing improved colour and structure">
+    <img id="cifar-solution-image" src="posts/self-teaching-autoencoder/assets/cifar_crop.png" alt="CIFAR-10 reconstructions under crop-and-resize showing improved colour and structure">
     <div class="mlc-toggle-row">
       <button class="mlc-small-toggle is-active" type="button" onclick="showCifarSolution('self_teaching', this)">Crop-resize self-teaching</button>
       <button class="mlc-small-toggle" type="button" onclick="showCifarSolution('baseline', this)">MSE baseline</button>
@@ -197,7 +202,7 @@
     On CIFAR-10, step-freezing worked much better:
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img id="cifar-ema-image" src="posts/masked-latent-consistency/assets/cifar_stepfrozen_crop.png" alt="CIFAR-10 reconstructions under the step-frozen crop-resize formulation">
+    <img id="cifar-ema-image" src="posts/self-teaching-autoencoder/assets/cifar_stepfrozen_crop.png" alt="CIFAR-10 reconstructions under the step-frozen crop-resize formulation">
     <div class="mlc-toggle-row">
       <button class="mlc-small-toggle" type="button" onclick="showCifarEmaSolution('detail_transforms', this)">Detail transforms</button>
       <button class="mlc-small-toggle is-active" type="button" onclick="showCifarEmaSolution('crop_resize', this)">Crop resize</button>
@@ -245,7 +250,7 @@
     First, the easier setting: ordinary autoencoding at roughly 6x compression. Here the question is just whether the step-frozen crop-resize method still reconstructs cleanly once the data are more structured and higher resolution.
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img id="celeba-solution-image" src="posts/masked-latent-consistency/assets/celeba_stepfrozen_crop.png" alt="CelebA step-frozen crop-resize result">
+    <img id="celeba-solution-image" src="posts/self-teaching-autoencoder/assets/celeba_stepfrozen_crop.png" alt="CelebA step-frozen crop-resize result">
     <div class="mlc-toggle-row">
       <button class="mlc-small-toggle" type="button" onclick="showCelebASolution('baseline', this)">Baseline</button>
       <button class="mlc-small-toggle is-active" type="button" onclick="showCelebASolution('algo2_crop', this)">Step-frozen crop-resize</button>
@@ -263,7 +268,7 @@
     For the masking task I also switch to global pooling in the latent pathway. Once the input is only partially observed, forcing the representation through a globally pooled bottleneck made more sense than keeping a more spatially local code.
   </p>
   <figure class="mlc-figure mlc-story-figure">
-    <img id="hard-challenge-image" src="posts/masked-latent-consistency/assets/our_method_vs_baseline_latent512_checkpoint100.png" alt="CelebA masked autoencoding comparison at latent 512, showing original images, masked inputs, our method masked and clean reconstructions, and baseline masked and clean reconstructions">
+    <img id="hard-challenge-image" src="posts/self-teaching-autoencoder/assets/our_method_vs_baseline_latent512_checkpoint100.png" alt="CelebA masked autoencoding comparison at latent 512, showing original images, masked inputs, our method masked and clean reconstructions, and baseline masked and clean reconstructions">
     <div class="mlc-toggle-row">
       <button class="mlc-small-toggle" type="button" onclick="showHardChallengeSolution('latent128', this)">latent=128</button>
       <button class="mlc-small-toggle is-active" type="button" onclick="showHardChallengeSolution('latent512', this)">latent=512</button>
@@ -289,6 +294,11 @@
     The other important point is why this behaves differently from a plain MSE autoencoder. It is not chasing weak pixel averages. It is chasing an abstract representation of what the image should contain under a family of transformations. That changes the failure mode. When it misses, it is more likely to hallucinate something plausible than to wash everything into a blurry average, because the objective is organised around semantic agreement rather than direct pixel matching. The fact that those semantics are learned during training, without requiring a pretrained model, is the cherry on the cake.
   </p>
 </section>
+
+<aside class="repo-embed repo-embed-bottom" aria-label="GitHub repository">
+  <p class="repo-embed-kicker">Repository</p>
+  <a href="https://github.com/the-puzzler/leautoencoder" target="_blank" rel="noopener noreferrer">github.com/the-puzzler/leautoencoder</a>
+</aside>
 
 <h2>Comments</h2>
 <div id="post-comments-thread"></div>
