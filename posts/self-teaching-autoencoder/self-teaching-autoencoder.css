@@ -136,6 +136,33 @@
   max-width: 100%;
 }
 
+.page.post .mlc-top-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin: 0 0 1rem;
+}
+
+.page.post .mlc-top-demo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--accent) 28%, var(--mlc-border) 72%);
+  background: color-mix(in oklab, var(--bg) 86%, white 14%);
+  color: var(--ink);
+  text-decoration: none;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+}
+
+.page.post .mlc-top-demo-button:hover {
+  text-decoration: none;
+  background: color-mix(in oklab, var(--bg) 76%, white 24%);
+}
+
 .page.post .mlc-prologue-questions {
   margin: 0.65rem auto 1rem auto;
   width: min(820px, 96%);

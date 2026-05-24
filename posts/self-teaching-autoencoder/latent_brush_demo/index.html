@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Latent Brush</title>
+    <style>
+      :root {
+        --bg: #f4efe4;
+        --panel: #fffaf0;
+        --ink: #12233b;
+        --muted: #5c6b7a;
+        --accent: #c7532f;
+        --line: #d5cab6;
+        --shadow: 0 18px 45px rgba(18, 35, 59, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(199, 83, 47, 0.14), transparent 22%),
+          radial-gradient(circle at top right, rgba(18, 35, 59, 0.08), transparent 20%),
+          linear-gradient(180deg, #f6f0e6 0%, #ede4d4 100%);
+      }
+
+      .shell {
+        min-height: 100vh;
+        padding: 24px;
+      }
+
+      .frame {
+        display: grid;
+        gap: 24px;
+      }
+
+      .app-shell {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 24px;
+        align-items: start;
+      }
+
+      .panel {
+        background: color-mix(in srgb, var(--panel) 92%, white 8%);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+      }
+
+      .sidebar {
+        padding: 20px;
+        position: sticky;
+        top: 24px;
+      }
+
+      .title {
+        margin: 0;
+        font-size: 2rem;
+        line-height: 1;
+      }
+
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 16px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.84);
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        background: white;
+      }
+
+      .subtitle {
+        margin: 10px 0 18px;
+        color: var(--muted);
+        font-size: 0.98rem;
+        line-height: 1.45;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .button-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .control-group {
+        display: grid;
+        gap: 10px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 11px 14px;
+        font: inherit;
+        color: white;
+        background: var(--ink);
+        cursor: pointer;
+      }
+
+      button.secondary {
+        color: var(--ink);
+        background: transparent;
+        border: 1px solid var(--line);
+      }
+
+      .mode-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .mode-row button.active {
+        background: var(--accent);
+      }
+
+      .control {
+        display: grid;
+        gap: 6px;
+      }
+
+      .label-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-size: 0.9rem;
+      }
+
+      input[type="range"] {
+        width: 100%;
+      }
+
+      .swatch {
+        display: grid;
+        grid-template-columns: 56px 1fr;
+        gap: 12px;
+        align-items: center;
+        margin: 18px 0 0;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+      }
+
+      .swatch-chip {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        border: 1px solid rgba(18, 35, 59, 0.15);
+      }
+
+      .palette-strip {
+        padding: 18px 20px 20px;
+      }
+
+      .palette-strip-head {
+        margin-bottom: 12px;
+      }
+
+      .palette-strip-head h2 {
+        margin: 0;
+        font-size: 1.15rem;
+      }
+
+      .palette-strip-head p {
+        margin: 6px 0 0;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .palette-list {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: minmax(440px, 440px);
+        gap: 14px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        align-items: start;
+        scrollbar-width: thin;
+      }
+
+      .palette-card {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.7);
+      }
+
+      .palette-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .palette-grid img,
+      .palette-grid canvas {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        display: block;
+        border-radius: 12px;
+        border: 1px solid rgba(18, 35, 59, 0.08);
+      }
+
+      .palette-grid canvas {
+        cursor: crosshair;
+        image-rendering: pixelated;
+      }
+
+      .palette-grid img.source-pick {
+        cursor: pointer;
+      }
+
+      .feature-wrap {
+        position: relative;
+      }
+
+      .feature-overlay {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        border-radius: 12px;
+      }
+
+      .feature-overlay.active {
+        outline: 2px solid rgba(199, 83, 47, 0.9);
+      }
+
+      .palette-note {
+        margin: 8px 2px 0;
+        color: var(--muted);
+        font-size: 0.82rem;
+      }
+
+      .workspace {
+        padding: 20px;
+      }
+
+      .workspace-head {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .workspace-head h2 {
+        margin: 0;
+        font-size: 1.4rem;
+      }
+
+      .workspace-head p {
+        margin: 6px 0 0;
+        color: var(--muted);
+      }
+
+      .canvas-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 18px;
+        align-items: start;
+        max-width: 1040px;
+      }
+
+      .canvas-panel {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid var(--line);
+      }
+
+      .canvas-panel h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .canvas-panel-main {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+      }
+
+      #paint-canvas {
+        width: 100%;
+        display: block;
+        border-radius: 18px;
+        background: #fefaf3;
+        border: 1px solid var(--line);
+        touch-action: none;
+        image-rendering: pixelated;
+      }
+
+      .canvas-stage {
+        position: relative;
+      }
+
+      .canvas-stage::before {
+        content: "";
+        display: block;
+        padding-top: 100%;
+      }
+
+      .canvas-stage > canvas {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+      }
+
+      #brush-preview-canvas {
+        width: 100%;
+        pointer-events: none;
+        border-radius: 18px;
+        image-rendering: pixelated;
+      }
+
+      .main-image {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        display: block;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: white;
+      }
+
+      .status {
+        margin-top: 10px;
+        min-height: 1.2em;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 1080px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+
+        .canvas-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .palette-list {
+          grid-auto-columns: minmax(320px, 320px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="frame">
+        <div class="app-shell">
+          <aside class="panel sidebar">
+            <a class="back-link" href="../../../?p=self-teaching-autoencoder">Back to blog</a>
+            <h1 class="title">Latent Brush</h1>
+            <p class="subtitle">
+              Pick local features from a precomputed CelebA palette bank, then paint those latent fragments into a shared face canvas entirely in-browser.
+            </p>
+
+            <div class="controls">
+              <div class="control-group">
+                <div class="button-row">
+                  <button id="randomize-btn">New Palette</button>
+                  <button class="secondary" id="reset-btn">Reset Canvas</button>
+                </div>
+
+                <div class="button-row">
+                  <button class="secondary" id="undo-btn">Undo</button>
+                  <button class="secondary" id="redo-btn">Redo</button>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="mode-row">
+                  <button id="picker-mode-btn" class="active">Picker</button>
+                  <button id="blend-mode-btn" class="secondary">Blend</button>
+                  <button id="erase-mode-btn" class="secondary">Erase</button>
+                </div>
+
+                <div class="button-row">
+                  <button class="secondary" id="rotate-left-btn">Rotate L</button>
+                  <button class="secondary" id="rotate-right-btn">Rotate R</button>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <div class="control">
+                  <div class="label-row">
+                    <span>Brush radius</span>
+                    <span id="radius-value">1.00</span>
+                  </div>
+                  <input id="radius-slider" type="range" min="0.35" max="4.5" step="0.05" value="1.0" />
+                </div>
+
+                <div class="control">
+                  <div class="label-row">
+                    <span>Opacity</span>
+                    <span id="opacity-value">0.70</span>
+                  </div>
+                  <input id="opacity-slider" type="range" min="0.05" max="1" step="0.05" value="0.7" />
+                </div>
+              </div>
+            </div>
+
+            <div class="swatch">
+              <div class="swatch-chip" id="brush-chip"></div>
+              <div>
+                <div id="selection-label">No region selected</div>
+                <div class="palette-note" id="selection-note">Picker mode: click or drag a box on a palette feature map, then paint on the canvas.</div>
+              </div>
+            </div>
+          </aside>
+
+          <main class="panel workspace">
+            <div class="workspace-head">
+              <div>
+                <h2>Face Canvas</h2>
+                <p>Draw on the latent feature map. The decoder ONNX model runs in your browser.</p>
+              </div>
+            </div>
+
+            <div class="canvas-grid">
+              <section class="canvas-panel canvas-panel-main">
+                <h3>Paint Surface</h3>
+                <div class="canvas-stage">
+                  <canvas id="paint-canvas" width="256" height="256"></canvas>
+                  <canvas id="brush-preview-canvas" width="256" height="256"></canvas>
+                </div>
+                <div class="status" id="status-text"></div>
+              </section>
+
+              <section class="canvas-panel canvas-panel-main">
+                <h3>Decoded Face</h3>
+                <img id="decoded-image" class="main-image" alt="Decoded face" />
+              </section>
+            </div>
+
+          </main>
+        </div>
+
+        <section class="panel palette-strip">
+          <div class="palette-strip-head">
+            <h2>Palette Bank</h2>
+            <p>Choose a source face, then sample local latent patches from the feature maps below.</p>
+          </div>
+          <div class="palette-list" id="palette-list"></div>
+        </section>
+      </div>
+    </div>
+
+    <script src="vendor/ort.min.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
