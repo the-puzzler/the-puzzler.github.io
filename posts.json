@@ -1,11 +1,20 @@
 [
   {
+    "title": "Self-Teaching Autoencoder",
+    "date": "2026-05-19",
+    "path": "posts/masked-latent-consistency/masked-latent-consistency.html",
+    "description": "A self-training autoencoder. Trained without reconstruction losses, pixel or otherwise, and no image-space supervision of any kind.",
+    "social_image": "posts/masked-latent-consistency/assets/cover.png",
+    "tags": ["Self-Supervision"]
+  },
+
+  {
     "title": "Practical notes on leJEPA",
     "date": "2026-05-11",
     "path": "posts/practical-notes-on-lejepa/practical-notes-on-lejepa.html",
     "description": "Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.",
     "social_image": "posts/practical-notes-on-lejepa/thumbnail.png",
-    "tags": ["World Modelling"],
+    "tags": ["Self-Supervision"],
     "type": "research"
   },
 
@@ -15,7 +24,7 @@
     "path": "posts/la-leworldmodel/la-leworldmodel.html",
     "description": "Simultaneous latent action and world model learning from passive video for controllable prediction.",
     "social_image": "posts/la-leworldmodel/assets/thumbnail.png",
-    "tags": ["World Modelling", "Robotics"]
+    "tags": ["World Modelling", "Robotics", "Self-Supervision"]
   },
 
   {

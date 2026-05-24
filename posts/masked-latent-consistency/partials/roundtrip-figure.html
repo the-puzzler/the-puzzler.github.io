@@ -1,0 +1,66 @@
+<figure class="mlc-figure mlc-figure-rt">
+  <div class="mlc-roundtrip" aria-label="Round trip behavior with and without transformations">
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+      <defs>
+        <pattern id="mlc-imgStripes" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+          <rect width="7" height="7" fill="#ece6d4"/>
+          <line x1="0" y1="0" x2="0" y2="7" stroke="#d6cdb2" stroke-width="2.4"/>
+        </pattern>
+        <filter id="mlc-noiseFilter" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch" seed="7"/>
+          <feColorMatrix values="0 0 0 0 1
+                                 0 0 0 0 1
+                                 0 0 0 0 1
+                                 0 0 0 2 -0.7"/>
+        </filter>
+        <filter id="mlc-noiseFilter2" x="0" y="0" width="100%" height="100%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch" seed="19"/>
+          <feColorMatrix values="0 0 0 0 1
+                                 0 0 0 0 1
+                                 0 0 0 0 1
+                                 0 0 0 2 -0.65"/>
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="mlc-rt-panels">
+      <section class="mlc-rt-panel bad">
+        <div class="mlc-rt-head">
+          <span class="mlc-rt-tag">A · Without transformations</span>
+          <div class="mlc-rt-title" role="heading" aria-level="3">Latent collision</div>
+        </div>
+        <div class="mlc-rt-pipeline">
+          <div class="mlc-rt-node"><div class="mlc-rt-tile"><svg viewBox="0 0 72 72" preserveAspectRatio="none"><rect width="72" height="72" fill="url(#mlc-imgStripes)"/><text x="36" y="40" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#75716a" letter-spacing="0.04em">image</text></svg></div><div class="mlc-rt-cap"><b>x</b><br>real image</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">E</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-latent"><div class="halo" style="left:62%;top:42%"></div><div class="dot" style="left:62%;top:42%"></div></div><div class="mlc-rt-cap"><b>z</b><br>latent</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">D</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-tile code"><svg viewBox="0 0 72 72" preserveAspectRatio="none"><rect width="72" height="72" fill="#1a1814"/><rect width="72" height="72" filter="url(#mlc-noiseFilter)"/></svg></div><div class="mlc-rt-cap"><b style="color:var(--mlc-rt-bad)">D(z)</b><br><span style="color:var(--mlc-rt-bad)">secret code</span></div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">E</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-latent"><div class="halo" style="left:62%;top:42%"></div><div class="dot" style="left:62%;top:42%"></div></div><div class="mlc-rt-cap"><b>z</b><br>same latent</div></div>
+        </div>
+      </section>
+
+      <section class="mlc-rt-panel good">
+        <div class="mlc-rt-head">
+          <span class="mlc-rt-tag">B · With transformations</span>
+          <div class="mlc-rt-title" role="heading" aria-level="3">Faithful round-trip</div>
+        </div>
+        <div class="mlc-rt-pipeline">
+          <div class="mlc-rt-node"><div class="mlc-rt-tile"><svg viewBox="0 0 72 72" preserveAspectRatio="none"><rect width="72" height="72" fill="url(#mlc-imgStripes)"/><text x="36" y="40" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#75716a" letter-spacing="0.04em">image</text></svg></div><div class="mlc-rt-cap"><b>x</b><br>real image</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">E</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-latent"><div class="halo" style="left:38%;top:38%"></div><div class="dot" style="left:38%;top:38%"></div></div><div class="mlc-rt-cap"><b>z</b><br>latent</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">D</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-tile"><svg viewBox="0 0 72 72" preserveAspectRatio="none"><rect width="72" height="72" fill="url(#mlc-imgStripes)"/><text x="36" y="40" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" fill="#75716a" letter-spacing="0.04em">image</text></svg></div><div class="mlc-rt-cap"><b style="color:var(--mlc-rt-good)">D(z) = x</b><br>reconstruction</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">E</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-latent"><div class="halo" style="left:38%;top:38%"></div><div class="dot" style="left:38%;top:38%"></div></div><div class="mlc-rt-cap"><b>z</b><br>same latent</div></div>
+        </div>
+        <div class="mlc-rt-pipeline secondary">
+          <div class="mlc-rt-node"><div class="mlc-rt-tile code"><svg viewBox="0 0 72 72" preserveAspectRatio="none"><rect width="72" height="72" fill="#1a1814"/><rect width="72" height="72" filter="url(#mlc-noiseFilter2)"/></svg></div><div class="mlc-rt-cap"><b>c</b><br>fake code</div></div>
+          <div class="mlc-rt-arrow"><div class="line"></div><div class="head"></div><div class="op">E</div></div>
+          <div class="mlc-rt-node"><div class="mlc-rt-latent"><div class="dot ring" style="left:38%;top:38%;opacity:0.45"></div><div class="halo" style="left:74%;top:70%"></div><div class="dot" style="left:74%;top:70%"></div></div><div class="mlc-rt-cap"><b style="color:var(--mlc-rt-good)">z′ ≠ z</b><br><span style="color:var(--mlc-rt-good)">elsewhere</span></div></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <figcaption>Without transformations, a decoder-produced secret code can survive as long as it maps back to the same latent. With transformations, faithful image round-trips stay stable, but fake code images get pushed somewhere else.</figcaption>
+</figure>

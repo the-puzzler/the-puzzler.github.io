@@ -1,0 +1,31 @@
+<figure class="mlc-figure mlc-figure-narrow">
+  <div class="mlc-viz-box">
+    <div class="mlc-viz-inner mlc-viz-pad-algo">
+      <div class="mlc-algo-compare" aria-label="Algorithm 3 and Algorithm 4 comparison">
+        <div class="mlc-algo">
+          <div class="mlc-algo-title">Algorithm 3&nbsp;&nbsp;Step-Frozen Self-Teaching Autoencoder</div>
+          <div class="mlc-algo-rule"></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">1</span><span class="mlc-algo-txt">Input image \(x\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">2</span><span class="mlc-algo-txt">Run through the autoencoder</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\hat{x} \leftarrow D(E(x))\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">3</span><span class="mlc-algo-txt">Anchor the decoded branch to the data distribution with step-frozen crop-resize</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\mathcal{L} \leftarrow \lVert E_f(T(x)) - E_f(T(\hat{x})) \rVert + \lambda \mathcal{L}_{\mathrm{SIGReg}}\)</span></div>
+        </div>
+        <div class="mlc-algo">
+          <div class="mlc-algo-title">Algorithm 4&nbsp;&nbsp;leAutoencoder</div>
+          <div class="mlc-algo-rule"></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">1</span><span class="mlc-algo-txt">Input clean image \(x\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln" style="color:#2f9e44">2</span><span class="mlc-algo-txt" style="color:#2f9e44">Construct masked view \(x_m \leftarrow C(x)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln" style="color:#2f9e44">3</span><span class="mlc-algo-txt" style="color:#2f9e44">Run both through the autoencoder</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\hat{x} \leftarrow D(E(x)),\qquad \hat{x}_m \leftarrow D(E(x_m))\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">4</span><span class="mlc-algo-txt">Match clean and masked final latents with a JEPA loss</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\mathcal{L}_{\mathrm{JEPA}} \leftarrow \lVert E(\hat{x}) - E(\hat{x}_m) \rVert\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">5</span><span class="mlc-algo-txt">Anchor to distribution (see Algo 3)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">6</span><span class="mlc-algo-txt">Optimise</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\mathcal{L} \leftarrow \mathcal{L}_{\mathrm{JEPA}} + \mathcal{L}_{\mathrm{crop}} + \lambda \mathcal{L}_{\mathrm{SIGReg}}\)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption>Left: the step-frozen crop-resize objective for ordinary autoencoding. Right: leAutoencoder adds a JEPA loss between the clean and masked final latents, while crop-resize still anchors the decoded branches to the image distribution.</figcaption>
+</figure>

@@ -28,7 +28,7 @@ function formatDate(iso) {
   }
 }
 
-const HOME_FILTER_TAGS = ['LLM', 'Robotics', 'Biology', 'World Modelling'];
+const HOME_FILTER_TAGS = ['LLM', 'Robotics', 'Biology', 'World Modelling', 'Self-Supervision'];
 let homePostsCache = [];
 let activeHomeTags = new Set();
 let homeSearchQuery = '';
@@ -216,6 +216,38 @@ function typesetAfterLoad(root) {
       }
     })();
   });
+}
+
+async function resolveHtmlPartials(root, basePath) {
+  const includeAttr = 'data-include-html';
+  const includeNodes = $$(`[${includeAttr}]`, root);
+  if (!includeNodes.length) return;
+
+  const cache = new Map();
+  const fetchInclude = async (src) => {
+    if (!cache.has(src)) {
+      cache.set(src, fetch(src).then((res) => {
+        if (!res.ok) throw new Error(`Failed to load include: ${src}`);
+        return res.text();
+      }));
+    }
+    return cache.get(src);
+  };
+
+  for (const node of includeNodes) {
+    const rel = node.getAttribute(includeAttr);
+    if (!rel) continue;
+
+    const src = new URL(rel, new URL(basePath, window.location.href)).toString();
+    const html = await fetchInclude(src);
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    node.replaceWith(tpl.content);
+  }
+
+  if ($$(`[${includeAttr}]`, root).length) {
+    await resolveHtmlPartials(root, basePath);
+  }
 }
 
 // -----------------------------
@@ -968,6 +1000,7 @@ async function renderPost() {
     const html = await res.text();
 
     contentEl.innerHTML = html;
+    await resolveHtmlPartials(contentEl, path);
     // Fade Animation
     contentEl.classList.remove('fade-enter');
     void contentEl.offsetWidth; // force reflow to restart animation

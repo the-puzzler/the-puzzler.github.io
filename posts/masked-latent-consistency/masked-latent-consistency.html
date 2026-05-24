@@ -1,0 +1,294 @@
+<header class="mlc-header">
+  <h1>Self-Teaching Autoencoder</h1>
+  <p class="post-subtitle">A self-supervised autoencoder trained without reconstruction loss.</p>
+  <p class="mlc-subhead">
+    No direct reconstruction loss. The core idea is simple:
+    the representation of the output should look like the representation of the input.
+  </p>
+</header>
+
+<section class="mlc-lead-block">
+  <p>This project began with one question:</p>
+  <div class="mlc-prologue-questions" role="note" aria-label="Core questions">
+    <p>Can an autoencoder learn to reconstruct images without any reconstruction loss at all?</p>
+  </div>
+
+  <p>
+    Autoencoders are usually trained the obvious way: reconstruct the image, compare it to the original, punish the error. In practice, people often add extra supervision on top to improve fidelity, whether that is pixel losses, feature-space losses like LPIPS, or adversarial setups with a discriminator.
+  </p>
+
+  <p>
+    Here I wanted to try the opposite approach. Can the model teach itself to reconstruct without any image-space supervision at all, using only its own latent agreement as the training signal?
+  </p>
+  <p><strong>TLDR;</strong> YES!</p>
+</section>
+
+<hr>
+
+<section class="mlc-section" id="background">
+  <div class="mlc-section-num">01 — Setup</div>
+  <h2>What is being removed?</h2>
+  <p>
+    An autoencoder is just an encoder and a decoder. The encoder compresses an image into a latent representation, and the decoder maps that latent back into image space. In ordinary autoencoders, the interesting question is not <em>whether</em> this loop can reconstruct, but which direct supervision makes the reconstructions good.
+  </p>
+
+  <p>
+    In the standard setup, the forward pass is
+  </p>
+  <figure class="mlc-equation">
+    \[
+      z = E(x),
+      \qquad
+      \hat{x} = D(z)
+    \]
+  </figure>
+
+  <p>
+    What changes is the objective. Usually it looks something like
+  </p>
+  <figure class="mlc-equation">
+    \[
+      \mathcal{L}_{\mathrm{AE}}
+      =
+      \mathcal{L}_{\mathrm{pixel}}(x,\hat{x})
+      +
+      \lambda_{\mathrm{perc}} \, \mathcal{L}_{\mathrm{perc}}(x,\hat{x})
+      +
+      \lambda_{\mathrm{adv}} \, \mathcal{L}_{\mathrm{adv}}(\hat{x})
+    \]
+  </figure>
+
+  <ul class="mlc-bullet-list">
+    <li><strong>Pixel losses.</strong> The basic route. Use MSE or L1 directly on the output image.</li>
+    <li><strong>Feature-space losses.</strong> Compare learned features instead of raw pixels.</li>
+    <li><strong>Adversarial losses.</strong> Add a learned signal that pushes outputs toward the image distribution.</li>
+    <li><strong>Hybrids.</strong> Most serious image models mix several of these together because each fixes a different weakness in the others.</li>
+  </ul>
+
+  <p>
+    This post removes all of that. The image goes in, the decoder produces an image, and after that the only question is whether the model internally treats the output as matching the input.
+  </p>
+
+  <p>
+    So the real proposal is not a new architecture. It is a new source of pressure on an otherwise ordinary encoder-decoder.
+  </p>
+</section>
+
+<section class="mlc-section" id="arch">
+  <div class="mlc-section-num">02 — Core Objective</div>
+  <h2>Self-Teaching Autoencoder</h2>
+  <p>
+    Formally, the model is still just \(z = E(x)\) and \(\hat{x} = D(z)\). The core self-teaching objective is
+  </p>
+  <figure class="mlc-equation">
+    \[
+      \mathcal{L}
+      =
+      \mathbb{E}_T \left[\lVert E(T(x)) - E(T(\hat{x})) \rVert\right]
+      +
+      \mathcal{L}_{\mathrm{SigReg}}
+    \]
+  </figure>
+  <p>
+    That is the whole game. SIGReg prevents the trivial constant-code collapse by pushing latents toward a Gaussian distribution (see <a href="?p=practical-notes-on-lejepa">this research note</a>). Everything else has to emerge from latent consistency under transformations.
+  </p>
+  <p>
+    The model itself is small: roughly 600k parameters, with about 6x compression through the latent bottleneck.
+  </p>
+  <div data-include-html="partials/algorithm-compare.html"></div>
+  <p>
+    At first glance, the transformation looks like an odd extra. Why not just require \(E(x)\) and \(E(\hat{x})\) to match directly? If the decoder output lands at the same latent point as the input, shouldn&rsquo;t that already mean it has reconstructed the image?
+  </p>
+</section>
+
+<section class="mlc-section" id="collapse">
+  <div class="mlc-section-num">03 — Why Transformations Are Necessary</div>
+  <h2>Private language and equivalence classes</h2>
+  <p>
+    Without transformations, the objective barely constrains the decoder. The untransformed loss \(\lVert E(x) - E(D(E(x))) \rVert\) only requires the decoder output to land somewhere the encoder treats as equivalent to the input. It does <em>not</em> require a faithful reconstruction.
+  </p>
+  <blockquote class="mlc-callout">
+    Without transformations, the model does not need to reconstruct the world. It only needs to reconstruct something the encoder recognises as one of its own.
+  </blockquote>
+  <p>
+    That is the private-language loophole. The encoder and decoder can collude on codes that survive re-encoding without corresponding to real images. SIGReg stops the degenerate constant solution, but it does not stop this collusion.
+  </p>
+  <div data-include-html="partials/roundtrip-figure.html"></div>
+  <p>
+    The cleanest way to formalise this is with equivalence classes. The encoder partitions images into sets it treats as the same, so without transformations the decoder only has to produce something in the same class as the input.
+  </p>
+  <p>
+    Without transformations, the relevant set is
+  </p>
+  <figure class="mlc-equation">
+    \[
+      [x]_E = \{y : E(y) = E(x)\}
+    \]
+  </figure>
+  <p>
+    and that set can be enormous. With transformations, the requirement becomes
+  </p>
+  <figure class="mlc-equation">
+    \[
+      [x]_{E,T} = \{y : E(T(y)) = E(T(x))\},
+      \qquad
+      \hat{x} \in \bigcap_T [x]_{E,T}
+    \]
+  </figure>
+  <p>
+    Each transformation checks a different aspect of the image, so the intersection gets tighter. In the ideal case, the only thing that keeps passing all those checks is the real image itself. That is why transformations are necessary: they turn latent agreement from an easily hacked objective into meaningful pressure toward faithful reconstruction. Once I started thinking about it this way, the experimental question became much clearer: which transformations tighten the right constraints without pushing the corrupted view too far off the natural image distribution?
+  </p>
+</section>
+
+<section class="mlc-section" id="masks">
+  <div class="mlc-section-num">04 — Refining The Method</div>
+  <h2>From toy data to CIFAR-10</h2>
+  <p>
+    At this point the transformation <em>is</em> the method, so the next step was really a refinement process. Start on toy data, scale up to CIFAR-10, see what stops working, and keep only the variants that survive that transition.
+  </p>
+  <p>
+    The lesson from the toy setting was that sparse pixel masking works when structure is almost all that matters. The lesson from CIFAR-10 was that this is not enough for natural images, where colour and local texture also need to be constrained.
+  </p>
+  <h3>Synthetic dataset</h3>
+  <p>
+    On grayscale shapes over black backgrounds, sparse pixel masking worked well. It preserved enough local structure for the model to recover the shape without introducing obvious artefacts, so in that regime the basic transformed objective already looked clean.
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img src="posts/masked-latent-consistency/assets/synthetic_pixel.png" alt="Synthetic grayscale-shape reconstructions showing the pixel transformation as the only clean method">
+    <figcaption>On the synthetic grayscale data, the pixel transformation was the only method that reconstructed cleanly without obvious artefacts.</figcaption>
+  </figure>
+  <p>
+    But that only solved the toy problem. It showed that the idea could work when structure is almost all that matters.
+  </p>
+
+  <h3>CIFAR-10</h3>
+  <p>
+    CIFAR-10 exposed the limitation immediately. Pixel masking did not fail completely, but it asked the wrong question for natural images. The model mostly learned luminance and coarse layout, while colour and local texture remained underconstrained.
+  </p>
+  <p>
+    In practice, the grayscale shape of the scene was often roughly right while colour remained weak or washed out. So the synthetic result was informative, but it did not scale.
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img src="posts/masked-latent-consistency/assets/cifar_pixel.png" alt="CIFAR-10 reconstructions under the pixel transformation showing luminance structure without correct colour detail">
+    <figcaption>On CIFAR-10, the pixel transformation mostly preserved luminance and coarse structure, but it did not constrain colour and finer detail well enough.</figcaption>
+  </figure>
+
+  <h3 id="triangle">Crop-resize</h3>
+  <p>
+    Crop-resize was the first version that really worked on CIFAR-10. Small natural crops force agreement on colour and local texture as well as coarse shape, so they constrain exactly the parts that pixel masking was missing. It was the first latent-consistency variant that produced reconstructions with both sensible structure and sensible colour.
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img id="cifar-solution-image" src="posts/masked-latent-consistency/assets/cifar_crop.png" alt="CIFAR-10 reconstructions under crop-and-resize showing improved colour and structure">
+    <div class="mlc-toggle-row">
+      <button class="mlc-small-toggle is-active" type="button" onclick="showCifarSolution('self_teaching', this)">Crop-resize self-teaching</button>
+      <button class="mlc-small-toggle" type="button" onclick="showCifarSolution('baseline', this)">MSE baseline</button>
+    </div>
+    <figcaption>On CIFAR-10, crop-and-resize produced reconstructions with substantially better colour and overall fidelity than the other transformation variants.</figcaption>
+  </figure>
+  <p>
+    The MSE baseline is still slightly better here, but that was not the point. Crop-resize made the approach look plausible on real images, so it became the first version worth scaling further.
+  </p>
+  <h3>Step-frozen judging</h3>
+  <p>
+    But crop-resize still left a second loophole. Once reconstructions became decent, the encoder could become invariant to the decoder's remaining artefacts instead of forcing the decoder to fix them. The important method change was therefore not a new corruption by itself, but a new judge: freeze the encoder during the comparison step so the decoder has to absorb more of the mismatch.
+  </p>
+  <div data-include-html="partials/algorithm-ema-compare.html"></div>
+  <p>
+    On CIFAR-10, step-freezing worked much better:
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img id="cifar-ema-image" src="posts/masked-latent-consistency/assets/cifar_stepfrozen_crop.png" alt="CIFAR-10 reconstructions under the step-frozen crop-resize formulation">
+    <div class="mlc-toggle-row">
+      <button class="mlc-small-toggle" type="button" onclick="showCifarEmaSolution('detail_transforms', this)">Detail transforms</button>
+      <button class="mlc-small-toggle is-active" type="button" onclick="showCifarEmaSolution('crop_resize', this)">Crop resize</button>
+      <button class="mlc-small-toggle" type="button" onclick="showCifarEmaSolution('gaussian', this)">Gaussian</button>
+      <button class="mlc-small-toggle" type="button" onclick="showCifarEmaSolution('baseline', this)">MSE baseline</button>
+      <button class="mlc-small-toggle" type="button" onclick="showCifarEmaSolution('no_corruption', this)">No corruption</button>
+    </div>
+    <figcaption>Click through to see different transformations with step-frozen encoder.</figcaption>
+  </figure>
+  <p>
+    Within that step-frozen setup, crop-resize was still the strongest transformation overall. I also tried several other transformations in the same setup, including a small detail-sensitive stack plus a plain full-view term, but the main takeaway was unchanged: step-freezing improved the method, and crop-resize remained the most reliable corruption.
+  </p>
+</section>
+
+<section class="mlc-section" id="celeba">
+  <div class="mlc-section-num">05 — Scaling The Task</div>
+  <h2>CelebA autoencoding and masked autoencoding</h2>
+  <p>
+    Once the method looked plausible on CIFAR-10, the next question was whether the step-frozen crop-resize variant would survive on a more realistic dataset. On CelebA, that naturally split into two settings: ordinary autoencoding, where the input still determines the target, and masked autoencoding, where the target is only partially observed.
+  </p>
+  <h3>leAutoencoder</h3>
+  <p>
+    In ordinary autoencoding, the job is still basically compression: preserve enough information in the latent to reconstruct the image. In masked autoencoding, that is no longer true. If the masked observation is \(y = m \odot x\), then the visible pixels do not determine a unique target, so the problem becomes conditional prediction rather than compression.
+  </p>
+  <p>
+    Formally, the conditional distribution \(p(x \mid y,m)\) has nonzero entropy, and under squared error the optimal predictor is
+  </p>
+  <figure class="mlc-equation">
+    \[
+      \hat{x}(y,m) = \mathbb{E}[x \mid y,m].
+    \]
+  </figure>
+  <p>
+    That is exactly why ambiguous regions become blurry under MSE: different plausible completions get averaged together. This is the point where the setup starts to look much closer to leJEPA. The masked input is being asked to land at the same latent target as the clean input, while the decoder, viewed as just another internal layer, is still being constrained onto the dataset distribution.
+  </p>
+  <p>
+    So leAutoencoder compares both the clean reconstruction \(\hat{x}(x)\) and the masked reconstruction \(\hat{x}(y)\) against the same transformed clean view. The masked branch is pulled toward the clean latent target, while the decoded branch is still pressured to stay on the image manifold.
+  </p>
+  <div data-include-html="partials/algorithm-hard-challenge.html"></div>
+  <p>
+    The practical question, then, is how the same method behaves in those two settings on CelebA: first in ordinary autoencoding, then in masked autoencoding.
+  </p>
+  <h3>Ordinary autoencoding</h3>
+  <p>
+    First, the easier setting: ordinary autoencoding at roughly 6x compression. Here the question is just whether the step-frozen crop-resize method still reconstructs cleanly once the data are more structured and higher resolution.
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img id="celeba-solution-image" src="posts/masked-latent-consistency/assets/celeba_stepfrozen_crop.png" alt="CelebA step-frozen crop-resize result">
+    <div class="mlc-toggle-row">
+      <button class="mlc-small-toggle" type="button" onclick="showCelebASolution('baseline', this)">Baseline</button>
+      <button class="mlc-small-toggle is-active" type="button" onclick="showCelebASolution('algo2_crop', this)">Step-frozen crop-resize</button>
+    </div>
+    <figcaption>All CelebA results here use the same 2M parameter architecture at roughly 6x compression. I kept the bottleneck fairly gentle because this stage was only meant to validate the method.</figcaption>
+  </figure>
+  <p>
+    This mostly confirmed the CIFAR story. The step-frozen crop-resize variant remained stable enough to push into the genuinely harder masked setting.
+  </p>
+  <h3>Masked autoencoding</h3>
+  <p>
+    Here I tried two much harder masked-autoencoding variants. With latent size 128, the model has about 11M parameters and the bottleneck is roughly 400x compressed. With latent size 512, it has about 36M parameters and the bottleneck is still roughly 96x compressed. So this is a very hard conditional reconstruction problem in both cases.
+  </p>
+  <p>
+    For the masking task I also switch to global pooling in the latent pathway. Once the input is only partially observed, forcing the representation through a globally pooled bottleneck made more sense than keeping a more spatially local code.
+  </p>
+  <figure class="mlc-figure mlc-story-figure">
+    <img id="hard-challenge-image" src="posts/masked-latent-consistency/assets/our_method_vs_baseline_latent512_checkpoint100.png" alt="CelebA masked autoencoding comparison at latent 512, showing original images, masked inputs, our method masked and clean reconstructions, and baseline masked and clean reconstructions">
+    <div class="mlc-toggle-row">
+      <button class="mlc-small-toggle" type="button" onclick="showHardChallengeSolution('latent128', this)">latent=128</button>
+      <button class="mlc-small-toggle is-active" type="button" onclick="showHardChallengeSolution('latent512', this)">latent=512</button>
+    </div>
+    <figcaption>Masked-autoencoding comparison on CelebA. Switch between the `latent=128` and `latent=512` runs; each figure already contains the side-by-side baseline versus leAutoencoder comparison.</figcaption>
+  </figure>
+  <p>
+    One important caveat is that the baseline autoencoder is trained directly from masked input to clean output, so its encoder is not really trained to handle clean inputs at all. 
+  </p>
+
+  <p>
+    The results are a slight victory for our method, but it is competitive. The fact that it natively handles the input distribution is a bonus. It also seems to handle hair a bit better when it covers the face (latent size 512, columns 7 and 8). Unlike the baseline, it never creates isolated strands of hair. Still, I would not say it fully resolves the issue of averaging instead of choosing a mode. That may also be partly due to architectural constraints.
+  </p>
+</section>
+
+<section class="mlc-section mlc-section-last" id="takeaway">
+  <div class="mlc-section-num">Takeaway</div>
+  <h2>What Actually Matters</h2>
+  <p>
+    The main point is that this is basically a leJEPA-style objective with one extra ingredient: an internal layer is constrained to stay on the input distribution. That matters because JEPA-style methods usually do not come with a decoder for free, and adding one later often damages the representation by forcing reconstruction into a latent space that was never meant to be invertible in the first place. I wrote more about that trade-off in <a href="?p=practical-notes-on-lejepa">this post on leJEPA and SIGReg</a>. Here, the latent objective and the image-distribution constraint are learned together rather than bolted together afterward.
+  </p>
+  <p>
+    The other important point is why this behaves differently from a plain MSE autoencoder. It is not chasing weak pixel averages. It is chasing an abstract representation of what the image should contain under a family of transformations. That changes the failure mode. When it misses, it is more likely to hallucinate something plausible than to wash everything into a blurry average, because the objective is organised around semantic agreement rather than direct pixel matching. The fact that those semantics are learned during training, without requiring a pretrained model, is the cherry on the cake.
+  </p>
+</section>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>

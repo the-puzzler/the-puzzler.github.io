@@ -1,0 +1,31 @@
+<figure class="mlc-figure mlc-figure-narrow">
+  <div class="mlc-viz-box">
+    <div class="mlc-viz-inner mlc-viz-pad-algo">
+      <div class="mlc-algo-compare" aria-label="Autoencoder and Self-Teaching Autoencoder comparison">
+        <div class="mlc-algo">
+          <div class="mlc-algo-title">Algorithm 1&nbsp;&nbsp;Autoencoder</div>
+          <div class="mlc-algo-rule"></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">1</span><span class="mlc-algo-txt">Input image \(x\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">2</span><span class="mlc-algo-txt">Encode latent \(z \leftarrow E(x)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">3</span><span class="mlc-algo-txt">Decode reconstruction \(\hat{x} \leftarrow D(z)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">4</span><span class="mlc-algo-txt">Optimise</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\mathcal{L} \leftarrow \mathcal{L}_{\mathrm{pixel}}(x,\hat{x}) + \lambda_{\mathrm{perc}}\mathcal{L}_{\mathrm{perc}} + \lambda_{\mathrm{adv}}\mathcal{L}_{\mathrm{adv}}\)</span></div>
+        </div>
+        <div class="mlc-algo">
+          <div class="mlc-algo-title">Algorithm 2&nbsp;&nbsp;Transformed Self-Teaching Autoencoder</div>
+          <div class="mlc-algo-rule"></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">1</span><span class="mlc-algo-txt">Input image \(x\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">2</span><span class="mlc-algo-txt">Encode latent \(z \leftarrow E(x)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">3</span><span class="mlc-algo-txt">Decode reconstruction \(\hat{x} \leftarrow D(z)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">4</span><span class="mlc-algo-txt">Apply the same transformation to both branches</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(x_t \leftarrow T(x),\qquad \hat{x}_t \leftarrow T(\hat{x})\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">5</span><span class="mlc-algo-txt">Re-encode both views</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(z_1 \leftarrow E(x_t),\qquad z_2 \leftarrow E(\hat{x}_t)\)</span></div>
+          <div class="mlc-algo-row"><span class="mlc-algo-ln">6</span><span class="mlc-algo-txt">Optimise</span></div>
+          <div class="mlc-algo-row mlc-algo-row-indent"><span class="mlc-algo-ln"></span><span class="mlc-algo-txt">\(\mathcal{L} \leftarrow \lVert z_1 - z_2 \rVert + \mathcal{L}_{\mathrm{SIGReg}}\)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption>Left: the ordinary autoencoder route, where the decoder is supervised directly in image space. Right: the transformed self-teaching route, where supervision only arrives through agreement between transformed input and transformed output.</figcaption>
+</figure>

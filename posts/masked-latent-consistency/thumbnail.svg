@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Masked Latent Consistency">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#09090f"/>
+      <stop offset="100%" stop-color="#111125"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="10%" r="70%">
+      <stop offset="0%" stop-color="#4a8fff" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#4a8fff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <g fill="none" stroke="#1c1c36" stroke-width="2">
+    <rect x="72" y="84" width="220" height="220" rx="18"/>
+    <rect x="490" y="84" width="220" height="220" rx="18"/>
+    <rect x="908" y="84" width="220" height="220" rx="18"/>
+  </g>
+  <g font-family="IBM Plex Mono, monospace" font-size="22" fill="#e8b84a" letter-spacing="3">
+    <text x="80" y="58">RESEARCH VISUALIZATION</text>
+  </g>
+  <g font-family="Cormorant Garamond, serif" fill="#ffffff">
+    <text x="78" y="422" font-size="92" font-weight="300">Self-Teaching Autoencoder</text>
+  </g>
+  <g font-family="DM Sans, sans-serif" fill="#9aa0cf" font-size="29">
+    <text x="82" y="556">A self-supervised autoencoder trained without reconstruction loss</text>
+  </g>
+  <g font-family="IBM Plex Mono, monospace" fill="#4a8fff" font-size="32">
+    <text x="132" y="205">E(x)</text>
+    <text x="550" y="205">D(z)</text>
+    <text x="960" y="205">E(M⊙x̂)</text>
+  </g>
+  <g stroke-width="4" fill="none">
+    <path d="M290 194 H448" stroke="#4a8fff"/>
+    <path d="M708 194 H866" stroke="#38d68a"/>
+    <path d="M866 194 Q930 194 930 260" stroke="#ff8c3a"/>
+    <path d="M930 260 Q930 328 852 328 H246 Q168 328 168 262" stroke="#ff8c3a" stroke-dasharray="10 8"/>
+  </g>
+  <g fill="#e8b84a" font-family="IBM Plex Mono, monospace" font-size="28">
+    <text x="503" y="128">SIGREG</text>
+  </g>
+  <g fill="#c4c4de" font-family="IBM Plex Mono, monospace" font-size="24">
+    <text x="920" y="356">shared corruption closes the loop</text>
+  </g>
+</svg>
