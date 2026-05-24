@@ -96,9 +96,7 @@
   <p>
     That is the whole game. SIGReg prevents the trivial constant-code collapse by pushing latents toward a Gaussian distribution (see <a href="?p=practical-notes-on-lejepa">this research note</a>). Everything else has to emerge from latent consistency under transformations.
   </p>
-  <p>
-    The model itself is small: roughly 600k parameters, with about 6x compression through the latent bottleneck.
-  </p>
+  
   <div data-include-html="partials/algorithm-compare.html"></div>
   <p>
     At first glance, the transformation looks like an odd extra. Why not just require \(E(x)\) and \(E(\hat{x})\) to match directly? If the decoder output lands at the same latent point as the input, shouldn&rsquo;t that already mean it has reconstructed the image?
