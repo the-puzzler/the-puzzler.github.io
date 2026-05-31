@@ -44,7 +44,7 @@
 </blockquote>
 
 <p>
-  The important detail is the cosine and sine. For each projection, SIGReg is comparing the empirical
+  For each projection, SIGReg is comparing the empirical
   characteristic function of the batch to the characteristic function of a Gaussian. That gives a compact,
   differentiable statistic for whether the projected distribution has the right shape.
 </p>
@@ -129,7 +129,7 @@
 </p>
 
 <p>
-  The random-projection version has no learnable parameters. Draw projections, compare the cosine and sine summaries of
+  The random-projection version has no learnable parameters. Draw projections, compare the distributions of
   fake and real samples across a small grid of frequencies, average the discrepancy, and backpropagate.
   There is no discriminator, no classifier, and no learned critic.
 </p>
@@ -153,10 +153,6 @@
   for images or internal model layers.
 </p>
 
-<p>
-  The elegance is that SDMatch compares batches, not pairs. It is an approximation to the thing we actually
-  want to solve directly: distribution matching.
-</p>
 
 <hr>
 
@@ -225,7 +221,7 @@
 <p>
   SDMatch is attractive because it is direct. It does not ask a discriminator to learn what realism means or
   diffuse over many steps from noise to distribution. It asks whether fake and real samples have the same
-  sketched distribution under many projections and frequencies. That directness is also the limitation: if
+  sketched distribution under many projections. That directness is also the limitation: if
   the sketches do not expose the important structure, the loss can be satisfied while the thing you wanted
   remains unresolved.
 </p>
