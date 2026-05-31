@@ -1,0 +1,248 @@
+<h1>SDMatch</h1>
+<p class="post-subtitle">Sketched Distribution Matching as a small, direct loss for making one distribution look like another.</p>
+
+<figure class="sdmatch-main-figure">
+  <img src="posts/sdmatch/assets/main.png" alt="SDMatch overview showing sketched distribution matching">
+  <figcaption>an attempt on cifar10</figcaption>
+</figure>
+
+<section class="lead-block">
+  <p>
+    SDMatch is a new loss I have been trying to make useful. The immediate motivation is to replace
+    generative objectives that only implicitly try to match distributions with an explicit batch-level
+    distribution matching objective.
+  </p>
+
+  <div class="prologue-questions" role="note" aria-label="Core questions">
+    <p>Can a loss compare two distributions without a discriminator? <a href="#from-sigreg" class="goto-link">GO TO</a></p>
+    <p>What changes when the target is arbitrary? <a href="#sdmatch" class="goto-link">GO TO</a></p>
+    <p>Where does it work, and where does it break? <a href="#experiments" class="goto-link">GO TO</a></p>
+  </div>
+
+  <p>
+    If it works, the use cases are broader than GANs. You could use it to fix arbitrary model layers to a
+    chosen distribution. In my <a href="?p=self-teaching-autoencoder#triangle">self-teaching autoencoder</a>
+    work I used crop-resize transformations to keep image reconstructions honest; in hindsight, SDMatch is
+    exactly the sort of tool I would have liked to try there. In the long run, if the rough edges are solved,
+    it might even become a simple alternative training signal for generative models that currently need
+    diffusion or adversarial training.
+  </p>
+</section>
+
+<hr>
+
+<h2 id="from-sigreg">Starting from SIGReg</h2>
+<p>
+  The starting point is SIGReg, which I described in the previous research note on
+  <a href="?p=practical-notes-on-lejepa">practical leJEPA failures</a>. SIGReg samples random directions,
+  projects embeddings onto those 1D axes, and checks whether each projected marginal looks like a standard
+  Gaussian.
+</p>
+
+<blockquote class="callout">
+  SIGReg asks one fixed question: does this batch look Gaussian after I sketch it down to many 1D views?
+</blockquote>
+
+<p>
+  The important detail is the cosine and sine. For each projection, SIGReg is comparing the empirical
+  characteristic function of the batch to the characteristic function of a Gaussian. That gives a compact,
+  differentiable statistic for whether the projected distribution has the right shape.
+</p>
+
+<section id="sigreg-demo" class="sdmatch-demo" aria-label="SIGReg Gaussianisation visual explanation">
+  <div class="sdmatch-demo-head">
+    <div>
+      <p class="sigreg-lab-kicker">Visual intuition</p>
+      <h3>Sample directions, then push a collapsed cloud toward Gaussian marginals</h3>
+    </div>
+    <div class="sdmatch-demo-actions">
+      <button id="sigreg-step-btn" type="button">Step</button>
+      <button id="sigreg-auto-btn" type="button">Auto step</button>
+      <button id="sigreg-reset-btn" type="button">Reset</button>
+    </div>
+  </div>
+  <canvas id="sigreg-canvas" width="1200" height="620" aria-label="SIGReg Gaussianisation demo"></canvas>
+  <div class="sdmatch-legend" aria-hidden="true">
+    <span><i class="sdmatch-swatch sdmatch-fake"></i> current embeddings</span>
+    <span><i class="sdmatch-swatch sdmatch-real"></i> Gaussian target</span>
+    <span><i class="sdmatch-swatch sdmatch-line"></i> sampled projection</span>
+  </div>
+</section>
+
+<p class="sigreg-caption">
+  The demo shows the geometry rather than the exact optimiser. Each step samples a new projection and nudges
+  the collapsed cloud so that the values seen along that direction look more Gaussian. A single projection
+  only fixes one shadow; many shadows reshape the whole cloud.
+</p>
+
+<hr>
+
+<h2 id="sdmatch">Sketched Distribution Matching</h2>
+<p>
+  SDMatch changes one thing: instead of comparing a batch to a fixed Gaussian, compare one empirical
+  distribution to another. The target can be real images, activations from a reference model, latents from a
+  frozen encoder, or any other sample distribution you can put into a tensor.
+</p>
+
+<figure class="equation-figure">
+  \[
+    \mathcal{L}_{\mathrm{SDMatch}}
+    =
+    \mathbb{E}_{a \sim \mathcal{A}}
+    \int
+    \left|
+      \varphi_{a^\top z_{\mathrm{fake}}}(t)
+      -
+      \varphi_{a^\top z_{\mathrm{real}}}(t)
+    \right|^2
+    w(t)\,dt
+  \]
+  <figcaption>
+    Match fake and real distributions by matching their characteristic functions after many low-dimensional sketches.
+  </figcaption>
+</figure>
+
+<section id="sdmatch-demo" class="sdmatch-demo" aria-label="Distribution matching visual explanation">
+  <div class="sdmatch-demo-head">
+    <div>
+      <p class="sigreg-lab-kicker">Visual intuition</p>
+      <h3>Match many 1D sketches, recover the 2D distribution</h3>
+    </div>
+    <div class="sdmatch-demo-actions">
+      <button id="sdmatch-step-btn" type="button">Step</button>
+      <button id="sdmatch-auto-btn" type="button">Auto step</button>
+      <button id="sdmatch-reset-btn" type="button">Reset</button>
+    </div>
+  </div>
+  <canvas id="sdmatch-canvas" width="1200" height="620" aria-label="SDMatch distribution matching demo"></canvas>
+  <div class="sdmatch-legend" aria-hidden="true">
+    <span><i class="sdmatch-swatch sdmatch-real"></i> real distribution</span>
+    <span><i class="sdmatch-swatch sdmatch-fake"></i> generated distribution</span>
+    <span><i class="sdmatch-swatch sdmatch-line"></i> sketched projection</span>
+  </div>
+</section>
+
+<p class="sigreg-caption">
+  The demo shows the core idea rather than the exact optimiser. Each step samples a projection, compares the
+  1D sketches of the real and generated points, then nudges the generated cloud toward the real sketch.
+  One projection is weak; many projections start to pin down the full distribution.
+</p>
+
+<p>
+  The random-projection version has no learnable parameters. Draw projections, compare the cosine and sine summaries of
+  fake and real samples across a small grid of frequencies, average the discrepancy, and backpropagate.
+  There is no discriminator, no classifier, and no learned critic.
+</p>
+
+<h3 id="learned-projections">Learned projections</h3>
+<p>
+  Random projections are clean, but they get weak as the dimensionality of the object gets harder. A random
+  view of a high-dimensional image often misses the structure you actually care about. You can brute-force
+  that with more projections, but the compute gets ugly quickly.
+</p>
+
+<p>
+  The obvious next move is to learn the projections. That gives the loss a way to spend its limited sketch
+  budget on directions where fake and real samples still differ.
+</p>
+
+<p>
+  This starts to look more adversarial, but it is still a small constrained object. The projection matrix is
+  the only learned part, and the comparison statistic stays fixed. My current expectation is that random
+  SDMatch is useful for simple low-dimensional structure, while learned SDMatch is the more plausible path
+  for images or internal model layers.
+</p>
+
+<p>
+  The elegance is that SDMatch compares batches, not pairs. It is an approximation to the thing we actually
+  want to solve directly: distribution matching.
+</p>
+
+<hr>
+
+<h2 id="experiments">Experiments so far</h2>
+<p>
+  These are early experiments, but they are useful because the failure modes are visible. The loss can match
+  simple distributions cleanly, starts to struggle as structure becomes more image-like, and then needs
+  learned projections to keep up.
+</p>
+
+<h3>2D double spiral</h3>
+<figure class="sdmatch-result-figure">
+  <img src="posts/sdmatch/assets/ds.png" alt="Random SDMatch result on a 2D double spiral dataset with real and generated samples plus loss curve">
+  <figcaption>
+    Random SDMatch performs well on a 2D double spiral dataset. The final samples track the real spiral
+    distribution closely, and the loss curve falls smoothly rather than oscillating around a learned critic.
+  </figcaption>
+</figure>
+
+<h3>Simple 2D images with random projections</h3>
+<figure class="sdmatch-result-figure">
+  <img src="posts/sdmatch/assets/synthetic.png" alt="Random SDMatch result on simple 2D images with real and generated distributions plus loss curve">
+  <figcaption>
+    On simple 2D images, random SDMatch gets surprisingly far but does not quite finish the job. The generated
+    distribution captures the broad structure, while sometimes rendering bendy lines instead of straight, or
+    completely failing.
+  </figcaption>
+</figure>
+
+<h3>Simple 2D images with learned projections</h3>
+<figure class="sdmatch-result-figure">
+  <img src="posts/sdmatch/assets/syntehtic_lp.png" alt="Learned SDMatch result on simple 2D images with real and generated distributions plus loss curve">
+  <figcaption>
+    With learned projections, the same simple 2D image task becomes essentially solved. The loss can focus on
+    the directions where generated samples still differ from real samples, so fewer projections do more work.
+  </figcaption>
+</figure>
+
+<h3>CIFAR directly in pixel space</h3>
+<figure class="sdmatch-result-figure">
+  <img src="posts/sdmatch/assets/cifar.png" alt="SDMatch result on CIFAR raw images showing natural-looking but semantically unresolved generated samples">
+  <figcaption>
+    Running SDMatch directly on CIFAR raw images gives outputs that look surprisingly natural at first glance,
+    but semantics and high-order structure never quite resolve. There is often a hint that something meaningful
+    is in there, but you are never fully sure.
+  </figcaption>
+</figure>
+
+<p>
+  For the CIFAR run, I matched distributions at three scales: whole images, 16x16 patches, and 4x4 patches.
+  The aim was to give the loss access to both global structure and local texture. That helped the images look
+  more natural, but it did not solve the semantic problem. Pixel-space SDMatch sees statistics. It does not
+  automatically discover the object-level abstractions that make CIFAR CIFAR.
+</p>
+
+<p>
+  That may be the wrong space to ask the question in. SDMatch might work better in a learned semantic space
+  than directly in pixel space: match distributions over features that already know about objects, while still
+  keeping the loss explicit and batch-level. Even if that is not enough to train a full generator by itself,
+  it may still be useful as an auxiliary pressure that helps stabilise GAN training.
+</p>
+
+<hr>
+
+<h2>Where this leaves things</h2>
+<p>
+  SDMatch is attractive because it is direct. It does not ask a discriminator to learn what realism means or
+  diffuse over many steps from noise to distribution. It asks whether fake and real samples have the same
+  sketched distribution under many projections and frequencies. That directness is also the limitation: if
+  the sketches do not expose the important structure, the loss can be satisfied while the thing you wanted
+  remains unresolved.
+</p>
+
+<p>
+  My current read is that random SDMatch is a clean tool for low-dimensional matching and layer-level
+  regularisation, while learned SDMatch is the version worth testing for serious image work. The open question
+  is whether the learned projections can be made strong enough to find semantic mismatches without becoming
+  just another unstable adversary.
+</p>
+
+<h2>Acknowledgements</h2>
+<p>
+  Thanks to <a href="https://ludocomito.dev/" target="_blank" rel="noreferrer">Ludo</a>
+  (<a href="https://x.com/ludocomito" target="_blank" rel="noreferrer">@ludocomito</a>) for discussions
+  and for trying to make this work in higher dimensions.
+</p>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>

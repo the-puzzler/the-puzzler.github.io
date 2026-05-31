@@ -1,5 +1,15 @@
 [
   {
+    "title": "SDMatch",
+    "date": "2026-05-31",
+    "path": "posts/sdmatch/sdmatch.html",
+    "description": "Sketched Distribution Matching: a direct loss for matching one distribution to another with random or learned projections.",
+    "social_image": "posts/sdmatch/assets/cover.png",
+    "tags": ["World Modelling", "Self-Supervision"],
+    "type": "research"
+  },
+
+  {
     "title": "Self-Teaching Autoencoder",
     "date": "2026-05-19",
     "path": "posts/self-teaching-autoencoder/self-teaching-autoencoder.html",

@@ -1,0 +1,225 @@
+.post-subtitle {
+  margin-top: -0.3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.lead-block {
+  margin-bottom: 1.2rem;
+}
+
+.sdmatch-main-figure {
+  margin: 0.2rem auto 1.25rem;
+  width: min(980px, 100%);
+  padding: clamp(0.45rem, 1.4vw, 0.75rem);
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--bg) 86%, white 14%);
+  box-shadow: 0 12px 28px rgba(30, 30, 30, 0.08);
+}
+
+.sdmatch-main-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.sdmatch-main-figure figcaption {
+  margin: 0.6rem auto 0;
+  max-width: min(760px, 92%);
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.goto-link {
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.45;
+  margin-left: 0.55em;
+  vertical-align: middle;
+}
+
+.goto-link:hover {
+  opacity: 0.85;
+}
+
+.prologue-questions {
+  margin: 0.55rem auto 0.95rem auto;
+  width: min(820px, 96%);
+  text-align: center;
+}
+
+.prologue-questions p {
+  margin: 0.24rem 0;
+  font-size: clamp(1.12rem, 2.6vw, 1.5rem);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+}
+
+.sigreg-lab-kicker {
+  margin: 0 0 0.18rem 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.sigreg-caption {
+  margin: 0.45rem auto 0;
+  max-width: min(760px, 92%);
+  text-align: center;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.sdmatch-demo {
+  margin: 1rem auto 0.55rem auto;
+  width: min(980px, 100%);
+}
+
+.sdmatch-demo-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.45rem;
+}
+
+.sdmatch-demo-head h3 {
+  margin: 0;
+}
+
+.sdmatch-demo-actions {
+  display: flex;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+#sdmatch-reset-btn,
+#sdmatch-step-btn,
+#sdmatch-auto-btn,
+#sigreg-reset-btn,
+#sigreg-step-btn,
+#sigreg-auto-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.48rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--ink) 22%, transparent);
+  background: color-mix(in oklab, var(--bg) 78%, white 22%);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+  transition: background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+#sdmatch-reset-btn:hover,
+#sdmatch-step-btn:hover,
+#sdmatch-auto-btn:hover,
+#sigreg-reset-btn:hover,
+#sigreg-step-btn:hover,
+#sigreg-auto-btn:hover {
+  background: color-mix(in oklab, var(--bg) 68%, white 32%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(30, 30, 30, 0.08);
+}
+
+#sdmatch-canvas,
+#sigreg-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--bg) 98%, white 2%),
+      color-mix(in oklab, var(--bg) 94%, #eef5f1 6%)
+    );
+}
+
+.sdmatch-legend {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+.sdmatch-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.sdmatch-swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  display: inline-block;
+  border-radius: 999px;
+}
+
+.sdmatch-real {
+  background: #126a5a;
+}
+
+.sdmatch-fake {
+  background: #d35d2f;
+}
+
+.sdmatch-line {
+  background: #2a2a2a;
+}
+
+.sdmatch-result-figure {
+  margin: 1rem auto 1.35rem auto;
+  width: min(900px, 100%);
+}
+
+.sdmatch-result-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid color-mix(in oklab, var(--rule) 72%, transparent);
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--bg) 92%, white 8%);
+}
+
+.sdmatch-result-figure figcaption {
+  margin: 0.6rem auto 0;
+  max-width: min(760px, 92%);
+  text-align: center;
+}
+
+pre {
+  overflow-x: auto;
+}
+
+pre code {
+  font-size: 0.84rem;
+}
+
+@media (max-width: 720px) {
+  .sdmatch-demo-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sdmatch-demo-actions {
+    justify-content: flex-start;
+  }
+}
