@@ -740,6 +740,82 @@ async function getShareUrlForCurrentPost() {
   return location.href;
 }
 
+async function resolvePostPath(p) {
+  try {
+    const posts = await loadPosts();
+
+    // 1. Exact Match (Legacy links: ?p=posts/foo/bar.html)
+    let found = posts.find(x => x.path === p);
+
+    // 2. Slug Match (Clean links: ?p=micro-modelling)
+    //    We look for a post whose path *contains* this slug as a folder or filename
+    if (!found) {
+      found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
+    }
+
+    if (found) return found.path;
+    if (!p.includes('/')) return `posts/${p}/${p}.html`;
+    return `posts/${p}.html`;
+  } catch (e) {
+    return `posts/${p}/${p}.html`;
+  }
+}
+
+// -----------------------------
+// Raw text extraction (copy post for LLMs)
+// -----------------------------
+function extractPlainText(rootEl) {
+  $$('script, style, noscript, svg, canvas, button, [aria-hidden="true"]', rootEl).forEach(n => n.remove());
+
+  // Collapse source-formatting whitespace, except inside <pre>
+  const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT);
+  const textNodes = [];
+  while (walker.nextNode()) textNodes.push(walker.currentNode);
+  for (const t of textNodes) {
+    if (!t.parentElement?.closest('pre')) t.textContent = t.textContent.replace(/\s+/g, ' ');
+  }
+
+  // Shield <pre> content from the line-level whitespace cleanup below
+  const preTexts = [];
+  $$('pre', rootEl).forEach((pre, i) => {
+    preTexts.push(pre.textContent.replace(/\s+$/, ''));
+    pre.textContent = `\u0000PRE${i}\u0000`;
+  });
+
+  $$('h1, h2, h3, h4, h5, h6', rootEl).forEach(h => {
+    h.prepend('\n' + '#'.repeat(Number(h.tagName[1])) + ' ');
+  });
+  $$('li', rootEl).forEach(li => li.prepend('- '));
+  $$('hr', rootEl).forEach(el => el.replaceWith('\n---\n'));
+  $$('p, h1, h2, h3, h4, h5, h6, li, pre, blockquote, figcaption, tr, figure', rootEl).forEach(el => {
+    el.append('\n');
+  });
+
+  return rootEl.textContent
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .replace(/\u0000PRE(\d+)\u0000/g, (_, i) => preTexts[Number(i)]);
+}
+
+async function copyCurrentPostRawText() {
+  const p = getCurrentPostPath();
+  if (!p) throw new Error('No post loaded');
+  const path = await resolvePostPath(p);
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(`Failed to fetch ${path}`);
+  const html = await res.text();
+
+  // Parse the raw source (math is still TeX here, not MathJax output)
+  const holder = document.createElement('div');
+  holder.innerHTML = html;
+  await resolveHtmlPartials(holder, path);
+
+  const text = extractPlainText(holder);
+  await navigator.clipboard.writeText(text);
+}
+
 // -----------------------------
 // Routing / URL Logic
 // -----------------------------
@@ -794,30 +870,7 @@ async function renderPost() {
   // --- Robust Path Reconstruction ---
   // Instead of guessing, we look it up in the index.
   // This handles ANY folder structure (flat, nested, etc) correctly.
-  let path = null;
-
-  try {
-    const posts = await loadPosts();
-
-    // 1. Exact Match (Legacy links: ?p=posts/foo/bar.html)
-    let found = posts.find(x => x.path === p);
-
-    // 2. Slug Match (Clean links: ?p=micro-modelling)
-    //    We look for a post whose path *contains* this slug as a folder or filename
-    if (!found) {
-      // Search for "/slug/" or "/slug.html"
-      found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
-    }
-
-    if (found) path = found.path;
-    else {
-      if (!p.includes('/')) path = `posts/${p}/${p}.html`;
-      else path = `posts/${p}.html`;
-    }
-
-  } catch (e) {
-    path = `posts/${p}/${p}.html`;
-  }
+  const path = await resolvePostPath(p);
 
   // Fetch Logic
   // ======= Helpers scoped to this function =======
@@ -1178,7 +1231,34 @@ function initControls() {
     });
     container.appendChild(shareBtn);
 
-    // C. Book Mode Button
+    // C. Copy Raw Text Button (paste post into LLMs)
+    const llmBtn = document.createElement('button');
+    llmBtn.className = 'mode-btn';
+    llmBtn.type = 'button';
+    llmBtn.textContent = '📋 LLM';
+    llmBtn.title = 'Copy raw text (for LLMs)';
+    llmBtn.style.lineHeight = '1';
+    llmBtn.style.whiteSpace = 'nowrap';
+    llmBtn.addEventListener('click', async () => {
+      const prev = llmBtn.textContent;
+      const prevTitle = llmBtn.title;
+      try {
+        await copyCurrentPostRawText();
+        llmBtn.textContent = '✓';
+        llmBtn.title = 'Copied';
+      } catch (err) {
+        console.error(err);
+        llmBtn.textContent = '!';
+        llmBtn.title = 'Copy failed';
+      }
+      setTimeout(() => {
+        llmBtn.textContent = prev;
+        llmBtn.title = prevTitle;
+      }, 900);
+    });
+    container.appendChild(llmBtn);
+
+    // D. Book Mode Button
     const bookBtn = document.createElement('button');
     bookBtn.className = 'mode-btn';
 
