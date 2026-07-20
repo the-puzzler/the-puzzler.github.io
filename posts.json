@@ -1,5 +1,14 @@
 [
   {
+    "title": "Pan1ni",
+    "date": "2026-07-19",
+    "path": "posts/pan1ni/pan1ni.html",
+    "description": "A General Goal-Conditioned Nethack Model inspired by Pan-1 (Pantograph).",
+    "social_image": "posts/pan1ni/assets/thumb.png",
+    "tags": ["World Modelling"]
+  },
+
+  {
     "title": "SDMatch",
     "date": "2026-05-31",
     "path": "posts/sdmatch/sdmatch.html",

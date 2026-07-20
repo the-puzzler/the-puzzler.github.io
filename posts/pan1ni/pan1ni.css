@@ -1,0 +1,657 @@
+/* pan1ni — "quest" style: serif prose with gamified mono chrome.
+   Rules on shared classes (.prologue-questions, .callout, h2, …) are scoped
+   under .page[data-post="pan1ni"] because per-post stylesheets persist across
+   SPA navigation. pan1ni-* classes only occur in this post, so they stay bare. */
+
+.page[data-post="pan1ni"] .post-subtitle {
+  margin-top: -0.3rem;
+  margin-bottom: 1.2rem;
+  font-size: clamp(1.02rem, 2.2vw, 1.3rem);
+  line-height: 1.3;
+  opacity: 0.9;
+}
+
+.page[data-post="pan1ni"] .lead-block {
+  margin-bottom: 1.2rem;
+}
+
+.pan1ni-mono,
+.pan1ni-main-figure figcaption,
+.pan1ni-ascii-figure figcaption,
+.pan1ni-ascii {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+/* ---------- arcade gallery ---------- */
+/* compound selector so this beats .pan1ni-main-figure (defined later, same specificity) */
+.pan1ni-main-figure.pan1ni-gallery {
+  padding: clamp(0.5rem, 1.6vw, 0.85rem);
+  /* dark panel so the frame matches the video; fixed in both themes */
+  background: #191612;
+  border-color: #3a352c;
+}
+
+.pan1ni-arcade {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 1.8vw, 1rem);
+}
+
+.pan1ni-arcade-btn {
+  flex: none;
+  width: clamp(46px, 8vw, 64px);
+  height: clamp(46px, 8vw, 64px);
+  border-radius: 50%;
+  border: 3px solid color-mix(in oklab, var(--rule) 85%, var(--ink));
+  background: radial-gradient(circle at 38% 30%, #f2ba43, #d79921 55%, #a9761a);
+  color: #191612;
+  font-size: clamp(1rem, 3vw, 1.4rem);
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 0 #7c5714, 0 6px 9px rgba(0, 0, 0, 0.3);
+  transition: transform 60ms ease, box-shadow 60ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pan1ni-arcade-btn:hover {
+  filter: brightness(1.05);
+}
+
+.pan1ni-arcade-btn:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #7c5714, 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.pan1ni-screen {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  background: #191612;
+  overflow: hidden;
+  /* full clip ratio, nothing cropped */
+  aspect-ratio: 1200 / 792;
+}
+
+/* two stacked clips that crossfade (double-buffer) so switching never flashes;
+   contain so the whole screen is always visible, never occluded */
+.pan1ni-clip {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #191612;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.pan1ni-clip.is-active {
+  opacity: 1;
+}
+
+.pan1ni-clip-count {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.55rem;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  color: #d79921;
+  background: rgba(25, 22, 18, 0.7);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.pan1ni-gallery-cap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-top: 0.075rem;
+  text-align: center;
+  opacity: 1;
+}
+
+.pan1ni-main-figure .pan1ni-gallery-cap::before,
+.pan1ni-main-figure .pan1ni-gallery-cap::after {
+  content: none;
+}
+
+.pan1ni-clip-note {
+  font-size: 0.71rem;
+  color: #ece3cf;
+}
+
+.pan1ni-clip-stats {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.555rem;
+  letter-spacing: 0.04em;
+  color: #d79921;
+}
+
+.pan1ni-gallery-note {
+  margin: -0.6rem auto 1.4rem;
+  max-width: 640px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--ink-dim);
+}
+
+.pan1ni-main-figure {
+  margin: 0.2rem auto 1.25rem;
+  width: min(980px, 100%);
+  padding: clamp(0.45rem, 1.4vw, 0.75rem);
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 86%, white 14%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.pan1ni-main-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pan1ni-main-figure figcaption,
+.pan1ni-ascii-figure figcaption {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+.pan1ni-main-figure figcaption::before,
+.pan1ni-ascii-figure figcaption::before {
+  content: "── ";
+  opacity: 0.6;
+}
+
+.pan1ni-main-figure figcaption::after,
+.pan1ni-ascii-figure figcaption::after {
+  content: " ──";
+  opacity: 0.6;
+}
+
+.pan1ni-meme {
+  width: min(370px, 100%);
+}
+
+.pan1ni-idea-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+  align-items: start;
+  margin: 1.2rem 0;
+}
+
+.pan1ni-idea-row > p {
+  margin-top: 0;
+}
+
+.pan1ni-idea-row .pan1ni-meme {
+  margin: 0 auto;
+}
+
+@media (max-width: 700px) {
+  .pan1ni-idea-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+.pan1ni-ascii-figure {
+  margin: 1.25rem auto;
+  width: min(720px, 100%);
+}
+
+.pan1ni-ascii {
+  margin: 0;
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.35;
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 86%, white 14%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+/* tweet embed: small, left half, prose beside it */
+.pan1ni-tweet-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+  align-items: start;
+  margin: 1.25rem 0;
+}
+
+.pan1ni-tweet {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  overflow: hidden;
+  padding: clamp(0.45rem, 1.4vw, 0.75rem);
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 86%, white 14%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.pan1ni-tweet .twitter-tweet {
+  margin: 0 auto !important;
+}
+
+/* clips the cropped tweet with rounded corners so it reads as a complete card */
+.pan1ni-tweet-clip {
+  position: relative;
+  overflow: hidden;
+  border-radius: 13px;
+}
+
+.pan1ni-tweet-clip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border: 1px solid var(--rule);
+  border-radius: 13px;
+}
+
+.pan1ni-tweet-text {
+  min-width: 0;
+}
+
+.pan1ni-tweet-text p {
+  font-size: calc(clamp(1.1875rem, 4vw, 1.25rem) + 4px);
+  line-height: 1.5;
+}
+
+.pan1ni-tweet-text > p:first-child {
+  margin-top: 0;
+}
+
+.pan1ni-tweet-head {
+  margin: 0 0 0.6rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  font-size: clamp(1.25rem, 3.5vw, 1.5rem);
+}
+
+.pan1ni-tweet-head::before {
+  content: "▸";
+  display: inline-block;
+  margin-right: 0.35em;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+@media (max-width: 700px) {
+  .pan1ni-tweet-row {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+/* collapsible spec sheet */
+.pan1ni-specs {
+  margin: 1.2rem 0;
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.pan1ni-specs summary {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.pan1ni-specs summary::-webkit-details-marker {
+  display: none;
+}
+
+.pan1ni-specs summary::before {
+  content: "▸";
+  color: var(--accent);
+  transition: transform 120ms ease;
+}
+
+.pan1ni-specs[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.pan1ni-specs summary h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.pan1ni-specs-hint {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.pan1ni-specs[open] .pan1ni-specs-hint {
+  display: none;
+}
+
+.pan1ni-specs > *:not(summary) {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.pan1ni-specs > p:last-child {
+  padding-bottom: 0.85rem;
+  margin-bottom: 0;
+}
+
+.pan1ni-spec-table {
+  width: calc(100% - 2rem);
+  border-collapse: collapse;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  margin: 0.2rem 1rem 0.9rem;
+}
+
+.pan1ni-spec-table th {
+  text-align: left;
+  vertical-align: top;
+  white-space: nowrap;
+  padding: 0.4rem 0.9rem 0.4rem 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.pan1ni-spec-table td {
+  padding: 0.4rem 0;
+}
+
+.pan1ni-spec-table tr:not(:last-child) th,
+.pan1ni-spec-table tr:not(:last-child) td {
+  border-bottom: 1px solid color-mix(in oklab, var(--rule) 45%, transparent);
+}
+
+/* results: plot caption metric list + caveat.
+   Matches the site caption look (centred, mono, small, dim) but holds a list. */
+.pan1ni-results-figure figcaption {
+  margin-top: 0.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+.pan1ni-results-figure figcaption::before,
+.pan1ni-results-figure figcaption::after {
+  content: none;
+}
+
+.pan1ni-metric-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pan1ni-metric-list li {
+  margin: 0.28rem 0;
+  font-size: 0.66rem;
+  line-height: 1.4;
+}
+
+.pan1ni-metric-list b {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.pan1ni-caveat {
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  text-align: center;
+  opacity: 0.7;
+}
+
+/* retro console "Play Here" panel: dark screen in both themes, amber phosphor */
+.pan1ni-play {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  margin: 1.2rem 0 1rem;
+  padding: 0.95rem 1.15rem 0.85rem;
+  text-decoration: none;
+  border: 1.5px solid var(--rule);
+  background: #191612;
+  box-shadow: 5px 5px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.pan1ni-play::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.32) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.pan1ni-play:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.pan1ni-play:active {
+  transform: translate(5px, 5px);
+  box-shadow: none;
+}
+
+.pan1ni-play-btn {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #d79921;
+  text-shadow: 0 0 10px rgba(215, 153, 33, 0.55);
+}
+
+.pan1ni-play-btn::after {
+  content: "▮";
+  margin-left: 0.3em;
+  animation: pan1ni-blink 1.1s steps(1) infinite;
+}
+
+@keyframes pan1ni-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pan1ni-play-btn::after {
+    animation: none;
+  }
+}
+
+.pan1ni-play-sub {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #a89984;
+}
+
+/* PLAY HERE + GitHub side by side */
+.pan1ni-cta-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.8rem;
+  margin: 1.2rem 0 1rem;
+  flex-wrap: wrap;
+}
+
+.pan1ni-cta-row .pan1ni-play {
+  flex: 1;
+  min-width: 240px;
+  margin: 0;
+}
+
+.pan1ni-cta-row .pan1ni-github {
+  margin: 0;
+  flex: none;
+}
+
+/* GitHub button under the PLAY HERE console */
+.pan1ni-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+  padding: 0.6rem 0.95rem;
+  text-decoration: none;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+  box-shadow: 3px 3px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.pan1ni-github:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.pan1ni-github:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.pan1ni-github svg {
+  display: block;
+  flex: none;
+}
+
+.page[data-post="pan1ni"] .prologue-questions {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  margin: 1.2rem 0;
+  padding: 0.9rem 1.1rem 0.8rem;
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+  position: relative;
+}
+
+.page[data-post="pan1ni"] .prologue-questions::before {
+  content: "QUEST LOG";
+  display: block;
+  margin-bottom: 0.55rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--accent);
+}
+
+.page[data-post="pan1ni"] .prologue-questions p {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0.35rem 0;
+}
+
+.page[data-post="pan1ni"] .prologue-questions p::before {
+  content: "□";
+  margin-right: 0.55rem;
+  color: var(--accent);
+}
+
+.page[data-post="pan1ni"] .goto-link {
+  flex: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid var(--rule);
+  background: var(--bg);
+  box-shadow: 2px 2px 0 color-mix(in oklab, var(--rule) 65%, transparent);
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+
+.page[data-post="pan1ni"] .goto-link:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 color-mix(in oklab, var(--rule) 65%, transparent);
+}
+
+.page[data-post="pan1ni"] .goto-link:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.page[data-post="pan1ni"] .callout {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.88rem;
+  margin-inline: 0;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--rule);
+  border-left: 4px solid var(--accent);
+  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.page[data-post="pan1ni"] .callout::before {
+  content: "! ";
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.page[data-post="pan1ni"] h2::before {
+  content: "▸ ";
+  color: var(--accent);
+}
+
+.page[data-post="pan1ni"] .equation-figure {
+  margin: 0.55rem auto 1rem auto;
+  width: min(760px, 96%);
+  text-align: center;
+}
+
+.page[data-post="pan1ni"] .equation-figure mjx-container[jax="CHTML"][display="true"] {
+  font-size: 160% !important;
+}
+
+@media (max-width: 560px) {
+  .page[data-post="pan1ni"] .equation-figure mjx-container[jax="CHTML"][display="true"] {
+    font-size: 118% !important;
+  }
+}
+
+.page[data-post="pan1ni"] .equation-figure figcaption {
+  margin-top: 0.45rem;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  color: var(--ink-dim);
+}
+
+.page[data-post="pan1ni"] .equation-figure figcaption::before {
+  content: "── ";
+  opacity: 0.6;
+}
+
+.page[data-post="pan1ni"] .equation-figure figcaption::after {
+  content: " ──";
+  opacity: 0.6;
+}

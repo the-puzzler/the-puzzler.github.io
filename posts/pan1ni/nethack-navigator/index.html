@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetHack Navigator — Pan1ni demo</title>
+<script>
+  // mirror the blog's chosen theme so the demo matches
+  try { var m = localStorage.getItem('mode');
+    if (m === 'dark' || m === 'light') document.documentElement.setAttribute('data-mode', m); } catch (e) {}
+</script>
+<style>
+  :root{
+    --bg:#f9f7f1; --ink:#2c2925; --ink-dim:#8a847e; --rule:#a8a39d; --accent:#2c2925;
+    --font:"EB Garamond",Garamond,"URW Palladio L",serif;
+    --mono:ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+    --panel:color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+    --frame:color-mix(in oklab, var(--bg) 86%, white 14%);
+    --shadow:color-mix(in oklab, var(--rule) 55%, transparent);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-mode="light"]){ --bg:#1d2021; --ink:#ebdbb2; --ink-dim:#a89984; --rule:#504945; --accent:#d79921; }
+  }
+  :root[data-mode="dark"]{ --bg:#1d2021; --ink:#ebdbb2; --ink-dim:#a89984; --rule:#504945; --accent:#d79921; }
+  :root[data-mode="light"]{ --bg:#f9f7f1; --ink:#2c2925; --ink-dim:#8a847e; --rule:#a8a39d; --accent:#2c2925; }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--ink);
+    font:18px/1.5 var(--font);
+    -webkit-font-smoothing:antialiased;
+    padding:26px 18px 64px;
+  }
+  .wrap{max-width:900px; margin:0 auto}
+
+  .back{
+    display:inline-block; font-family:var(--mono); font-size:0.78rem; letter-spacing:0.04em;
+    text-decoration:none; color:var(--ink);
+    padding:0.4rem 0.7rem; border:1.5px solid var(--rule); background:var(--bg);
+    box-shadow:3px 3px 0 var(--shadow); transition:transform 80ms ease, box-shadow 80ms ease;
+  }
+  .back:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--shadow) }
+  .back:active{ transform:translate(3px,3px); box-shadow:none }
+
+  h1{ margin:0.9rem 0 0.2rem; font-size:clamp(1.7rem,4.5vw,2.3rem); font-weight:700 }
+  .sub{ margin:0 0 1.4rem; color:var(--ink-dim); font-size:1.05rem }
+  .boot{ font-family:var(--mono); font-size:0.72rem; letter-spacing:0.02em; color:var(--ink-dim) }
+
+  .kicker{ font-family:var(--mono); font-size:0.7rem; letter-spacing:0.16em; text-transform:uppercase; color:var(--accent) }
+
+  .card{
+    border:1.5px solid var(--rule); background:var(--panel);
+    box-shadow:4px 4px 0 var(--shadow); padding:1.1rem 1.2rem; margin-bottom:1.3rem;
+  }
+
+  /* status row */
+  .hud{ display:flex; gap:0.6rem; margin-bottom:1.1rem; flex-wrap:wrap }
+  .hud>div{ flex:1; min-width:88px; text-align:center; padding:0.5rem 0.4rem;
+    border:1px solid var(--rule); background:var(--frame) }
+  .hud label{ display:block; font-family:var(--mono); font-size:0.62rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-dim) }
+  .hud b{ font-family:var(--mono); font-size:1.15rem; color:var(--ink) }
+  #verdict.ok{ color:#2f8f5b } #verdict.run{ color:var(--accent) } #verdict.fail{ color:#c0492f }
+  :root[data-mode="dark"] #verdict.ok, :root:not([data-mode="light"]) #verdict.ok{ color:#8ec07c }
+  :root[data-mode="dark"] #verdict.fail, :root:not([data-mode="light"]) #verdict.fail{ color:#fb4934 }
+
+  .views{ display:flex; gap:1.1rem; justify-content:center; flex-wrap:wrap }
+  .views figure{ margin:0; text-align:center }
+  .views figcaption{ font-family:var(--mono); font-size:0.68rem; letter-spacing:0.04em; color:var(--ink-dim); margin-bottom:0.5rem }
+  #agentView,#goalView{
+    width:clamp(180px,42vw,250px); height:auto; image-rendering:pixelated;
+    border:1.5px solid var(--rule); background:#0a0805; padding:6px;
+    box-shadow:4px 4px 0 var(--shadow);
+  }
+
+  .controls{ display:grid; grid-template-columns:1fr 1fr; gap:1.2rem }
+  @media (max-width:640px){ .controls{ grid-template-columns:1fr } }
+  .ctl label{ display:block; font-family:var(--mono); font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-dim); margin-bottom:0.45rem }
+  select{ width:100%; font-family:var(--mono); font-size:0.85rem; color:var(--ink); padding:0.55rem 0.7rem;
+    background:var(--frame); border:1.5px solid var(--rule); cursor:pointer }
+  input[type=range]{ width:100%; accent-color:var(--accent) }
+
+  .goals{ display:grid; grid-template-columns:repeat(4,1fr); gap:0.55rem }
+  .goalcard{ border:1.5px solid var(--rule); padding:4px; background:var(--frame); cursor:pointer; text-align:center;
+    transition:border-color .12s, box-shadow .12s }
+  .goalcard:hover{ border-color:var(--accent) }
+  .goalcard.sel{ border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) }
+  .goalcard canvas{ width:100%; height:auto; image-rendering:pixelated; margin-bottom:3px }
+  .goalcard span{ font-family:var(--mono); font-size:0.66rem; color:var(--ink-dim) }
+
+  .buttons{ display:flex; gap:0.7rem; margin-top:1.2rem }
+  .ab{
+    flex:1; cursor:pointer; font-family:var(--mono); font-size:0.82rem; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink); background:var(--bg); border:1.5px solid var(--rule);
+    padding:0.8rem 0.5rem; box-shadow:3px 3px 0 var(--shadow);
+    transition:transform 80ms ease, box-shadow 80ms ease;
+  }
+  .ab:hover{ transform:translate(1px,1px); box-shadow:2px 2px 0 var(--shadow) }
+  .ab:active{ transform:translate(3px,3px); box-shadow:none }
+  .ab:disabled{ opacity:.45; cursor:default; transform:none; box-shadow:3px 3px 0 var(--shadow) }
+  .ab-run{ background:var(--accent); color:var(--bg); border-color:var(--accent) }
+
+  .speed-row{ display:flex; align-items:center; gap:0.9rem; margin-top:1rem }
+  .speed-row label{ margin:0; font-family:var(--mono); font-size:0.68rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-dim) }
+
+  .legend-note{ font-family:var(--mono); font-size:0.68rem; color:var(--ink-dim); margin-top:0.9rem; text-align:center }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back" href="../../../index.html?p=pan1ni">◄ Back to the post</a>
+  <h1>NetHack Navigator</h1>
+  <p class="sub">A goal-conditioned world model, pretrained only on recordings of humans playing NetHack,
+  running live in your browser. Pick a goal and watch it walk there. <span class="boot" id="boot">initialising…</span></p>
+
+  <div class="card">
+    <div class="hud">
+      <div><label>verdict</label><b id="verdict" class="run">ready</b></div>
+      <div><label>steps</label><b id="steps">0</b></div>
+      <div><label>dist</label><b id="dist">–</b></div>
+      <div><label>goal d</label><b id="gdist">–</b></div>
+    </div>
+    <div class="views">
+      <figure>
+        <figcaption>what it sees</figcaption>
+        <canvas id="agentView" width="144" height="144"></canvas>
+      </figure>
+      <figure>
+        <figcaption>goal frame</figcaption>
+        <canvas id="goalView" width="144" height="144"></canvas>
+      </figure>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="controls">
+      <div class="ctl">
+        <label for="levelSel">dungeon</label>
+        <select id="levelSel"></select>
+      </div>
+      <div class="ctl">
+        <label for="goalGrid">goal — distance in tiles</label>
+        <div class="goals" id="goalGrid"></div>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button id="run" class="ab ab-run">▶ Run</button>
+      <button id="step" class="ab ab-step">Step</button>
+      <button id="reset" class="ab ab-reset">Reset</button>
+    </div>
+
+    <div class="speed-row">
+      <label for="speed">speed</label>
+      <input type="range" id="speed" min="0" max="200" value="70">
+    </div>
+
+    <div class="legend-note">backend <span id="backend">–</span> · the same frozen model handles every level and goal</div>
+  </div>
+
+</div>
+
+<script src="ort/ort.webgpu.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

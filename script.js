@@ -344,7 +344,8 @@ function buildPostTOC(contentEl) {
 
   clearPostTOC();
 
-  const headings = $$('h2, h3', contentEl).filter(h => h.textContent.trim().length);
+  const headings = $$('h2, h3', contentEl)
+    .filter(h => h.textContent.trim().length && !h.hasAttribute('data-toc-skip'));
   if (headings.length < 2) return;
 
   const usedIds = new Set();
@@ -364,7 +365,7 @@ function buildPostTOC(contentEl) {
 
   for (const h of headings) {
     const li = document.createElement('li');
-    li.className = h.tagName === 'H3' ? 'toc-h3' : 'toc-h2';
+    li.className = (h.tagName === 'H3' && !h.hasAttribute('data-toc-top')) ? 'toc-h3' : 'toc-h2';
     const a = document.createElement('a');
     a.href = `#${h.id}`;
     a.textContent = h.textContent.trim();
@@ -391,24 +392,7 @@ function buildPostTOC(contentEl) {
   };
   if (tocCard) tocCard.addEventListener('scroll', updateCardScrollHint, { passive: true });
 
-  let roller = toc.querySelector('.toc-roller');
-  if (!roller) {
-    roller = document.createElement('div');
-    roller.className = 'toc-roller';
-    roller.innerHTML = `
-      <div class="toc-roller-line toc-roller-prev2"></div>
-      <div class="toc-roller-line toc-roller-prev"></div>
-      <div class="toc-roller-line toc-roller-current"></div>
-      <div class="toc-roller-line toc-roller-next"></div>
-      <div class="toc-roller-line toc-roller-next2"></div>
-    `;
-    toc.insertBefore(roller, toc.firstChild);
-  }
-  const rollerPrev2 = roller.querySelector('.toc-roller-prev2');
-  const rollerPrev = roller.querySelector('.toc-roller-prev');
-  const rollerCurrent = roller.querySelector('.toc-roller-current');
-  const rollerNext = roller.querySelector('.toc-roller-next');
-  const rollerNext2 = roller.querySelector('.toc-roller-next2');
+  toc.querySelector('.toc-roller')?.remove();
 
   const links = $$('a', ul);
   const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
@@ -438,11 +422,6 @@ function buildPostTOC(contentEl) {
     const active = headings[activeIndex];
     links.forEach(a => a.classList.remove('active'));
     byId.get(active.id)?.classList.add('active');
-    rollerPrev2.textContent = headings[activeIndex - 2]?.textContent.trim() || '';
-    rollerPrev.textContent = headings[activeIndex - 1]?.textContent.trim() || '';
-    rollerCurrent.textContent = active.textContent.trim() || 'Contents';
-    rollerNext.textContent = headings[activeIndex + 1]?.textContent.trim() || '';
-    rollerNext2.textContent = headings[activeIndex + 2]?.textContent.trim() || '';
     updateCardScrollHint();
   };
 
@@ -853,6 +832,7 @@ async function renderPost() {
 
   // If no "p" param, we are on Home (already handled by index.html + renderList)
   if (!p) {
+    if (contentEl) delete contentEl.dataset.post;
     clearPostTOC();
     return;
   }
@@ -1053,6 +1033,10 @@ async function renderPost() {
     const html = await res.text();
 
     contentEl.innerHTML = html;
+    // Mark which post is active so per-post stylesheets (which persist across
+    // SPA navigation) can scope rules to their own post.
+    const slugMatch = path.match(/^posts\/([^\/]+)\//);
+    contentEl.dataset.post = slugMatch ? slugMatch[1] : p;
     await resolveHtmlPartials(contentEl, path);
     // Fade Animation
     contentEl.classList.remove('fade-enter');
