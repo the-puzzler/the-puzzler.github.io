@@ -29,7 +29,7 @@ const ORT_BASE = new URL(
   document.baseURI,
 ).toString();
 const MODEL_URL = new URL(
-  'posts/curriculum-mining/assets/othello-aznet.onnx',
+  'posts/curriculum-mining/assets/othello-aznet.onnx?v=20260726b',
   document.baseURI,
 ).toString();
 
@@ -51,7 +51,7 @@ function loadScript(src) {
 }
 
 async function loadModel() {
-  await loadScript(`${ORT_BASE}ort.wasm.min.js`);
+  await loadScript(`${ORT_BASE}ort.wasm.min.js?v=20260726b`);
   globalThis.ort.env.wasm.wasmPaths = ORT_BASE;
   globalThis.ort.env.wasm.numThreads = 1;
   globalThis.ort.env.wasm.proxy = false;
@@ -69,14 +69,15 @@ async function loadModel() {
 }
 
 const modelSessionPromise = loadModel().catch((error) => {
+  const errorMessage = error?.message || error?.stack || String(error);
   console.error(
     'Could not load Othello checkpoint',
-    error?.message || error?.stack || String(error),
+    errorMessage,
   );
   modelFailed = true;
   thinking = false;
-  statusEl.textContent = 'The trained policy could not be loaded. Refresh to try again.';
-  modelStatusEl.textContent = 'Model load failed';
+  statusEl.textContent = 'The trained policy could not be loaded.';
+  modelStatusEl.textContent = `Model load failed: ${errorMessage.slice(0, 180)}`;
   render();
   return null;
 });
