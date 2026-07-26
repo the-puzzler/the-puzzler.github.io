@@ -29,7 +29,7 @@ const ORT_BASE = new URL(
   document.baseURI,
 ).toString();
 const MODEL_URL = new URL(
-  'posts/curriculum-mining/assets/othello-aznet.onnx?v=20260726b',
+  'posts/curriculum-mining/assets/othello-aznet.onnx?v=20260726c',
   document.baseURI,
 ).toString();
 
@@ -51,13 +51,13 @@ function loadScript(src) {
 }
 
 async function loadModel() {
-  await loadScript(`${ORT_BASE}ort.wasm.min.js?v=20260726b`);
+  await loadScript(`${ORT_BASE}ort.wasm.min.js?v=20260726c`);
   globalThis.ort.env.wasm.wasmPaths = ORT_BASE;
   globalThis.ort.env.wasm.numThreads = 1;
   globalThis.ort.env.wasm.proxy = false;
   const session = await globalThis.ort.InferenceSession.create(MODEL_URL, {
     executionProviders: ['wasm'],
-    graphOptimizationLevel: 'all',
+    graphOptimizationLevel: 'basic',
   });
   modelReady = true;
   modelStatusEl.textContent = 'Othello AZNet loaded · 1.83M parameters · no search';

@@ -12,10 +12,130 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import onnx
+from onnx import TensorProto, helper, numpy_helper
 import onnxruntime as ort
 import pgx
 from flax import serialization
-from jax2onnx import to_onnx
+
+
+def build_browser_model(variables, output: Path) -> None:
+    """Build a small, fixed-shape NCHW graph without converter shape metadata."""
+    params = variables["params"]
+    stats = variables["batch_stats"]
+    nodes, initializers = [], []
+
+    def constant(name, value):
+        array = np.asarray(value)
+        if not np.issubdtype(array.dtype, np.integer):
+            array = array.astype(np.float32)
+        initializers.append(numpy_helper.from_array(array, name))
+        return name
+
+    def conv(x, index, name):
+        layer = params[f"Conv_{index}"]
+        # Flax kernels are HWIO; ONNX Conv expects OIHW.
+        weight = np.asarray(layer["kernel"]).transpose(3, 2, 0, 1)
+        nodes.append(
+            helper.make_node(
+                "Conv",
+                [x, constant(f"{name}.weight", weight),
+                 constant(f"{name}.bias", layer["bias"])],
+                [name],
+                pads=[weight.shape[2] // 2] * 4,
+                strides=[1, 1],
+            )
+        )
+        return name
+
+    def norm_relu(x, index, name):
+        layer, running = params[f"BatchNorm_{index}"], stats[f"BatchNorm_{index}"]
+        scale = np.asarray(layer["scale"]) / np.sqrt(
+            np.asarray(running["var"]) + 1e-5
+        )
+        offset = np.asarray(layer["bias"]) - np.asarray(running["mean"]) * scale
+        shape = (1, scale.size, 1, 1)
+        scaled = f"{name}.scaled"
+        shifted = f"{name}.shifted"
+        nodes.append(helper.make_node(
+            "Mul", [x, constant(f"{name}.scale", scale.reshape(shape))], [scaled]
+        ))
+        nodes.append(helper.make_node(
+            "Add", [scaled, constant(f"{name}.offset", offset.reshape(shape))],
+            [shifted]
+        ))
+        nodes.append(helper.make_node("Relu", [shifted], [name]))
+        return name
+
+    def dense(x, index, name):
+        layer = params[f"Dense_{index}"]
+        nodes.append(helper.make_node(
+            "Gemm",
+            [x, constant(f"{name}.weight", layer["kernel"]),
+             constant(f"{name}.bias", layer["bias"])],
+            [name],
+        ))
+        return name
+
+    nodes.append(helper.make_node(
+        "Transpose", ["observation"], ["input.nchw"], perm=[0, 3, 1, 2]
+    ))
+    x = conv("input.nchw", 0, "trunk.input")
+    for block in range(6):
+        residual = x
+        x = norm_relu(x, block * 2, f"block{block}.relu0")
+        x = conv(x, block * 2 + 1, f"block{block}.conv0")
+        x = norm_relu(x, block * 2 + 1, f"block{block}.relu1")
+        x = conv(x, block * 2 + 2, f"block{block}.conv1")
+        added = f"block{block}.output"
+        nodes.append(helper.make_node("Add", [x, residual], [added]))
+        x = added
+    x = norm_relu(x, 12, "trunk.output")
+
+    policy = conv(x, 13, "policy.conv")
+    policy = norm_relu(policy, 13, "policy.relu")
+    nodes.append(helper.make_node(
+        "Transpose", [policy], ["policy.nhwc"], perm=[0, 2, 3, 1]
+    ))
+    nodes.append(helper.make_node(
+        "Reshape",
+        ["policy.nhwc", constant("policy.shape", np.asarray([1, 128], np.int64))],
+        ["policy.flat"],
+    ))
+    dense("policy.flat", 0, "logits")
+
+    value = conv(x, 14, "value.conv")
+    value = norm_relu(value, 14, "value.relu")
+    nodes.append(helper.make_node(
+        "Reshape",
+        [value, constant("value.shape", np.asarray([1, 64], np.int64))],
+        ["value.flat"],
+    ))
+    value = dense("value.flat", 1, "value.hidden")
+    nodes.append(helper.make_node("Relu", [value], ["value.hidden.relu"]))
+    value = dense("value.hidden.relu", 2, "value.dense")
+    nodes.append(helper.make_node("Tanh", [value], ["value.tanh"]))
+    nodes.append(helper.make_node("Squeeze", ["value.tanh"], ["value"], axes=[1]))
+
+    graph = helper.make_graph(
+        nodes,
+        "selfplay_othello_aznet_browser",
+        [helper.make_tensor_value_info(
+            "observation", TensorProto.FLOAT, [1, 8, 8, 2]
+        )],
+        [
+            helper.make_tensor_value_info("logits", TensorProto.FLOAT, [1, 65]),
+            helper.make_tensor_value_info("value", TensorProto.FLOAT, [1]),
+        ],
+        initializers,
+    )
+    model = helper.make_model(
+        graph,
+        producer_name="the-puzzler/selfplay",
+        opset_imports=[helper.make_opsetid("", 12)],
+    )
+    model.ir_version = 7
+    onnx.checker.check_model(model)
+    onnx.save(model, output)
 
 
 def main() -> None:
@@ -47,17 +167,7 @@ def main() -> None:
         return network.apply(variables, observation, train=False)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    to_onnx(
-        inference,
-        inputs=[jax.ShapeDtypeStruct(example.shape, jnp.float32)],
-        model_name="selfplay_othello_aznet",
-        opset=18,
-        return_mode="file",
-        output_path=args.output,
-        input_names=["observation"],
-        output_names=["logits", "value"],
-        export_mode="web",
-    )
+    build_browser_model(variables, args.output)
     onnx.checker.check_model(onnx.load(args.output))
 
     session = ort.InferenceSession(
