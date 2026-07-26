@@ -51,7 +51,7 @@ function loadScript(src) {
 }
 
 async function loadModel() {
-  await loadScript(`${ORT_BASE}ort.min.js`);
+  await loadScript(`${ORT_BASE}ort.wasm.min.js`);
   globalThis.ort.env.wasm.wasmPaths = ORT_BASE;
   globalThis.ort.env.wasm.numThreads = 1;
   globalThis.ort.env.wasm.proxy = false;
