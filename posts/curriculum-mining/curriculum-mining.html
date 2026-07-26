@@ -86,7 +86,7 @@
 
   <h3 data-toc-skip>Interactive Othello example</h3>
   <p>
-    Choose a reset depth below to sample a legal training state, then play black against the trained Othello checkpoint. The model takes one greedy policy action with no search, matching the evaluation setup.
+    Choose a reset depth below to sample a legal training state, then play black against the trained Othello checkpoint. This is how the model trains: it sees a random reset, then plays the position out. The model takes one greedy policy action with no search, matching the evaluation setup.
   </p>
 
   <section id="othello-demo" class="othello-dojo" aria-label="Interactive Othello random reset demo">
