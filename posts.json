@@ -4,7 +4,7 @@
     "date": "2026-07-26",
     "path": "posts/curriculum-mining/curriculum-mining.html",
     "description": "Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.",
-    "social_image": "posts/curriculum-mining/assets/board.svg",
+    "social_image": "posts/curriculum-mining/assets/reset-theory.png",
     "tags": ["RL"]
   },
   {
