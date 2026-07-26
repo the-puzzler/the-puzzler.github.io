@@ -5,7 +5,7 @@
     "path": "posts/curriculum-mining/curriculum-mining.html",
     "description": "Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.",
     "social_image": "posts/curriculum-mining/assets/board.svg",
-    "tags": ["Robotics", "Self-Supervision"]
+    "tags": ["RL"]
   },
   {
     "title": "Pan1ni",
