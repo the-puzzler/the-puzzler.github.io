@@ -330,17 +330,52 @@ h6 {
   font-size: 0.92rem;
 }
 
+.toc-roller {
+  display: grid;
+  gap: 2px;
+  max-width: 210px;
+  user-select: none;
+}
+
+.toc-roller-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.toc-roller-prev,
+.toc-roller-next {
+  font-size: 0.76rem;
+  color: var(--ink-dim);
+  opacity: 0.72;
+}
+
+.toc-roller-current {
+  font-size: 0.95rem;
+  color: var(--ink);
+}
+
+.toc-roller-prev2,
+.toc-roller-next2 {
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  opacity: 0.52;
+}
+
 .toc-card {
   position: relative;
-  padding: 0.85rem 1rem 0.75rem;
-  max-height: calc(100vh - 150px);
+  margin-top: 8px;
+  padding: 0;
+  max-height: min(250px, calc(100vh - 170px));
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  border: 1.5px solid var(--rule);
-  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
-  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 140ms ease, transform 140ms ease;
 }
 
 .toc-card::-webkit-scrollbar {
@@ -362,7 +397,7 @@ h6 {
   right: 0;
   bottom: 0;
   height: 26px;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), color-mix(in oklab, var(--bg) 88%, var(--ink) 12%));
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), var(--bg));
 }
 
 .toc-card::after {
@@ -379,13 +414,16 @@ h6 {
   opacity: 1;
 }
 
+.post-toc:hover .toc-card,
+.post-toc:focus-within .toc-card {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
 .toc-card h2 {
-  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  margin: 0 0 10px;
 }
 
 .toc-list {
@@ -393,25 +431,13 @@ h6 {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 6px;
-  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
-  font-size: 0.76rem;
-  line-height: 1.35;
+  gap: 4px;
 }
 
 .toc-list a {
   display: inline-block;
-  position: relative;
-  padding-left: 1em;
   text-decoration: none;
   border-bottom: 1px dashed transparent;
-}
-
-.toc-list a::before {
-  content: "·";
-  position: absolute;
-  left: 0;
-  color: var(--ink-dim);
 }
 
 .toc-list a:hover {
@@ -422,13 +448,62 @@ h6 {
   font-weight: 700;
 }
 
-.toc-list a.active::before {
+.toc-list .toc-h3 {
+  padding-left: 12px;
+  font-size: 0.95em;
+}
+
+/* Expanded TOC used by newer posts that explicitly opt in. */
+.post-toc--card .toc-card {
+  margin-top: 0;
+  padding: 0.85rem 1rem 0.75rem;
+  max-height: calc(100vh - 150px);
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+  border: 1.5px solid var(--rule);
+  background: color-mix(in oklab, var(--bg) 88%, var(--ink) 12%);
+  box-shadow: 4px 4px 0 color-mix(in oklab, var(--rule) 55%, transparent);
+}
+
+.post-toc--card .toc-card::before {
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), color-mix(in oklab, var(--bg) 88%, var(--ink) 12%));
+}
+
+.post-toc--card .toc-card h2 {
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.55rem;
+}
+
+.post-toc--card .toc-list {
+  gap: 6px;
+  font-family: ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  line-height: 1.35;
+}
+
+.post-toc--card .toc-list a {
+  position: relative;
+  padding-left: 1em;
+}
+
+.post-toc--card .toc-list a::before {
+  content: "·";
+  position: absolute;
+  left: 0;
+  color: var(--ink-dim);
+}
+
+.post-toc--card .toc-list a.active::before {
   content: "▸";
   color: var(--accent);
 }
 
-.toc-list .toc-h3 {
-  padding-left: 12px;
+.post-toc--card .toc-list .toc-h3 {
   font-size: 0.9em;
 }
 
@@ -841,6 +916,12 @@ pre {
 
   .brand {
     width: auto
+  }
+}
+
+@media (max-width: 1248px) {
+  .post-toc--card {
+    display: none;
   }
 }
 

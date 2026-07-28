@@ -343,6 +343,8 @@ function buildPostTOC(contentEl) {
   if (!toc || !nav || !contentEl) return;
 
   clearPostTOC();
+  const cardVariant = Boolean(contentEl.querySelector('[data-toc-variant="card"]'));
+  toc.classList.toggle('post-toc--card', cardVariant);
 
   const headings = $$('h2, h3', contentEl)
     .filter(h => h.textContent.trim().length && !h.hasAttribute('data-toc-skip'));
@@ -392,7 +394,22 @@ function buildPostTOC(contentEl) {
   };
   if (tocCard) tocCard.addEventListener('scroll', updateCardScrollHint, { passive: true });
 
-  toc.querySelector('.toc-roller')?.remove();
+  let roller = toc.querySelector('.toc-roller');
+  if (cardVariant) {
+    roller?.remove();
+    roller = null;
+  } else if (!roller) {
+    roller = document.createElement('div');
+    roller.className = 'toc-roller';
+    roller.innerHTML = `
+      <div class="toc-roller-line toc-roller-prev2"></div>
+      <div class="toc-roller-line toc-roller-prev"></div>
+      <div class="toc-roller-line toc-roller-current"></div>
+      <div class="toc-roller-line toc-roller-next"></div>
+      <div class="toc-roller-line toc-roller-next2"></div>
+    `;
+    toc.insertBefore(roller, toc.firstChild);
+  }
 
   const links = $$('a', ul);
   const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
@@ -422,6 +439,13 @@ function buildPostTOC(contentEl) {
     const active = headings[activeIndex];
     links.forEach(a => a.classList.remove('active'));
     byId.get(active.id)?.classList.add('active');
+    if (roller) {
+      roller.querySelector('.toc-roller-prev2').textContent = headings[activeIndex - 2]?.textContent.trim() || '';
+      roller.querySelector('.toc-roller-prev').textContent = headings[activeIndex - 1]?.textContent.trim() || '';
+      roller.querySelector('.toc-roller-current').textContent = active.textContent.trim() || 'Contents';
+      roller.querySelector('.toc-roller-next').textContent = headings[activeIndex + 1]?.textContent.trim() || '';
+      roller.querySelector('.toc-roller-next2').textContent = headings[activeIndex + 2]?.textContent.trim() || '';
+    }
     updateCardScrollHint();
   };
 
