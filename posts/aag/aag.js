@@ -7,6 +7,7 @@
   const stageDetail = document.getElementById('aag-stage-detail');
   const resetButton = document.getElementById('aag-reset');
   const gaussianButton = document.getElementById('aag-gaussianise');
+  const checkConditioningButton = document.getElementById('aag-check-conditioning');
   const fitButton = document.getElementById('aag-fit');
   const generateButton = document.getElementById('aag-generate');
   const unconditionalButton = document.getElementById('aag-unconditional');
@@ -34,6 +35,7 @@
   let transport = null;
   let model = null;
   let conditionalMode = true;
+  let conditioningChecked = false;
   let selectedCondition = 0;
 
   function trainingSteps() {
@@ -212,6 +214,10 @@
       scores.push(projectionDefect(z, evalDirections, targets) / iidFloor);
       iScores.push(independenceRatio(z, evalDirections, groupTargets, groupFloor));
     }
+    const conditionScores = [0, 1].map((group) => {
+      const subset = z.filter((point) => point.condition === group);
+      return projectionDefect(subset, evalDirections, groupTargets) / groupFloor;
+    });
     return {
       states,
       globalStates,
@@ -225,6 +231,7 @@
       radials,
       scores,
       iScores,
+      conditionScores,
     };
   }
 
@@ -590,6 +597,32 @@
     drawLabel(direction ? assignmentLabel() : 'assigned prior z', GAUSS_FRAME.x, 47);
     const liveScore = scoreValue == null ? transport.scores[Math.round(scoreProgress)] : scoreValue;
     drawAssignmentGraphs(scoreProgress, liveScore, iValue);
+  }
+
+  function renderConditioningCheck() {
+    const upperFrame = { x: 32, y: 72, size: 240 };
+    const lowerFrame = { x: 368, y: 72, size: 240 };
+    const upper = assigned.filter((point) => point.condition === 0);
+    const lower = assigned.filter((point) => point.condition === 1);
+    clearPlot('The assigned latent cloud is inspected separately for each condition.');
+    drawLabel('check condition independence', 320, 25, 'middle');
+    drawFrame(upperFrame, true);
+    drawFrame(lowerFrame, true);
+    drawPoints(upper, upperFrame, 3.2, {
+      radius: 2.25,
+      className: 'plot-condition-point plot-condition-0',
+      opacity: 0.82,
+    });
+    drawPoints(lower, lowerFrame, 3.2, {
+      radius: 2.25,
+      className: 'plot-condition-point plot-condition-1',
+      opacity: 0.82,
+    });
+    drawLabel('upper moon · c = 0', upperFrame.x, 54);
+    drawLabel(`G ${transport.conditionScores[0].toFixed(2)}`, upperFrame.x + upperFrame.size, 54, 'end');
+    drawLabel('lower moon · c = 1', lowerFrame.x, 54);
+    drawLabel(`G ${transport.conditionScores[1].toFixed(2)}`, lowerFrame.x + lowerFrame.size, 54, 'end');
+    drawLabel('each conditional cloud should match N(0, I) · target G = 1', 320, 340, 'middle');
   }
 
   function interpolatePoints(from, to, amount) {
@@ -1148,11 +1181,18 @@
 
   function syncControls() {
     gaussianButton.disabled = busy || stage !== 0;
-    fitButton.disabled = busy || stage !== 1;
+    checkConditioningButton.hidden = !conditionalMode;
+    checkConditioningButton.disabled = busy || stage !== 1 || conditioningChecked;
+    fitButton.disabled = busy || stage !== 1 || (conditionalMode && !conditioningChecked);
     generateButton.disabled = busy || stage < 2;
-    generateButton.textContent = stage >= 3 ? '3 · Resample' : '3 · Generate';
+    fitButton.textContent = conditionalMode ? '3 · Fit MLP' : '2 · Fit MLP';
+    const generateStep = conditionalMode ? 4 : 3;
+    generateButton.textContent = stage >= 3
+      ? `${generateStep} · Resample`
+      : `${generateStep} · Generate`;
     gaussianButton.dataset.current = String(stage === 0 && !busy);
-    fitButton.dataset.current = String(stage === 1 && !busy);
+    checkConditioningButton.dataset.current = String(conditionalMode && stage === 1 && !conditioningChecked && !busy);
+    fitButton.dataset.current = String(stage === 1 && (!conditionalMode || conditioningChecked) && !busy);
     generateButton.dataset.current = String(stage >= 2 && !busy);
     unconditionalButton.disabled = busy;
     conditionalButton.disabled = busy;
@@ -1174,6 +1214,7 @@
     runToken += 1;
     busy = false;
     stage = 0;
+    conditioningChecked = false;
     seed += 31;
     data = makeData();
     transport = buildTransport(data, seed);
@@ -1273,6 +1314,18 @@
       transport.scores.length - 1,
       transport.scores.at(-1),
     );
+    syncControls();
+  });
+
+  checkConditioningButton.addEventListener('click', () => {
+    if (busy || !conditionalMode || stage !== 1) return;
+    conditioningChecked = true;
+    const [upperScore, lowerScore] = transport.conditionScores;
+    setStatus(
+      'Conditioning checked',
+      `Upper G ${upperScore.toFixed(2)} · lower G ${lowerScore.toFixed(2)} · iid target 1.`,
+    );
+    renderConditioningCheck();
     syncControls();
   });
 

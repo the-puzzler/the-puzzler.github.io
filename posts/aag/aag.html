@@ -131,8 +131,9 @@
     <div class="aag-demo-controls" aria-label="AAG demonstration stages">
       <button type="button" id="aag-reset">Reset</button>
       <button type="button" id="aag-gaussianise">1 · Whiten + Gaussianise</button>
-      <button type="button" id="aag-fit" disabled>2 · Fit MLP</button>
-      <button type="button" id="aag-generate" disabled>3 · Generate</button>
+      <button type="button" id="aag-check-conditioning" disabled>2 · Check conditioning</button>
+      <button type="button" id="aag-fit" disabled>3 · Fit MLP</button>
+      <button type="button" id="aag-generate" disabled>4 · Generate</button>
     </div>
 
     <div class="aag-condition-controls" id="aag-condition-controls" aria-label="Conditional generation label">
@@ -140,6 +141,7 @@
       <button type="button" data-aag-condition="0" class="is-active" aria-pressed="true">Upper moon</button>
       <button type="button" data-aag-condition="1" aria-pressed="false">Lower moon</button>
     </div>
+
   </section>
 
   <div class="newgen-scaling-summary">
