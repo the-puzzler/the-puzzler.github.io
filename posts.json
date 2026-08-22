@@ -1,5 +1,13 @@
 [
   {
+    "title": "Amortised Assignment Generation",
+    "date": "2026-08-22",
+    "path": "posts/aag/aag.html",
+    "description": "One step generation by efficiently pre-assigning gaussian latents to samples.",
+    "social_image": "posts/aag/assets/celeba_cond_attributes.png",
+    "tags": ["Generative Modelling"]
+  },
+  {
     "title": "Curriculum Mining",
     "date": "2026-07-26",
     "path": "posts/curriculum-mining/curriculum-mining.html",

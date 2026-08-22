@@ -28,7 +28,7 @@ function formatDate(iso) {
   }
 }
 
-const HOME_FILTER_TAGS = ['LLM', 'RL', 'Robotics', 'Biology', 'World Modelling', 'Self-Supervision'];
+const HOME_FILTER_TAGS = ['LLM', 'RL', 'Robotics', 'Biology', 'World Modelling', 'Generative Modelling', 'Self-Supervision'];
 let homePostsCache = [];
 let activeHomeTags = new Set();
 let homeSearchQuery = '';
