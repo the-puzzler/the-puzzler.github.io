@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Microbiome Modelling | the-puzzler</title>
+  <meta name="description" content="Microbiome World Modelling.">
+  <meta name="author" content="Matteo Peluso">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://the-puzzler.github.io/blog/micro-modelling/">
+
+  <meta property="og:title" content="Microbiome Modelling">
+  <meta property="og:description" content="Microbiome World Modelling.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="the-puzzler">
+  <meta property="og:url" content="https://the-puzzler.github.io/blog/micro-modelling/">
+  <meta property="og:image" content="https://the-puzzler.github.io/posts/micro-modelling/micro-modelling-imgs/input-space.jpg">
+  <meta property="article:published_time" content="2025-09-29">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Microbiome Modelling">
+  <meta name="twitter:description" content="Microbiome World Modelling.">
+  <meta name="twitter:image" content="https://the-puzzler.github.io/posts/micro-modelling/micro-modelling-imgs/input-space.jpg">
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Microbiome Modelling","description":"Microbiome World Modelling.","datePublished":"2025-09-29","dateModified":"2025-09-29","mainEntityOfPage":"https://the-puzzler.github.io/blog/micro-modelling/","url":"https://the-puzzler.github.io/blog/micro-modelling/","image":["https://the-puzzler.github.io/posts/micro-modelling/micro-modelling-imgs/input-space.jpg"],"keywords":["Biology","World Modelling"],"author":{"@type":"Person","name":"Matteo Peluso"},"publisher":{"@type":"Organization","name":"the-puzzler"}}</script>
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;M&lt;/text&gt;&lt;/svg&gt;">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=20260728a">
+  <link rel="stylesheet" href="/posts/micro-modelling/micro-modelling.css">
+  <script defer src="/script.js?v=20260823seo2"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="mathjax" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <script type="module" src="/posts/micro-modelling/micro-modelling.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJZJKLZKHH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QJZJKLZKHH');
+  </script>
+</head>
+<body data-static-post-path="posts/micro-modelling/micro-modelling.html" data-static-post-slug="micro-modelling">
+  <div class="container">
+    <header class="header">
+      <div class="brand">the-puzzler <span class="badge">Matteo</span></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="https://x.com/MozarellaPesto" target="_blank" rel="noreferrer">X</a>
+        <a href="https://github.com/the-puzzler" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="/">Home</a>
+      </nav>
+    </header>
+
+    <section class="page post" data-post="micro-modelling">
+<h1>Microbiome World Modelling</h1>
+<p>
+
+Your gut can
+<a href="https://www.nature.com/articles/s41467-022-29760-0.pdf">increase your IQ</a>, give you
+ <a href="https://www.nature.com/articles/s41591-019-0485-4.pdf">better cardio</a>, let you
+  <a href="https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0288718">eat ice cream all day and not get fat</a>
+  and make you feel <a href="https://academic.oup.com/nutritionreviews/article/83/7/e1504/7934047">euphoria</a>.
+  All you need is a good microbiome.
+
+  <br>
+  <br>
+    The food you eat plays a massive role, but so do factors outside your control.
+    You inherit your microbiome from your mother at birth, then from your environment as you grow up.
+    You are covered in nooks and crannies in which microbes form resilient communities.
+    Most of the time, they are neutral or beneficial, but sometimes they can fall into negative stable states.
+    Due to the enclosed nature of these environments, these states can embed themselves for the long haul and then be passed on to your children.
+    In fact, it is thought that over the past 200 years of <i>modernisation</i>, we have seen an <a href="https://www.nature.com/articles/s41579-019-0191-8.pdf">extinction in microbiome diversity</a>, potentially irreparable.
+
+
+</p>
+<p>
+
+    Clearly there is something to study here, and even better, model. As of today, the space is wide open.
+    It is still not clear how these microbes have such a profound effect on us.
+    In this post, I will outline my research on this topic and attempts to create a microbiome world model
+    that understands the complexities of the abstract interactions between microbes across as many contexts
+    as possible. This should allow the model to build a general understanding of microbial interactions.
+
+</p>
+
+<hr>
+
+<h2>What is a Microbiome?</h2>
+<p>
+    A microbiome is a community of microorganisms—including bacteria, viruses, fungi, and other microbes—that inhabit a specific environment.
+    In humans, the microbiome primarily resides in the gut but can also be found on the skin, in the mouth, and in other areas of the body.
+    Basically, anywhere there is a surface or crevice, there is a microbiome. The more protected it is from the environment,
+    the more embedded and stable that microbiome will be.
+
+
+    <br>
+    <br>
+
+    They interact with each other in complex ways and form communities with emergent properties. For example,
+    in your mouth, bacteria work together to form a biofilm that protects them from the environment and provides
+    a safe space for consuming nutrients (and causing cavities).
+
+
+    <img src="posts/micro-modelling/micro-modelling-imgs/biofilm-img.jpg" alt="Biofilm example" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+
+</p>
+
+<hr>
+<h2>What can we aim to achieve?</h2>
+<p>
+
+
+    If we can build a model that understands the interactions between microbes, we can build targeted pro-biotics Herculean enough to reverse degenerative stable states to:
+
+    <ul>
+        <li>Increase our IQ</li>
+        <li>Get rid of diseases like IBS, eczema, auto-immune etc,</li>
+        <li>Becomes marathon runners</li>
+        <li>Eat pizza without consequence</li>
+        <li><a href="https://bmjopengastro.bmj.com/content/bmjgast/6/1/e000325.full.pdf">Become drunk 24/7</a> (although technically already possible)</li>
+
+    </ul>
+    Current methods struggle with this because simply sending random “good” microbes into the gut is not enough.
+    We need a targeted approach that takes into account the existing microbial community,
+    displacing only the organisms we don't want and ensuring the ones we do want can plausibly survive there.
+
+</p>
+
+<hr>
+
+<h1>Data</h1>
+
+<p>
+    Before we can start modelling we need some data.
+    For this project I have been using data from <a href="https://microbeatlas.org/landing" target="_blank" rel="noreferrer">MicrobeAtlas</a>
+    (<a href="https://www.biorxiv.org/content/10.1101/2025.07.18.665519v1" target="_blank" rel="noreferrer">paper</a>).
+
+    <br>
+    <br>
+    MicrobeAtlas is the largest microbiome database to date. It contains millions of samples from various environments,
+    including human, animal, and environmental sources. For each sample, we also have extensive textual metadata we can use.
+
+    <br>
+    <br>
+    A sample consists of a list of present microbes and their abundances (how many there were), but we will treat them only as present/absent here.
+
+
+<img src="posts/micro-modelling/micro-modelling-imgs/data-example.png"  style="display:block; margin:20px auto; max-width:100%; height:auto;">
+</p>
+
+<hr>
+
+<h2>Representation</h2>
+<p>
+    An important question to ask is: how do we represent microbes in a way that a model can understand?
+This is a tricky question because microbes are not like words in a sentence; they do not have a fixed order or structure.
+Even defining a microbe can be somewhat tricky (ultimately, they're just bags of DNA).
+
+    <br>
+    <br>
+    Here I choose to use DNA language models to embed 16S rRNA sequences (a widely accepted, uniquely identifying DNA marker) into a common space.
+    This way, we can use a parameter-efficient transformer architecture without requiring learned embeddings.
+
+    <br>
+    <br>
+    From MicrobeAtlas, we now have a vocabulary size of ~100k unique DNA pieces/microbes. Plotting them in DNA space now looks like this:
+    <img src="posts/micro-modelling/micro-modelling-imgs/input-space.jpg" alt="16S input space" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+    The different clusters represent Archea (e.g. Methanobrevibacter), Bacteria (e.g. lactobacillus), and Eukaryota (e.g. human, amoeba, etc.).
+
+</p>
+
+<hr>
+<h1> Model Objective</h1>
+<p>
+<div class="img-scroll">
+  <img src="posts/micro-modelling/micro-modelling-imgs/model-setup.png" alt="Model Architecture" style="display:block; margin:20px auto; max-width:none; height:auto; width:800px;">
+</div>
+
+    The model was trained using a cross-entropy (CE) loss objective to predict the presence or absence of microbes in a sample given the other microbes present.
+    In practice, the model sees a putative sample comprising the DNA embeddings of the present microbes and textual metadata (embedded with an LLM).
+    For each embedding, it then outputs a confidence score indicating how likely that microbe truly belongs to the sample.
+
+    <br>
+    <br>
+    Thus, to make this difficult, I used a bernouli noising strategy. Adding embeddings to confuse the model and as such make it learn the true relationships.
+</p>
+<hr>
+<h2>Why no Auto-Regression?</h2>
+<p>
+
+    I opted not to use auto-regression and instead use this quasi-contrastive approach because microbes in a sample are not ordinal. It doesn't make sense to impose an order on
+    them when they more naturally exist as unordered sets.
+    This means there is no positional embedding whatsoever; the transformer operation is entirely permutation-invariant.
+    <br>
+    <br>
+    This method also avoids projecting back to vocabulary space, which would be very expensive given the size of the vocabulary.
+    It also means the model is more generalised beause it has an open vocabulary (any DNA embedding can go in, even if here we stick to a predefined set from MicrobeAtlas).
+
+</p>
+
+<hr>
+<h1>Training</h1>
+<p>
+    The model was trained on ~2M samples from MicrobeAtlas. I used a batch size of 32 and trained for 1 epoch.
+    The model was trained using AdamW with a learning rate of 1e-4. The model was trained on a single
+    V100 for ~7 hours. I trained two versions of the model. Large:800k params, and small:50k params.
+</p>
+<img src="posts/micro-modelling/micro-modelling-imgs/loss-vs-batch.png" alt="Loss Curve" style="display:block; margin:20px auto; max-width:100%; height:auto;">
+
+<hr>
+<h1>Results/Eval</h1>
+<p>
+    Now for the interesting part. What did the model learn?
+    First lets look at how the models representation changes as we pass a noised sample through its layers.
+    Below is a UMAP for first the small then the large model. The first subplot on both represents the DNA space.
+
+<div class="img-scroll">
+    Small Model
+    <img src="posts/micro-modelling/micro-modelling-imgs/small-layers.jpg" alt="UMAP comparison" style="display:block; margin:20px auto;  height:auto;">
+    Large Model
+    <img src="posts/micro-modelling/micro-modelling-imgs/large-layers.jpg" alt="UMAP comparison" style="display:block; margin:20px auto; height:auto;">
+</div>
+</p>
+
+
+<p>
+    In these figures the triangles represent the noise microbes and the colours
+    represents the final logits they were assigned (remember lower logit == less likely to be here). We can clearly see in both cases, the triangles are relativly
+    evenly distrubuted in the DNA space, but as the model processes them, they are slowly removed.
+    <br>
+    <br>
+    Wow, so we can clearly see that the larger model has a much better go at figuring out which microbes
+    were original and which were added. You'll also notice if you look closely that some triangles are not given
+    lower logits whilst some circles are. This is likely because even the ground truth is somewhat noisey and stochastic.
+</p>
+
+<hr>
+<h2>Gingivitis Eval</h2>
+
+<p>
+    The next question I have is, can we use this model, that was never trained on any dynamics or concepts of time, to predict which
+    microbes will be present at another time step and which will not? I call this test: 'drop-out or colonise?'
+
+    <br>
+    <br>
+
+    To do this we will be using a held out gingivits dataset. This dataset consists of samples from patients with induced gingivitis over
+    the course of a month. There is no finetuning or classification head. We simply take the model and run 0-shot.
+</p>
+<p>
+<h3>Drop-Out Test</h3>
+
+<div class="img-scroll">
+    <img src="posts/micro-modelling/micro-modelling-imgs/drop-out-test.png" alt="Dropout ROC" style="display:block; margin:20px auto; max-width:none; height:auto; width:800px;">
+</div>
+
+
+    Wow again! Not only is the larger model (latter figures) better at this task, but both models are doing
+    far better than random chance! This is very exciting because it means the model has learned some
+    underlying representation of how microbes interact with each other. This is despite never being trained
+    on any temporal data. In otherwords: given a set of microbes, the model can predict which ones are likely to drop out
+    in the future/past. Hence the model has learned: given this set of microbes: these ones are stable and these ones are not. Note the model is doing
+    this over diverse conditions in this dataset (first patients have 'healthy' oral biomes, then ginigivitis, then 'healthy' again).
+</p>
+
+<p>
+<h3>Colonise Test</h3>
+
+<div class="img-scroll">
+    <img src="posts/micro-modelling/micro-modelling-imgs/colonise-test.png" alt="Colonise ROC" style="display:block; margin:20px auto; max-width:none; height:auto; width:800px;">
+</div>
+
+    Another good result! Not quite as good but this test is much harder. Here the model must predict which microbes will newly appear
+    in the next time step. I tested this by taking microbes that were present in other samples but not at a given time point t.
+    Then I would place the microbes into t and see if the model predicting higher logits on these putative microbes corresponded with
+    higher liklihood of that microbe appearing in the future.
+</p>
+<h3>What does this mean?</h3>
+<p>
+    Both of these results will be super useful for designing targeted pro-biotics as they mean we can cheaply run
+    millions of experiments in silico and optimise the logit space for the microbes we want to drop out/colonise.
+    It should also be noted that the dataset itself is inherently noisey and the nature of microbiomes is probably stochastic, so perfect
+    predictions are not to be expected.
+
+</p>
+
+<hr>
+<h2>Infants</h2>
+<p>
+    Lets change tack here and see whether the final embeddings produced by the model might also be good as embeddings/representations of samples.
+    To do this, I will use a dataset of samples taken from infant guts at different ages, some born by C-section and some vaginally.
+    The goal here is to see whether the models learned embeddings can predict age and birth mode.
+
+    <br>
+    <br>
+    Given the implications of the microbiome for health outcomes, if we can tell them apart, that means the model easily finds patterns that differentiate the states.
+    This would justify the recently adopted, somewhat medieval, practice of vaginal seeding for C-section born infants.
+
+
+    <br>
+    <br>
+    First lets take a look at a PCA of the embeddings produced by our models for the samples, this will show us
+    whether the model has learned any interesting structure without any fine-tuning or classification heads.
+</p>
+
+<hr>
+Small Model
+<img src="posts/micro-modelling/micro-modelling-imgs/3d-pca.jpg" alt="PCA of embeddings" style="display:block; margin:20px auto; height:auto; width:300px;">
+Large Model
+<img src="posts/micro-modelling/micro-modelling-imgs/2d-pca.jpg" alt="3D PCA of embeddings" style="display:block; margin:20px auto; height:auto; width:300px;">
+<hr>
+<p>
+    The first PCA comes from the small model and the second from the large model. I used 2d for the large model
+    because it was easier to understand. In both cases we can see that the model has learned some very obvious structure.
+    It clearly inherently differentiates between the different age groups and shows an almost monotonic time progression between them.
+    Again this data was totally unseen and this is 0-shot (no finetuning or classification head).
+
+    <br>
+    <br>
+    Now lets see if we can use these embeddings to classify whether an infant was born by C-section or vaginally and what age they are.
+    I did a 5x cross validation with a logistic regression head on top of the frozen embeddings.
+</p>
+<div class="img-scroll">
+    <img src="posts/micro-modelling/micro-modelling-imgs/small-infants.jpg"  style="display:block; margin:20px auto;height:auto; width:500px;">
+    <img src="posts/micro-modelling/micro-modelling-imgs/large-infants.jpg" style="display:block; margin:20px auto;height:auto; width:500px;">
+</div>
+
+<p>
+    Again we see that the larger model is better, but both models are doing far better than random chance.
+    For comparison I show the results of a comparable method from MGM (<a href="https://www.biorxiv.org/content/10.1101/2024.12.30.630825v1.full" target="_blank" rel="noreferrer">paper</a>).
+    Their model has ~2M parameters and they fine-tuned on the infants data (unlike my frozen model approach).
+</p>
+<div class="img-scroll">
+    <img src="posts/micro-modelling/micro-modelling-imgs/mgm-infants.png" style="display:block; margin:20px auto;height:auto; width:500px;">
+</div>
+
+<hr>
+<h3>What does this mean?</h3>
+<p>
+    This means that the models embeddings are rich, and in this embedding space, there is a clear structure that differentiates the different age groups
+    and birth modes. In fact we can see that even at 5Ys of age the model embeddings differentiate between C-section and vaginally born infants. Clearly,
+    the birth mode is having long lasting effects on the microbiome.
+    <br>
+    <br>
+    Linking back to our discussion on health, IQ, cardio, etc, who knows what the long term consequences of this difference are?
+    Given our results in colonization, maybe we could make a per-indivudal pro-biotic to help C-section born infants? (Although the vaginal seeding practice is probably enough).
+</p>
+
+<hr>
+
+<h1>Conclusion</h1>
+<p>
+    In this post I have outlined my work on building a microbiome world model.
+    The model was trained on millions of samples from MicrobeAtlas and was able to learn
+    interesting representations of microbial interactions. These representations were then
+    shown to be useful for predicting which microbes would drop out or colonise in a held out
+    gingivitis dataset. Furthermore, the final embeddings produced by the model were rich enough to be
+    useful for classifying whether an infant was born by C-section or vaginally and their age.
+    <br>
+    <br>
+    One day, this model could be used to design targeted and individual pro-biotics to help us all become super-humans.
+    <br>
+    <br>
+    There is still much work to be done in this field, but I believe that this approach has great potential.
+    I think the use of the DNA embeddings was crucial to the success of this model.
+    <br>
+    <br>
+     <a href="https://github.com/the-puzzler/Microbiome-Modelling" target="_blank" rel="noreferrer">Code</a>
+</p>
+
+
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="y"></span> the-puzzler</span>
+      <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+    </footer>
+  </div>
+</body>
+</html>

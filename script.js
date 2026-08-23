@@ -369,12 +369,13 @@ function buildPostTOC(contentEl) {
     const li = document.createElement('li');
     li.className = (h.tagName === 'H3' && !h.hasAttribute('data-toc-top')) ? 'toc-h3' : 'toc-h2';
     const a = document.createElement('a');
-    a.href = `#${h.id}`;
+    const headingUrl = `${location.pathname}${location.search}#${h.id}`;
+    a.href = headingUrl;
     a.textContent = h.textContent.trim();
     a.addEventListener('click', (e) => {
       e.preventDefault();
       h.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      history.replaceState(null, '', `#${h.id}`);
+      history.replaceState(null, '', headingUrl);
       // Collapse hover panel after mouse click (avoid sticky focus-within state)
       a.blur();
     });
@@ -704,7 +705,7 @@ function snapToPage(bookEl, delta) {
 }
 function getCurrentPostPath() {
   const params = new URLSearchParams(location.search);
-  return params.get('p') || '';
+  return params.get('p') || document.body?.dataset.staticPostPath || '';
 }
 
 function slugFromPostPath(postPath = '') {
@@ -716,13 +717,57 @@ function slugFromPostPath(postPath = '') {
   return parts.length ? parts[parts.length - 1] : '';
 }
 
+function setMetaContent(selector, attributes, content) {
+  let element = document.head.querySelector(selector);
+  if (!element) {
+    element = document.createElement('meta');
+    Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+}
+
+async function applyLegacyPostMetadata(path, fallbackTitle = '') {
+  const posts = await loadPosts().catch(() => []);
+  const post = posts.find((candidate) => candidate.path === path) || {};
+  const slug = post.slug || slugFromPostPath(path);
+  if (!slug) return;
+
+  const title = post.title || fallbackTitle || slug;
+  const description = post.description || 'Notes on deep learning, physics and biology.';
+  const canonicalUrl = `${location.origin}/blog/${encodeURIComponent(slug)}/`;
+  const imageUrl = post.social_image
+    ? new URL(post.social_image, `${location.origin}/`).toString()
+    : `${location.origin}/ghibme.jpg`;
+
+  document.title = `${title} | the-puzzler`;
+  let canonical = document.head.querySelector('link[rel="canonical"]');
+  if (!canonical) {
+    canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    document.head.appendChild(canonical);
+  }
+  canonical.href = canonicalUrl;
+
+  setMetaContent('meta[name="description"]', { name: 'description' }, description);
+  setMetaContent('meta[name="robots"]', { name: 'robots' }, 'index, follow, max-image-preview:large');
+  setMetaContent('meta[property="og:title"]', { property: 'og:title' }, title);
+  setMetaContent('meta[property="og:description"]', { property: 'og:description' }, description);
+  setMetaContent('meta[property="og:type"]', { property: 'og:type' }, 'article');
+  setMetaContent('meta[property="og:url"]', { property: 'og:url' }, canonicalUrl);
+  setMetaContent('meta[property="og:image"]', { property: 'og:image' }, imageUrl);
+  setMetaContent('meta[name="twitter:title"]', { name: 'twitter:title' }, title);
+  setMetaContent('meta[name="twitter:description"]', { name: 'twitter:description' }, description);
+  setMetaContent('meta[name="twitter:image"]', { name: 'twitter:image' }, imageUrl);
+}
+
 async function getShareUrlForCurrentPost() {
   const p = getCurrentPostPath();
   if (!p) return location.href;
 
   // If URL is already a short slug (?p=curriculum-is-key), use it directly.
   if (!p.includes('/') && !p.endsWith('.html')) {
-    return `${location.origin}/share/${encodeURIComponent(p)}.html`;
+    return `${location.origin}/blog/${encodeURIComponent(p)}/`;
   }
 
   // For legacy/full paths, resolve through posts.json to find canonical slug.
@@ -733,13 +778,13 @@ async function getShareUrlForCurrentPost() {
       found = posts.find(x => x.path.includes(`/${p}/`) || x.path.endsWith(`/${p}.html`));
     }
     const slug = found ? slugFromPostPath(found.path || '') : slugFromPostPath(p);
-    if (slug) return `${location.origin}/share/${encodeURIComponent(slug)}.html`;
+    if (slug) return `${location.origin}/blog/${encodeURIComponent(slug)}/`;
   } catch (e) {
     // Fall through to local slug parsing fallback.
   }
 
   const fallbackSlug = slugFromPostPath(p);
-  if (fallbackSlug) return `${location.origin}/share/${encodeURIComponent(fallbackSlug)}.html`;
+  if (fallbackSlug) return `${location.origin}/blog/${encodeURIComponent(fallbackSlug)}/`;
   return location.href;
 }
 
@@ -825,11 +870,11 @@ async function copyCurrentPostRawText() {
 function makeHref(path) {
   if (path.startsWith('http')) return path;
 
-  // Try to create a "Smart Slug" (?p=name)
-  // If path is "posts/name/name.html", we shorten to just "name"
+  // Canonical static article pages. Legacy ?p= links remain supported by
+  // renderPost(), but all new internal links point at indexable HTML.
   const matchSlug = path.match(/^posts\/([^\/]+)\/\1\.html$/);
   if (matchSlug) {
-    return `?p=${matchSlug[1]}`; // clean: ?p=micro-modelling
+    return `/blog/${encodeURIComponent(matchSlug[1])}/`;
   }
 
   // Fallback: Strip "posts/" prefix and ".html" suffix if present
@@ -1121,9 +1166,9 @@ async function renderPost() {
     loadSidecarAssets(path);
     document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
 
-    // Update Document Title
+    // Update title and point this legacy SPA route at its static canonical page.
     const h1 = contentEl.querySelector('h1');
-    if (h1) document.title = h1.innerText + " — " + "the-puzzler";
+    await applyLegacyPostMetadata(path, h1?.innerText || '');
 
     // Final follow-up fit (Only if book mode is active)
     if (window.matchMedia('(max-width: 560px)').matches && contentEl.closest('.post.book-mode')) {
@@ -1159,7 +1204,7 @@ function initControls() {
   applyPreferences();
 
   const params = new URLSearchParams(window.location.search);
-  const isHomePage = !params.get('p');
+  const isHomePage = !params.get('p') && !document.body?.dataset.staticPostPath;
 
   // Create Container
   let container = document.querySelector('.theme-controls');
@@ -1213,7 +1258,7 @@ function initControls() {
     homeBtn.style.lineHeight = '1';
     container.appendChild(homeBtn);
 
-    // B. Share Link Button (copy share/<slug>.html URL)
+    // B. Share Link Button (copy the canonical blog URL)
     const shareBtn = document.createElement('button');
     shareBtn.className = 'mode-btn';
     shareBtn.type = 'button';
@@ -1313,15 +1358,32 @@ function initControls() {
 // -----------------------------
 // Init
 // -----------------------------
+async function initStaticPost(path) {
+  const contentEl = document.querySelector('.page');
+  if (!contentEl) return;
+
+  contentEl.classList.add('post');
+  const slugMatch = path.match(/^posts\/([^\/]+)\//);
+  if (slugMatch) contentEl.dataset.post = slugMatch[1];
+  normalizeHeadings(contentEl);
+  buildPostTOC(contentEl);
+  await typesetAfterLoad(contentEl);
+  document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
+}
+
 addEventListener('DOMContentLoaded', () => {
   console.log('[Init] DOMContentLoaded');
   initControls();
 
   const params = new URLSearchParams(window.location.search);
   const p = params.get('p');
+  const staticPostPath = document.body?.dataset.staticPostPath || '';
   console.log('[Init] Params:', p);
 
-  if (p) {
+  if (staticPostPath) {
+    console.log('[Init] Initializing static post');
+    initStaticPost(staticPostPath);
+  } else if (p) {
     console.log('[Init] Delegating to renderPost');
     renderPost();
   } else {

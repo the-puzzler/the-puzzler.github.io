@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Pan1ni | the-puzzler</title>
+  <meta name="description" content="Making a goal seeking policy with video pretraining only">
+  <meta name="author" content="Matteo Peluso">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://the-puzzler.github.io/blog/pan1ni/">
+
+  <meta property="og:title" content="Pan1ni">
+  <meta property="og:description" content="Making a goal seeking policy with video pretraining only">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="the-puzzler">
+  <meta property="og:url" content="https://the-puzzler.github.io/blog/pan1ni/">
+  <meta property="og:image" content="https://the-puzzler.github.io/posts/pan1ni/assets/thumb.png">
+  <meta property="article:published_time" content="2026-07-19">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Pan1ni">
+  <meta name="twitter:description" content="Making a goal seeking policy with video pretraining only">
+  <meta name="twitter:image" content="https://the-puzzler.github.io/posts/pan1ni/assets/thumb.png">
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Pan1ni","description":"Making a goal seeking policy with video pretraining only","datePublished":"2026-07-19","dateModified":"2026-07-19","mainEntityOfPage":"https://the-puzzler.github.io/blog/pan1ni/","url":"https://the-puzzler.github.io/blog/pan1ni/","image":["https://the-puzzler.github.io/posts/pan1ni/assets/thumb.png"],"keywords":["World Modelling","Self-Supervision"],"author":{"@type":"Person","name":"Matteo Peluso"},"publisher":{"@type":"Organization","name":"the-puzzler"}}</script>
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;M&lt;/text&gt;&lt;/svg&gt;">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=20260728a">
+  <link rel="stylesheet" href="/posts/pan1ni/pan1ni.css">
+  <script defer src="/script.js?v=20260823seo2"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="mathjax" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <script type="module" src="/posts/pan1ni/pan1ni.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJZJKLZKHH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QJZJKLZKHH');
+  </script>
+</head>
+<body data-static-post-path="posts/pan1ni/pan1ni.html" data-static-post-slug="pan1ni">
+  <div class="container">
+    <header class="header">
+      <div class="brand">the-puzzler <span class="badge">Matteo</span></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="https://x.com/MozarellaPesto" target="_blank" rel="noreferrer">X</a>
+        <a href="https://github.com/the-puzzler" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="/">Home</a>
+      </nav>
+    </header>
+
+    <section class="page post" data-post="pan1ni">
+<h1 data-toc-variant="card">Pan1ni</h1>
+<p class="post-subtitle">Making a goal seeking policy with video pretraining only.</p>
+
+<figure class="pan1ni-main-figure pan1ni-gallery" id="pan1ni-gallery"
+        aria-label="Gallery of Pan1ni solving procedurally generated NetHack levels">
+  <div class="pan1ni-arcade">
+    <button type="button" class="pan1ni-arcade-btn" data-dir="-1" aria-label="Previous clip">&#9664;</button>
+    <div class="pan1ni-screen">
+      <video class="pan1ni-clip" muted loop playsinline preload="auto"></video>
+      <video class="pan1ni-clip" muted loop playsinline preload="auto"></video>
+      <span class="pan1ni-clip-count" aria-hidden="true"></span>
+    </div>
+    <button type="button" class="pan1ni-arcade-btn" data-dir="1" aria-label="Next clip">&#9654;</button>
+  </div>
+  <figcaption class="pan1ni-gallery-cap">
+    <span class="pan1ni-clip-note"></span>
+    <span class="pan1ni-clip-stats"></span>
+  </figcaption>
+  <script type="application/json" class="pan1ni-gallery-data">
+  [
+    {"src":"posts/pan1ni/assets/adventure/d20-WIN-Dlvl9.mp4","dist":20,"kills":0,"note":"20 tiles on level 9"},
+    {"src":"posts/pan1ni/assets/attacks/ep24-Dlvl8-d16-atk1.mp4","dist":16,"kills":1,"note":"a monster down on the way"},
+    {"src":"posts/pan1ni/assets/attacks/ep27-Dlvl11-d16-atk1.mp4","dist":16,"kills":1,"note":"fighting past a monster on level 11"},
+    {"src":"posts/pan1ni/assets/highlights/1_hero_20tiles_in_23steps_lvl5.mp4","dist":20,"kills":0,"note":"20 tiles in 23 steps"},
+    {"src":"posts/pan1ni/assets/highlights/4_perfect_line_6tiles_7steps.mp4","dist":6,"kills":0,"note":"a perfect line: 6 tiles, 7 steps"},
+    {"src":"posts/pan1ni/assets/highlights/3_17tiles_lvl1.mp4","dist":17,"kills":0,"note":"17 tiles across the level"},
+    {"src":"posts/pan1ni/assets/highlights/2_14tiles_in_21steps_lvl2.mp4","dist":14,"kills":0,"note":"14 tiles in 21 steps"},
+    {"src":"posts/pan1ni/assets/highlights/5_10tiles_in_18steps.mp4","dist":10,"kills":0,"note":"10 tiles in 18 steps"},
+    {"src":"posts/pan1ni/assets/adventure/d30-WIN-Dlvl8.mp4","dist":30,"kills":0,"note":"a 30-tile journey on level 8"}
+  ]
+  </script>
+</figure>
+
+<p class="pan1ni-gallery-note">
+  Every clip is a procedurally generated level the model has never seen,
+  reaching a goal it is shown as an image, never told as text.
+</p>
+
+<section class="pan1ni-tweet-row">
+  <div class="pan1ni-tweet">
+    <div class="pan1ni-tweet-clip">
+      <blockquote class="twitter-tweet" data-dnt="true" data-width="360">
+        <a href="https://twitter.com/MozarellaPesto/status/2077451333787869616">the tweet that started this</a>
+      </blockquote>
+    </div>
+  </div>
+  <div class="pan1ni-tweet-text">
+    <h3 class="pan1ni-tweet-head" id="introduction" data-toc-top>Introduction</h3>
+    <p>
+      This is the tweet that inspired this project.
+      <a href="https://pantograph.com" target="_blank" rel="noreferrer">Pantograph</a>
+      recently released
+      <a href="https://pantograph.com/journal/pan-1" target="_blank" rel="noreferrer">Pan-1</a>,
+      in which they show that it <em>is</em> possible to get goal-seeking
+      behaviour (the kind you would normally train an RL policy for)
+      from general, scalable pretraining. Their blog post doesn't mention their
+      exact architecture, loss function, or design choices, which inspired me to
+      have a go at the same challenge myself: in a simpler game
+      (NetHack), and in only two days (I have a job now).
+    </p>
+  </div>
+</section>
+
+<section class="lead-block">
+  <div class="prologue-questions" role="note" aria-label="Core questions">
+    <p>How do you get goal-directed behaviour without RL? <a href="/blog/pan1ni/#pan1" class="goto-link">GO TO</a></p>
+    <p>My interpretation of Pan-1: Pan1ni <a href="/blog/pan1ni/#architecture" class="goto-link">GO TO</a></p>
+    <p>Does it actually reach its goals? <a href="/blog/pan1ni/#results" class="goto-link">GO TO</a></p>
+  </div>
+
+  <div class="pan1ni-cta-row">
+    <a href="posts/pan1ni/nethack-navigator/index.html" class="pan1ni-play">
+      <span class="pan1ni-play-btn">▶ PLAY HERE</span>
+      <span class="pan1ni-play-sub">in-browser demo · no install · insert coin</span>
+    </a>
+
+    <a href="https://github.com/the-puzzler/pan1ni" class="pan1ni-github" target="_blank" rel="noreferrer">
+      <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor">
+        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+      </svg>
+      <span>View the code on GitHub</span>
+    </a>
+  </div>
+</section>
+
+<hr>
+
+<h2 id="pan1">The Pan-1 idea</h2>
+
+<section class="pan1ni-idea-row">
+  <p>
+    The core idea behind Pan-1 is elegant and simple. Training RL policies across
+    many tasks is not scalable. It would be much better if we could utilise
+    internet-scale video and still achieve the goal-seeking, intelligent policies
+    that emerge from RL. But how can we do this given we can't "simulate"
+    internet video (it's a static dataset)? The answer: instead of training a world/video
+    model that takes actions and previous frames to predict the next frame,
+    condition the model on a <em>goal</em> and previous frames to predict the
+    next frame. The goal is some future frame of the same video.
+    This way, the model is forced to construct a causal understanding of the
+    world: <em>"if this is the frame where I end up, what should come next?"</em>
+  </p>
+
+  <figure class="pan1ni-main-figure pan1ni-meme">
+    <img src="posts/pan1ni/assets/meme.png" alt="Drake-format meme: rejecting using RL to train a goal-seeking policy, approving using scalable pretraining to train a goal-seeking policy">
+    <figcaption>the pitch</figcaption>
+  </figure>
+</section>
+
+<p>
+  The payoff is that acting is now almost free: if the model can already
+  predict what should happen next on the way to a goal, all that's missing is
+  a small action head to translate "what happens next" into "what do I press".
+  That head can be trained cheaply afterwards, on a tiny amount of
+  action-labelled data.
+</p>
+
+<p>
+  Pantograph did not release their exact formulation, not even whether
+  they trained a pixel-space world model or a JEPA-style one. Hence, I came up
+  with my own formulation.
+</p>
+
+<blockquote class="callout">
+  Condition prediction on where you're going, and prediction becomes planning.
+</blockquote>
+
+<hr>
+
+<h2 id="architecture">Pan1ni: the architecture</h2>
+<p>
+  In my implementation, I chose to follow a JEPA-style method based on my
+  earlier <a href="/blog/la-leworldmodel/">la leWorldModel</a>:
+</p>
+
+<figure class="equation-figure">
+  \[
+    \hat{z}_{t+1} = P_\theta\!\left(z_{\le t},\, z_{g}\right),
+    \qquad g \sim \mathcal{U}\!\left(t+1,\, t+64\right)
+  \]
+  <figcaption>predict the next latent, conditioned on a latent from the future</figcaption>
+</figure>
+
+
+<p>
+  Unlike la leWorldModel, instead of using an inverse dynamics module/LAM to
+  learn latent actions, we simply go ahead in the sequence of contiguous frames
+  and grab one, up to 64 frames ahead.
+</p>
+
+<p>
+  The loss is nothing fancy either: a simple MSE between the predicted next
+  latent and the actual next latent, plus
+  <a href="/blog/practical-notes-on-lejepa/">SIGReg</a> to keep the latent space
+  from collapsing. The whole system is just two modules, an encoder that maps
+  a frame to a latent, and a predictor that takes the previous latents plus a
+  goal latent and outputs the next latent.
+</p>
+
+<figure class="equation-figure">
+  \[
+    \mathcal{L} = \bigl\lVert \hat{z}_{t+1} - z_{t+1} \bigr\rVert_2^2
+    + \mathcal{L}_{\mathrm{SIGReg}},
+    \qquad z = E_\phi(x)
+  \]
+  <figcaption>MSE in latent space between prediction and target, plus SIGReg against collapse</figcaption>
+</figure>
+
+<figure class="pan1ni-main-figure">
+  <img src="posts/pan1ni/assets/architecture.png" alt="Pan1ni architecture: frames are embedded to latents, the world model takes past latents and a future goal latent, and predicts the next latent, trained against the true next latent">
+  <figcaption>frames are embedded, the predictor sees the past plus a future goal frame, and predicts the next latent</figcaption>
+</figure>
+
+<hr>
+
+<h2 id="actions">Recovering actions</h2>
+<p>
+  The final piece is an inverse dynamics model (IDM). It takes the current
+  frame and the predicted next frame, and predicts the action that takes you
+  from one to the other. This is the small action head promised earlier: it
+  requires a much smaller dataset than pretraining, because the action behind
+  a frame-to-frame transition is normally self-evident. If the @ was here and
+  is now one tile west, you pressed west.
+</p>
+
+<p>
+  At inference time this closes the loop: the predictor imagines the next
+  latent on the way to the goal, and the IDM translates that imagined step
+  into a keypress.
+</p>
+
+<hr>
+
+<h2 id="training">Training</h2>
+<p>
+  Pan1ni is trained on human NetHack play from the NLD-NAO corpus: 290,331
+  games, each terminal frame rendered as tiles and cropped to a 9&times;9
+  player-centred window. The whole system is &approx;11.2M parameters. The
+  action head is trained afterwards on the frozen backbone, and its movement
+  labels come for free: a single-cell tty-cursor displacement gives one of
+  eight compass classes. For simplicity the action space is just these eight
+  compass moves, which in NetHack also covers attacking, since you attack by
+  moving into a monster. The full recipe is in the drop-down below.
+</p>
+
+<details class="pan1ni-specs">
+  <summary>
+    <h3 id="specifics" data-toc-skip>Specifics</h3>
+    <span class="pan1ni-specs-hint">click for the full recipe</span>
+  </summary>
+
+  <table class="pan1ni-spec-table">
+    <tbody>
+      <tr>
+        <th>Data</th>
+        <td>NLD-NAO human play (nld-nao-human-8shard), 290,331 games, 80/20 episode-level split (232,265 / 58,066)</td>
+      </tr>
+      <tr>
+        <th>Observation</th>
+        <td>MiniHack 16&times;16 tile atlas, 9&times;9 player-centred crop, 3&times;144&times;144 uint8 RGB</td>
+      </tr>
+      <tr>
+        <th>Encoder</th>
+        <td>ViT, 8 layers, width 320, &approx;10.4M params, 64-d latent</td>
+      </tr>
+      <tr>
+        <th>Predictor</th>
+        <td>goal-conditioned causal transformer, 4 layers, 8 heads, &approx;0.76M params</td>
+      </tr>
+      <tr>
+        <th>Conditioning</th>
+        <td>8-frame history + goal frame sampled &le;64 steps ahead</td>
+      </tr>
+      <tr>
+        <th>Objective</th>
+        <td>one-step MSE on next latent + SIGReg (weight 0.2, 256 slices)</td>
+      </tr>
+      <tr>
+        <th>Optimisation</th>
+        <td>AdamW, batch 64, 400k steps, LR 3&times;10<sup>&minus;4</sup> (0&ndash;100k) &rarr; 2&times;10<sup>&minus;4</sup> (100k&ndash;200k) &rarr; 1&times;10<sup>&minus;4</sup> (200k&ndash;400k)</td>
+      </tr>
+      <tr>
+        <th>Action head</th>
+        <td>MLP, 2 hidden layers of 1024, &approx;1.2M params, 5,000 steps, class-weighted cross-entropy</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The action head never sees pixels: it is trained on an inverse-dynamics
+    feature, the concatenation of the current latent, the goal-conditioned
+    predicted next latent, and their difference.
+  </p>
+</details>
+
+<figure class="pan1ni-main-figure">
+  <img src="posts/pan1ni/assets/training-curves-light.png" alt="Three training curves: effective rank of the latents rising to around 20 of 64, SIGReg loss falling and flattening, and held-out next-state MSE steadily decreasing, with learning-rate drops marked at 100k and 200k steps">
+  <figcaption>effective rank of the latents, SIGReg loss, and held-out next-state MSE; dashed lines mark the LR drops</figcaption>
+</figure>
+
+<hr>
+
+<h2 id="results">Results</h2>
+<p>
+  The action head is evaluated as a stochastic goal-reaching policy in full
+  procedural NetHack (NetHackScore-v0), rendered through the same tile
+  pipeline. Each run drops the agent a fixed distance from a goal tile and
+  gives it a step budget to get there; I sweep that distance from 3 to 30
+  tiles. Distance everywhere is Chebyshev (chessboard) distance, so a diagonal
+  step counts as one tile, matching NetHack's 8-way movement.
+</p>
+
+<p>
+  The baseline, <strong>masked-random</strong>, is a uniform random walk over
+  the eight compass moves that only skips steps into a visible wall, a closed
+  door, or off the map (it will still bump monsters and wander into fog).
+  Crucially the IDM policy runs under the <em>exact same mask</em>, so neither
+  side can waste a move on a wall. That makes the comparison fair: the only
+  difference between them is whether each step is chosen by the model or drawn
+  at random.
+</p>
+
+<figure class="pan1ni-main-figure pan1ni-results-figure">
+  <img class="pan1ni-theme-img"
+       src="posts/pan1ni/assets/results-light.png"
+       data-light="posts/pan1ni/assets/results-light.png"
+       data-dark="posts/pan1ni/assets/results-dark.png"
+       alt="Three panels of goal-success metrics versus goal distance for Pan1ni and a masked-random baseline. Pan1ni's exact-success and reached rates stay roughly flat near 65-90% out to 20 tiles, while masked-random falls to near zero by about 10 tiles; masked-random's mean best distance climbs steadily while Pan1ni's stays low.">
+
+  <figcaption>
+    <ul class="pan1ni-metric-list">
+      <li><b>exact</b> &mdash; stood on the goal tile exactly (same cell, same level) at some step.</li>
+      <li><b>reached</b> &mdash; got within one tile (Chebyshev &le; 1: the goal or any of its 8 neighbours) at some step.</li>
+      <li><b>mbd</b> &mdash; mean best distance, the nearest it ever got, in tiles, averaged over episodes. Lower is better.</li>
+    </ul>
+  </figcaption>
+</figure>
+
+<blockquote class="callout">
+  Pan1ni's success stays in the ~65&ndash;80% range all the way out to a goal
+  30 tiles away, while masked-random collapses to zero by about 10.
+</blockquote>
+
+<p class="pan1ni-caveat">
+  A caveat on the numbers: cells are only around 12&ndash;14 episodes (fewer at
+  the far end, distances 25 and 30 are n=4), so read individual cells as
+  indicative and the distance trend as the result.
+</p>
+
+<hr>
+
+<h2 id="closing">Closing thoughts</h2>
+<p>
+  I think goal-conditioned pretraining will have a role in the future of the
+  field. However, one of the fundamental limits of this method is that it
+  requires you to know what the goal looks like. In this case it is quite easy
+  for us to programmatically find legitimate final states, but in reality it
+  might not be the case.
+</p>
+
+<p>
+  Furthermore, only specifying a final state like this is an incomplete
+  instruction. For example, there are many ways in which a glass could end up
+  empty on a table: it could be because someone drank it, or because it was
+  spilled.
+</p>
+
+<p>
+  Nevertheless, I'm excited to see where this all goes.
+</p>
+
+<p class="pan1ni-github-row">
+  <a href="https://github.com/the-puzzler/pan1ni" class="pan1ni-github" target="_blank" rel="noreferrer">
+    <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+    </svg>
+    <span>View the code on GitHub</span>
+  </a>
+</p>
+
+<h2>Comments</h2>
+<div id="post-comments-thread"></div>
+
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="y"></span> the-puzzler</span>
+      <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+    </footer>
+  </div>
+</body>
+</html>

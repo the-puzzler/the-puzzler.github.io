@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Self-Organising Text | the-puzzler</title>
+  <meta name="description" content="Cellular Automata Inspired Self Organising Text">
+  <meta name="author" content="Matteo Peluso">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://the-puzzler.github.io/blog/self-org-text/">
+
+  <meta property="og:title" content="Self-Organising Text">
+  <meta property="og:description" content="Cellular Automata Inspired Self Organising Text">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="the-puzzler">
+  <meta property="og:url" content="https://the-puzzler.github.io/blog/self-org-text/">
+  <meta property="og:image" content="https://the-puzzler.github.io/posts/self-org-text/self-org-text-imgs/cover.png">
+  <meta property="article:published_time" content="2025-09-07">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Self-Organising Text">
+  <meta name="twitter:description" content="Cellular Automata Inspired Self Organising Text">
+  <meta name="twitter:image" content="https://the-puzzler.github.io/posts/self-org-text/self-org-text-imgs/cover.png">
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Self-Organising Text","description":"Cellular Automata Inspired Self Organising Text","datePublished":"2025-09-07","dateModified":"2025-09-07","mainEntityOfPage":"https://the-puzzler.github.io/blog/self-org-text/","url":"https://the-puzzler.github.io/blog/self-org-text/","image":["https://the-puzzler.github.io/posts/self-org-text/self-org-text-imgs/cover.png"],"keywords":["LLM"],"author":{"@type":"Person","name":"Matteo Peluso"},"publisher":{"@type":"Organization","name":"the-puzzler"}}</script>
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;M&lt;/text&gt;&lt;/svg&gt;">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=20260728a">
+  <link rel="stylesheet" href="/posts/self-org-text/self-org-text.css">
+  <script defer src="/script.js?v=20260823seo2"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="mathjax" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <script type="module" src="/posts/self-org-text/self-org-text.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJZJKLZKHH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QJZJKLZKHH');
+  </script>
+</head>
+<body data-static-post-path="posts/self-org-text/self-org-text.html" data-static-post-slug="self-org-text">
+  <div class="container">
+    <header class="header">
+      <div class="brand">the-puzzler <span class="badge">Matteo</span></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="https://x.com/MozarellaPesto" target="_blank" rel="noreferrer">X</a>
+        <a href="https://github.com/the-puzzler" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="/">Home</a>
+      </nav>
+    </header>
+
+    <section class="page post" data-post="self-org-text">
+<h1>Self-Organising Text</h1>
+<p>
+  Inspired by self-organising cellular automata and the broader idea that <em>simple local rules</em> can yield <em>emergent global intelligence</em>.
+  <br>
+  <br>
+  Here, I explore how self-organisation scales — starting from a physical basis in the Ising model.
+  Then, we will jump into the text space and see if its possible for textual tokens, <em>looking only at their neighbours</em>, to organise into coherent text.
+  <br>
+  <br>
+  I took a lot of inspiration from <a href="https://francesco215.github.io/Language_CA/" target="_blank" rel="noopener">
+    this</a> post by Francesco Sacco. If you find yourself wishing for a deeper understanding on emergence and the importance of the Ising model, I highly recommend you check it out.
+</p>
+
+<hr>
+
+<h2>Introduction: Self-organisation</h2>
+<p>
+  Self-organisation is a key principle in complex systems: local interactions can produce
+  surprising global order. Examples range from flocking birds to financial markets.
+</p>
+<ul>
+  <li><strong>Cellular automata</strong> → show how local update rules can produce global patterns.</li>
+  <li><strong>Markets</strong> → buyers/sellers act locally, prices and supply chains emerge globally.</li>
+  <li><strong>Neural systems</strong> → synapses adapt locally, intelligence emerges globally.</li>
+</ul>
+
+<p>
+  The question is, is there a way to, atleast roughly, model when a system has some degree of emergent capacity... or atleast know by its topology if it doesn't?
+</p>
+
+<hr>
+
+<h2>The Ising Model</h2>
+<p>
+  The Ising model gives a clean mathematical framework for how local interactions
+  <em>can</em> lead to collective alignment and, perhaps more crucially, when they <em>can't</em>. In one dimension, the conventional result says
+  no spontaneous magnetisation occurs — but with <em>interaction ranges above a critical threshold</em>,
+  self-organisation <em>is</em> possible.
+</p>
+
+<h3>Origins</h3>
+<p>
+    In 1925, Ising solves the 1D version of the model as a means of describing ferromagnetism: how local interactions, given the right conditions can reach a global order.
+    In the case of magnetism this means atomic spins being "suddenly" aigned causing the overall material to behave magnetically. He discovered that it is actually impossible in 1D!
+
+    The equation he used to describe the system is as follows:
+    $$H = -J \sum_{i=1}^N s_i s_{i+1}$$
+
+    where \( s_i \in \{-1,+1\} \) are spins and \( J \) is the coupling constant.
+    <br>
+    Simply, what this means is the energy contribution from a pair of neighboring spins is \( -J \) if they are aligned  and \( +J \) if they are anti-aligned.
+    <br>
+  </p>
+
+  <p>
+
+    I am summarising a bit here, but for a system, we can calculate its free energy.
+    <br>
+    The free energy tells us the balance between energy and entropy that determines the system's equilibrium.
+    <br>
+    More generally in thermodynamics, this is written as:
+    $$
+    F = U - T S,
+    $$
+    where \( U \) is the internal energy (the \( H \) from before) and \( S \) the entropy.
+    <br>
+    So, if we want to know whether it is likely that the system, with decreasing \( T \), will
+    collapse into an ordered state, we must compare the free energies of the possible states.
+    <br>
+    As \( T \) decreases the entropy term \( T S \) becomes less important, so the system will lean towards order
+    whenever the ordered state leads to a lower free energy than the disordered one.
+  </p>
+
+
+<h3>
+    The Kicker
+</h3>
+<p>
+  Here's the kicker however: the best case ordered scenario for a 1D sequence is
+  $$
+  U = - J L,
+  $$
+  where \( J \) is the interaction strength and \( L \) the system size.
+  <br>
+  But introducing a single domain wall only costs a finite energy (about \( 2J \)), while the number of possible
+  locations for such a wall grows with \( L \).
+  <br>
+  In fact, the entropy is given by
+  $$
+  S = k_B \ln(g),
+  $$
+  where \( g \) is the degeneracy, i.e. the number of accessible microstates. For the one–domain-wall case,
+  \( g = L - 1 \).
+  <br>
+  Therefore the entropy contribution is
+  $$
+  T S = T k_B \ln(L - 1),
+  $$
+  which increases without bound as \( L \) becomes large.
+</p>
+<p>
+  As a result, in 1D the system never collapses into a truly ordered state in the thermodynamic limit.
+  <br>
+  This is clear from comparing the finite energy cost of a domain wall, \( U = 2J \), with the entropy term.
+  As the sequence length increases,
+  $$
+  T k_B \ln(L - 1) \gg 2J,
+  $$
+  so the entropy always dominates for any \( T > 0 \).
+  <br>
+  Hence, only at absolute zero does the perfectly ordered state survive.
+  <br>
+  See the following simulation for a practical intuition ->
+</p>
+
+
+
+<hr>
+<h2>1D Ising Simulation</h2>
+<div id="ising-demo" class="ising-widget">
+  <div class="ising-controls">
+    <label>Temperature T:
+      <input id="ising-T" type="range" min="0.01" max="5" step="0.01" value="2.00">
+    </label>
+    <output id="ising-T-out">2.00</output>
+    <button id="ising-toggle">Start</button>
+    <button id="ising-step">Step</button>
+    <label class="inline">
+      <input id="ising-reset" type="checkbox">
+      Randomize on reset
+    </label>
+    <button id="ising-clear">Clear</button>
+  </div>
+  <canvas id="ising-canvas" aria-label="1D Ising space-time visualization"></canvas>
+  <small class="ising-hint">
+    Each row is one sweep. Dark = spin −1, light = spin +1. Open (non-periodic) boundaries.
+  </small>
+
+</div>
+<p>
+  And let the enternal battle between light and darkness commence! Even if you decrease T to near 0 to bias towards order, it will never converge!
+</p>
+<h2>Back to Text</h2>
+<p>
+  Provided I didn't lose you there, what does this mean for self-organising text? It means that if we only ever allow a textual token
+  to attend to its nearest neighbours, this is directly analogous to the 1D Ising case — and we are guaranteed to have no stable, globally ordered state.
+  <br>
+  In practice, for language models this might mean that the first tokens begin talking about one topic, but as the sequence grows
+  the later tokens drift toward something else, since nothing enforces long-range coherence.
+  <br>
+  Modern language models use 'full attention' to solve this, all positions in a sequence can attend to all others. But this defeats the purpose
+  of this mini project. We want to see if its possible for only local interactions to achieve global convergence a la cellular automata.
+</p>
+
+<hr>
+<h2>Is all hope lost?</h2>
+<p>
+  Well hold on a minute. Sure, convergence is impossible if we only allow <em>pair</em> interactions,
+  but what if we expand the interaction range? What if we allow one token to look at <em>all</em> of its neighbours
+  within a certain radius?
+</p>
+
+
+<hr>
+
+<h2>Derivation & Critical Range</h2>
+<p>
+  Okay so before hand we said that the energy of the system was a sum of the pairwise interactions.
+  But now, it is a sum of interactions that each position has with other positions within a fixed distance \( m \).
+  Mathematically:
+  $$
+  U \;=\; -J \sum_{1 \le i < j \le L} \;\; \{\, |i - j| \le m \,\}\; s_i s_j \,,
+  $$
+  where \( s_i \in \{\pm 1\} \), \( L \) is the sequence length, and \( m \) sets the interaction range.
+</p>
+<p>
+  In a range \( m \) there are \( N \) pairs. If we let \( d = i - j \), then for our given sequence \( L \) there are
+  \( L - d \) pairs.
+  <br>
+  You can see this by considering:
+  $$
+  N \;=\; \sum_{d=1}^{m} (L - d)
+  $$
+  $$
+  \;=\; (L - 1) + \cdots + (L - m)
+  $$
+  $$
+  \;=\; mL - \frac{m(m+1)}{2}.
+  $$
+</p>
+<p>
+  Now, to figure out wether this allows us to reach a convergent state, we can pose the following question:
+  What is the ground state energy, and what is the cost of a single barrier. If the cost of transitioning to a domain barrier state is cheaper than
+  the ground state it will never converge (as before).
+  <br>
+  Well, given \( N \), the ground state energy is:
+  $$
+  E_0 \;=\; -J\Big(mL \;-\; \frac{m(m+1)}{2}\Big).
+  $$
+  Moreover, a single domain barrier flips all pairs that straddle the cut within range \( m \), i.e.
+  \( \sum_{d=1}^{m} d = \tfrac{m(m+1)}{2} \) pairs, each costing \( 2J \). Thus the additional energy is
+  $$
+  \Delta E_{\text{barrier}} \;=\; 2J \cdot \frac{m(m+1)}{2}
+  $$
+  $$
+  \;=\; J\,m(m+1).
+  $$
+  </p>
+  <p>
+  Hence
+  $$
+  E_{\text{barrier}} \;=\; E_0 \;+\; J\,m(m+1).
+  $$
+</p>
+<p>
+  Aha! So now we can just plug this in and see:
+  $$
+  \Delta F \;=\; J\,m(m+1) \;-\; k_B T \ln(L-1),
+  $$
+  which for \( m = 1 \) simplifies to the prior case (\( U = 2J \)).
+  <br>
+  Now, all we need to do is choose an \( m \) that guarantees order even as sequence length tends to infinity!
+  We can do this by defining \( m \) as a function of \( L \).
+  <br>
+  If \( L \to \infty \), the above simplifies to
+  $$
+  \Delta F \;\sim\; J m^2 \;-\; k_B T \ln(L).
+  $$
+  So for energy to dominate over entropy (\( U > TS \)):
+  $$
+  m \;>\; \sqrt{\tfrac{k_B T}{J} \ln L}.
+  $$
+</p>
+<p>
+  This is great, as it means \( m \) only needs to scale with the square root of \( \ln L \), which grows extremely slowly!
+</p>
+
+<h3>Visualizing the ordering threshold</h3>
+<div id="m-threshold-lite" class="mchart-lite">
+  <div class="mctrl">
+    <label>T:
+      <input id="mT" type="range" min="0.00" max="5.00" step="0.01" value="1.00">
+    </label>
+    <output id="mTOut">1.00</output>
+
+    <label>J:
+      <input id="mJ" type="range" min="0.05" max="2.00" step="0.05" value="1.00">
+    </label>
+    <output id="mJOut">1.00</output>
+
+    <label>L range:
+      <input id="mLMax" type="number" min="10" step="10" value="100000">
+    </label>
+  </div>
+
+  <canvas id="mCanvasLite" aria-label="m_min vs L"></canvas>
+  <small class="mnote">
+    Curve: \(m_{\min}(L)=\sqrt{\tfrac{k_B T}{J}\ln L}\) with \(k_B=1\). Log-x plotted from \(L=2\) to your chosen max.
+  </small>
+</div>
+<hr>
+<p>
+So lets apply it to our simulation now, does it converge?!
+<br>
+->
+</p>
+<h2>Ising with Interaction Radius m</h2>
+<div id="ising-range-demo" class="ising-widget">
+  <div class="ising-controls">
+    <label>Temperature T:
+      <input id="ir-T" type="range" min="0.00" max="5" step="0.01" value="2.00">
+    </label>
+    <output id="ir-T-out">2.00</output>
+
+    <label>Radius m:
+      <input id="ir-R" type="range" min="1" max="32" step="1" value="3">
+    </label>
+    <output id="ir-R-out">3</output>
+
+    <button id="ir-toggle">Start</button>
+    <button id="ir-step">Step</button>
+    <label class="inline">
+      <input id="ir-reset" type="checkbox">
+      Randomize on reset
+    </label>
+    <button id="ir-clear">Clear</button>
+  </div>
+
+  <canvas id="ir-canvas" aria-label="1D Ising (radius m) space-time visualization"></canvas>
+  <small class="ising-hint">
+    Each row is one sweep. Dark = spin −1, light = spin +1. Open (non-periodic) boundaries. Neighbours within radius <em>m</em> interact.
+  </small>
+</div>
+
+
+<hr>
+
+<h2>Now Lets Model Some Text</h2>
+<h3>Overview</h3>
+<p>
+  Now we know that global coherence is not impossible, we can start language modelling with a little confidence.
+  To do this experiment, I used the TinyStories dataset and trained a model using strictly local attention.
+  This means that each token in the sequence can communicate only with its nearest \( m \) neighbours. But crucially,
+  with each layer of the model, information gets passed around the sequence, so the effective interaction radius is much larger!
+</p>
+<h3>Objective and Architecture</h3>
+<p> The learning objective was a very simple one. The model would see a sequence of text that had been noised to some
+  corruption level, meaning e.g. 25% of the sequence had been replaced by nonsense tokens. Then, where ever this
+  displacement had occured the model would have to predict the correct token (CELoss).
+  <br>
+  The model I converged to was effectivley a pre-norm transformer encoder with radial attention mask.
+  The model had ~150M parameters and it trained over 250M text tokens (very few generally speaking).
+  Finally I also used a pretty naive corruption level sampling and loss re-weighting as well as some other minor tricks.
+  <br>
+  <br>
+</p>
+
+<hr>
+
+<h2>Training Results</h2>
+<h2>Model Training</h2>
+<p>
+  Here are the training curves from the 28th epoch. The model was still improving but alas, my battle with the finitude of
+  time leaves me triumphed over once again.
+
+</p>
+
+<img src="posts/self-org-text/self-org-text-imgs/train_img.png" alt="Results of training epoch 28" style="max-width:100%; border-radius:8px;">
+
+<hr>
+
+<h2>Experiments & Examples</h2>
+<p>
+  I suppose now you will want to see some actual results!
+  During training the model simultaneosuly denoises all tokens in the sequence but in practice this is ineffective.
+  It would be like trying to paint a model that keeps changing position. To resolve this I have adopted a simple sampling scheme.
+  Every step a random token is chosen and its logits are sampled. There are likely better methods, but for now this will do.
+</p>
+
+<hr>
+
+<h2>Play With It Yourself</h2>
+<p>
+  You can explore the model live ->
+  <br>
+  (Simply initalise random, then live stream denoise! I recommened playing with settings.)
+</p>
+
+
+<div class="hf-embed">
+  <iframe
+  src="https://basilboy-selforganisingtext.hf.space"
+  loading="lazy"
+  allow="clipboard-read; clipboard-write; microphone; camera"
+  referrerpolicy="strict-origin-when-cross-origin"
+  style="width:100%; height:650px; border:0; border-radius:8px">
+</iframe>
+</div>
+
+
+<hr>
+
+<h2>Reflections</h2>
+<p>
+  Self-organisation is a general principle — whether in physics, markets, or language models.
+  Local rules, scaled properly, can produce unexpected intelligence. This was a fun weekend project.
+</p>
+
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="y"></span> the-puzzler</span>
+      <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+    </footer>
+  </div>
+</body>
+</html>

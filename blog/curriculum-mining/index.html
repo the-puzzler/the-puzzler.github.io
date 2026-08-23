@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>Curriculum Mining | the-puzzler</title>
+  <meta name="description" content="Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.">
+  <meta name="author" content="Matteo Peluso">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://the-puzzler.github.io/blog/curriculum-mining/">
+
+  <meta property="og:title" content="Curriculum Mining">
+  <meta property="og:description" content="Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="the-puzzler">
+  <meta property="og:url" content="https://the-puzzler.github.io/blog/curriculum-mining/">
+  <meta property="og:image" content="https://the-puzzler.github.io/posts/curriculum-mining/assets/reset-theory.png">
+  <meta property="article:published_time" content="2026-07-26">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Curriculum Mining">
+  <meta name="twitter:description" content="Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.">
+  <meta name="twitter:image" content="https://the-puzzler.github.io/posts/curriculum-mining/assets/reset-theory.png">
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"Curriculum Mining","description":"Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.","datePublished":"2026-07-26","dateModified":"2026-07-26","mainEntityOfPage":"https://the-puzzler.github.io/blog/curriculum-mining/","url":"https://the-puzzler.github.io/blog/curriculum-mining/","image":["https://the-puzzler.github.io/posts/curriculum-mining/assets/reset-theory.png"],"keywords":["RL"],"author":{"@type":"Person","name":"Matteo Peluso"},"publisher":{"@type":"Organization","name":"the-puzzler"}}</script>
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;M&lt;/text&gt;&lt;/svg&gt;">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=20260728a">
+  <link rel="stylesheet" href="/posts/curriculum-mining/curriculum-mining.css">
+  <script defer src="/script.js?v=20260823seo2"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="mathjax" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <script type="module" src="/posts/curriculum-mining/curriculum-mining.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJZJKLZKHH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QJZJKLZKHH');
+  </script>
+</head>
+<body data-static-post-path="posts/curriculum-mining/curriculum-mining.html" data-static-post-slug="curriculum-mining">
+  <div class="container">
+    <header class="header">
+      <div class="brand">the-puzzler <span class="badge">Matteo</span></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="https://x.com/MozarellaPesto" target="_blank" rel="noreferrer">X</a>
+        <a href="https://github.com/the-puzzler" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="/">Home</a>
+      </nav>
+    </header>
+
+    <section class="page post" data-post="curriculum-mining">
+<div class="cm-post">
+  <header class="cm-hero">
+    <div class="cm-sun" aria-hidden="true"></div>
+    <p class="cm-eyebrow">SELF-PLAY NOTES</p>
+<h1 data-toc-variant="card">Curriculum Mining</h1>
+    <p class="post-subtitle">Training search-free board-game policies with diverse resets and sparse rewards.</p>
+    <p class="cm-kanji" aria-hidden="true">探索 · 学習 · 拡張</p>
+    <div class="cm-hero-actions">
+      <a class="cm-code-button" href="https://github.com/the-puzzler/selfplay" target="_blank" rel="noopener noreferrer">
+        <span>View the code</span>
+        <code>the-puzzler/selfplay ↗</code>
+      </a>
+      <a class="cm-code-button cm-play-button" href="/blog/curriculum-mining/#othello-demo">
+        <span>Play against my Othello model</span>
+        <code>jump to board ↓</code>
+      </a>
+    </div>
+  </header>
+
+  <section class="cm-lead">
+    <h2>Introduction</h2>
+    <p class="cm-dropcap">In this project I test whether pure self-play PPO, without search, can learn strong policies for Othello, Hex and Go.</p>
+    <p>
+      The comparison is controlled. The policy uses the same network architecture as Pgx's published Gumbel AlphaZero baselines and is trained with comparable compute. The difference is the objective. The baseline uses MCTS to produce search-improved policy targets. My policy is trained with <strong>PPO from sparse terminal ±1 rewards</strong>. There is no search, teacher or reward shaping during training, and no search at inference.
+    </p>
+    <p>
+      The resulting raw policy beats the published baseline networks at Othello, Hex 11×11 and Go 9×9. This post is about the training ingredient I think is most important to that result: resetting games into random legal mid-game positions.
+    </p>
+    <p class="cm-thesis cm-thesis-compact">
+      Random resets create a curriculum from the states the policy can currently learn.
+    </p>
+    <div class="cm-score-strip cm-score-strip-intro" aria-label="Scores against published baselines">
+      <div><span>Othello 8×8</span><strong>0.671</strong></div>
+      <div><span>Hex 11×11</span><strong>0.835</strong></div>
+      <div><span>Go 9×9</span><strong>0.817</strong></div>
+    </div>
+    <p class="cm-caption">Score against each published baseline over 10,240 games. Raw greedy policy on both sides.</p>
+  </section>
+
+  <hr>
+
+  <h2>Theory</h2>
+
+  <p>
+    Raw PPO struggles here because the only reward is the terminal result. If every game starts from the opening, an early action may not receive a learning signal for another 50 moves. Early in training both players are bad, so they also visit a narrow distribution of states produced by their current bad policies.
+  </p>
+  <p>
+    One way to shorten this credit-assignment problem is to train from positions closer to termination. The policy can learn a useful value function there first, then propagate that information toward earlier positions. In other words, solving the full game requires a sequence of smaller, currently solvable problems.
+  </p>
+  <p>
+    This turns credit assignment into a curriculum problem. We need intermediate states that produce useful learning signals, but we do not know which states should come next or the order in which their behaviours must be acquired. The order is also not necessarily a simple progression from late game to early game: learning one behaviour can make a qualitatively different set of positions solvable.
+  </p>
+
+  <figure class="cm-theory-figure">
+    <img src="posts/curriculum-mining/assets/reset-theory.png" alt="Direct optimisation toward one distant objective misses required stepping stones, while developmental search acquires skills through reachable challenges until the final goal becomes reachable">
+    <figcaption>Direct progress toward a distant objective can be deceptive. The required skills may only be found by solving intermediate challenges that do not initially appear to move toward the final goal.</figcaption>
+  </figure>
+
+  <p>
+    This is the argument in <a href="/blog/curriculum-is-key/">Curriculum Is Key</a> and in Stanley and Lehman's <a href="https://pure.itu.dk/en/publications/why-greatness-cannot-be-planned-the-myth-of-the-objective/" target="_blank" rel="noopener noreferrer"><em>Why Greatness Cannot Be Planned</em></a>: useful stepping stones often cannot be specified from the final objective.
+  </p>
+  <p>
+    Random resets avoid choosing the stepping stones manually. Each sampled state is a candidate intermediate problem. PPO learns from whichever states are currently within reach; the resulting behaviours then make a different set of states learnable. This is a form of <em>curriculum mining</em>: an open-ended search over possible next challenges inside the finite state space of the game.
+  </p>
+
+  <hr>
+
+  <h2>Method</h2>
+
+  <p>The training method has two changes to standard self-play PPO:</p>
+
+  <h3 data-toc-skip>1. Random legal resets</h3>
+  <p>
+    This was inspired directly by <a href="https://omnireset.github.io/" target="_blank" rel="noopener noreferrer">OmniReset</a>. When an environment terminates, I generate a new starting state by taking a random number of random legal moves from the opening, up to 40–50 plies depending on the game. PPO then trains from that state using the same sparse terminal reward.
+  </p>
+
+  <h3 data-toc-skip>2. A bank of old checkpoints</h3>
+  <p>
+    Naive self-play was unstable: performance peaked and then drifted as both sides changed together. I keep a ring of 12 frozen policy checkpoints and add one every 100 iterations. Half of the environments play against a checkpoint sampled from the bank, and the loss is applied only to the learner's moves. This keeps the opponent distribution stable enough that new updates do not immediately erase earlier progress.
+  </p>
+
+  <div class="opponent-ring" aria-label="Opponent checkpoint ring">
+    <span class="ring-label">learner<br><b>今</b></span>
+    <span>t−1</span><span>t−2</span><span>t−3</span><span>t−4</span><span>…</span><span>t−12</span>
+  </div>
+
+  <h3 data-toc-skip>Interactive Othello example</h3>
+  <p>
+    Choose a reset depth below to sample a legal training state, then play black against the trained Othello checkpoint. This is how the model trains: it sees a random reset, then plays the position out. The model takes one greedy policy action with no search, matching the evaluation setup.
+  </p>
+
+  <section id="othello-demo" class="othello-dojo" aria-label="Interactive Othello random reset demo">
+    <div class="dojo-heading">
+      <div>
+        <p class="cm-eyebrow">OTHELLO RESET DISTRIBUTION</p>
+        <h3 data-toc-skip>Sample a legal training state</h3>
+      </div>
+      <div class="dojo-stamp" aria-hidden="true">盤</div>
+    </div>
+
+    <div class="dojo-grid">
+      <div class="board-wrap">
+        <div id="othello-board" class="othello-board" role="grid" aria-label="Othello board"></div>
+      </div>
+
+      <div class="dojo-panel">
+        <div class="dojo-score">
+          <div><i class="disc black"></i><span>You</span><strong id="black-score">2</strong></div>
+          <div><i class="disc white"></i><span>Trained policy</span><strong id="white-score">2</strong></div>
+        </div>
+        <p id="game-status" class="game-status" aria-live="polite">Your move. Choose a marked cell.</p>
+        <p id="model-status" class="model-status">Loading Othello AZNet…</p>
+
+        <label class="depth-control" for="reset-depth">
+          <span>Reset depth <output id="depth-output">24 plies</output></span>
+          <input id="reset-depth" type="range" min="0" max="50" step="1" value="24">
+          <span class="depth-labels"><small>opening</small><small>endgame</small></span>
+        </label>
+
+        <div class="dojo-actions">
+          <button id="mine-position" type="button">Sample position</button>
+          <button id="new-game" type="button">Return to opening</button>
+        </div>
+        <p class="dojo-note" id="position-note">Opening position · 60 empty squares</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="cm-model-link">
+    <div>
+      <p class="cm-eyebrow">TERMINAL VERSION</p>
+      <strong>Play the same checkpoint locally</strong>
+      <p>The repository also ships the original Flax weights and terminal player.</p>
+    </div>
+    <a href="https://github.com/the-puzzler/selfplay#play-against-the-models" target="_blank" rel="noopener noreferrer">Open instructions ↗</a>
+  </div>
+
+  <hr>
+
+  <h2>Results</h2>
+
+  <div class="cm-score-strip" aria-label="Scores against published baselines">
+    <div><span>Othello 8×8</span><strong>0.671</strong></div>
+    <div><span>Hex 11×11</span><strong>0.835</strong></div>
+    <div><span>Go 9×9</span><strong>0.817</strong></div>
+  </div>
+  <p class="cm-caption">Score against each published baseline over 10,240 games. Raw greedy policy on both sides; no search at inference.</p>
+
+  <figure class="cm-results-figure">
+    <img src="posts/curriculum-mining/assets/score_vs_env_steps.svg" alt="Scores of the Othello, Hex and Go policies against the published Gumbel AlphaZero baselines as training environment steps increase">
+    <figcaption>
+      Score against the published Gumbel AlphaZero baseline networks as a function of total environment interactions. Search steps are included in the baseline compute: each baseline frame costs 32 MCTS simulations plus the played move. A score above 0.5 beats the corresponding baseline.
+    </figcaption>
+  </figure>
+
+  <details class="compute-details">
+    <summary>How total environment steps were counted</summary>
+    <div class="compute-details-body">
+      <p>
+        One PPO iteration executes \(4{,}096 \times 32 = 131{,}072\) environment steps. The final policies use:
+      </p>
+      <code>8,000 iterations × 4,096 environments × 32 steps = 1,048,576,000</code>
+      <p>
+        For Gumbel AlphaZero, every played frame costs 32 MCTS simulations plus the played move, so each frame counts as 33 environment interactions:
+      </p>
+      <code>Othello / Hex: 100 × 1,024 × 256 × 33 = 865,075,200</code>
+      <code>Go 9×9: 200 × 1,024 × 256 × 33 = 1,730,150,400</code>
+    </div>
+  </details>
+
+  <p>
+    Within that comparison, the result is strong. Using the same 1.83M-parameter AZNet architecture, sparse terminal ±1 reward and no search in training or inference, the policy beats the three published networks. The compute-matched Othello checkpoint scores 0.579 against the baseline. On Go 9×9, the final policy beats the baseline using 0.61× its environment interactions under the symmetric accounting used here.
+  </p>
+
+  <hr>
+
+  <h2>Conclusion</h2>
+  <p>
+    Random resets make sparse-reward PPO work by exposing the policy to short credit-assignment problems before it can solve full games from the opening. The checkpoint bank solves a separate problem: it stops self-play from drifting as both players change together.
+  </p>
+  <p>
+    The comparison is limited. These are published reference networks rather than state-of-the-art opponents, and both sides are evaluated as greedy raw policies. AlphaZero normally uses search at play time. The games are also fixed and finite, so random resets only approximate open-ended search over possible next challenges.
+  </p>
+  <p>
+    Still, the sequence of useful challenges was not specified ahead of time. It emerged from the states sampled by the reset distribution and what the policy could learn at each point in training. Random resets do not avoid curriculum; they search for one.
+  </p>
+
+  <div class="cm-code-bottom">
+    <a class="cm-code-button" href="https://github.com/the-puzzler/selfplay" target="_blank" rel="noopener noreferrer">
+      <span>View the code</span>
+      <code>the-puzzler/selfplay ↗</code>
+    </a>
+  </div>
+
+  <h2 data-toc-skip>Comments</h2>
+  <div id="post-comments-thread"></div>
+</div>
+
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="y"></span> the-puzzler</span>
+      <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+    </footer>
+  </div>
+</body>
+</html>
