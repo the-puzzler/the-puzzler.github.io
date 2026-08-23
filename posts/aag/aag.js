@@ -1480,11 +1480,12 @@
   const root = document.getElementById('aag-doom-demo');
   const canvas = document.getElementById('aag-doom-canvas');
   const loadButton = document.getElementById('aag-doom-load');
+  const newStartButton = document.getElementById('aag-doom-new-start');
   const resetButton = document.getElementById('aag-doom-reset');
   const status = document.getElementById('aag-doom-status');
   const stepLabel = document.getElementById('aag-doom-step');
   const actionButtons = [...document.querySelectorAll('[data-doom-action]')];
-  if (!root || !canvas || !loadButton || !resetButton || !status || !stepLabel) return;
+  if (!root || !canvas || !loadButton || !newStartButton || !resetButton || !status || !stepLabel) return;
 
   const MODEL_URL = 'posts/aag/assets/doom-browser/worldmodel.onnx?v=20260822b';
   const SEED_URL = 'posts/aag/assets/doom_worldmodel.png';
@@ -1492,15 +1493,18 @@
   const ORT_BASE = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
   const FRAME_SIZE = 64;
   const FRAME_VALUES = 3 * FRAME_SIZE * FRAME_SIZE;
-  const SEED_CROPS = [
-    [17, 44, 126, 126],
-    [151, 44, 125, 126],
-    [284, 44, 126, 126],
+  const SEED_CONTEXT_CROPS = [
+    [[17, 44, 126, 126], [151, 44, 125, 126], [284, 44, 126, 126]],
+    [[17, 184, 126, 127], [151, 184, 125, 127], [284, 184, 126, 127]],
+    [[17, 324, 126, 127], [151, 324, 125, 127], [284, 324, 126, 127]],
+    [[17, 464, 126, 128], [151, 464, 125, 128], [284, 464, 126, 128]],
+    [[17, 605, 126, 127], [151, 605, 125, 127], [284, 605, 126, 127]],
   ];
 
   const context = canvas.getContext('2d', { alpha: false });
   let session = null;
-  let seedFrames = [];
+  let seedContexts = [];
+  let seedContextIndex = 4;
   let frames = [];
   let busy = false;
   let step = 0;
@@ -1516,10 +1520,13 @@
       button.disabled = !enabled;
     });
     resetButton.disabled = !enabled;
+    newStartButton.disabled = !enabled;
   }
 
   function syncResetButton() {
-    resetButton.disabled = !session || busy || Boolean(heldAction);
+    const disabled = !session || busy || Boolean(heldAction);
+    resetButton.disabled = disabled;
+    newStartButton.disabled = disabled;
   }
 
   function frameFromCanvas(sourceCanvas) {
@@ -1558,9 +1565,9 @@
   }
 
   async function loadSeedFrames() {
-    if (seedFrames.length) return;
+    if (seedContexts.length) return;
     const sheet = await loadImage(SEED_URL);
-    seedFrames = SEED_CROPS.map(([x, y, width, height]) => {
+    seedContexts = SEED_CONTEXT_CROPS.map((crops) => crops.map(([x, y, width, height]) => {
       const buffer = document.createElement('canvas');
       buffer.width = FRAME_SIZE;
       buffer.height = FRAME_SIZE;
@@ -1571,16 +1578,26 @@
         sheet, x, y, width, height, 0, 0, FRAME_SIZE, FRAME_SIZE,
       );
       return frameFromCanvas(buffer);
-    });
+    }));
   }
 
   async function reset() {
     await loadSeedFrames();
-    frames = seedFrames.map((frame) => frame.slice());
+    frames = seedContexts[seedContextIndex].map((frame) => frame.slice());
     step = 0;
     stepLabel.textContent = 'seed context';
     drawFrame(frames[frames.length - 1]);
     if (session) setStatus('Ready for an action.');
+  }
+
+  async function sampleNewStart() {
+    await loadSeedFrames();
+    if (seedContexts.length > 1) {
+      const offset = 1 + Math.floor(Math.random() * (seedContexts.length - 1));
+      seedContextIndex = (seedContextIndex + offset) % seedContexts.length;
+    }
+    await reset();
+    if (session) setStatus('New start ready.');
   }
 
   function loadRuntime() {
@@ -1720,9 +1737,9 @@
       if (heldAction !== button || token !== holdToken) break;
       if (completed && !firstCompleted) {
         firstCompleted = true;
-        await wait(260);
+        await wait(130);
       } else {
-        await wait(completed ? 55 : 35);
+        await wait(completed ? 28 : 18);
       }
     }
   }
@@ -1751,6 +1768,7 @@
   window.addEventListener('pointercancel', stopHeldAction);
   window.addEventListener('blur', stopHeldAction);
   loadButton.addEventListener('click', loadModel);
+  newStartButton.addEventListener('click', sampleNewStart);
   resetButton.addEventListener('click', reset);
   reset().catch(() => setStatus('Preview unavailable. The model can still be loaded.'));
 })();
