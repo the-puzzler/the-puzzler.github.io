@@ -130,7 +130,7 @@
 <h2 id="architecture">Pan1ni: the architecture</h2>
 <p>
   In my implementation, I chose to follow a JEPA-style method based on my
-  earlier <a href="?p=la-leworldmodel">la leWorldModel</a>:
+  earlier <a href="/blog/la-leworldmodel/">la leWorldModel</a>:
 </p>
 
 <figure class="equation-figure">
@@ -151,7 +151,7 @@
 <p>
   The loss is nothing fancy either: a simple MSE between the predicted next
   latent and the actual next latent, plus
-  <a href="?p=practical-notes-on-lejepa">SIGReg</a> to keep the latent space
+  <a href="/blog/practical-notes-on-lejepa/">SIGReg</a> to keep the latent space
   from collapsing. The whole system is just two modules, an encoder that maps
   a frame to a latent, and a predictor that takes the previous latents plus a
   goal latent and outputs the next latent.

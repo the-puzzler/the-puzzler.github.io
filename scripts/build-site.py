@@ -20,7 +20,7 @@ SITE_NAME = "the-puzzler"
 SITE_URL = "https://the-puzzler.github.io"
 DEFAULT_DESCRIPTION = "Notes on deep learning, physics and biology."
 DEFAULT_IMAGE = f"{SITE_URL}/ghibme.jpg"
-SCRIPT_VERSION = "20260823seo2"
+SCRIPT_VERSION = "20260830seo3"
 
 
 def is_external(path: str) -> bool:

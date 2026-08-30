@@ -6,9 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>the-puzzler — Post</title>
   <meta name="description" content="Blog post · the-puzzler">
+  <meta name="robots" content="noindex, follow">
+  <script>
+    // Preserve old shared URLs while consolidating every post on /blog/<slug>/.
+    (() => {
+      const postPath = new URLSearchParams(window.location.search).get('p');
+      if (!postPath) return;
+
+      const cleanPath = postPath.replace(/^\/+/, '').replace(/[?#].*$/, '');
+      const exactMatch = cleanPath.match(/^posts\/([a-z0-9-]+)\/\1\.html$/i);
+      const slug = exactMatch
+        ? exactMatch[1]
+        : cleanPath.replace(/^posts\//, '').replace(/\.html$/i, '').split('/').filter(Boolean).pop();
+
+      if (/^[a-z0-9-]+$/i.test(slug || '')) {
+        window.location.replace(`/blog/${encodeURIComponent(slug)}/${window.location.hash}`);
+      }
+    })();
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>M</text></svg>">
   <link rel="stylesheet" href="styles.css?v=20260728a">
-  <script defer src="script.js?v=20260728a"></script>
+  <script defer src="script.js?v=20260830seo3"></script>
   <!-- MathJax v3 config -->
   <script>
     window.MathJax = {

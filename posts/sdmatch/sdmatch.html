@@ -21,7 +21,7 @@
 
   <p>
     If it works, the use cases are broader than just generation. You could use it to fix arbitrary model layers to a
-    chosen distribution. In my <a href="?p=self-teaching-autoencoder#triangle">self-teaching autoencoder</a>
+    chosen distribution. In my <a href="/blog/self-teaching-autoencoder/#triangle">self-teaching autoencoder</a>
     work I used crop-resize transformations to keep image reconstructions honest; in hindsight, SDMatch is
     exactly the sort of tool I would have liked to try there. In the long run, if the rough edges are solved,
     it might even become a simple alternative training signal for generative models that currently need
@@ -34,7 +34,7 @@
 <h2 id="from-sigreg">Starting from SIGReg</h2>
 <p>
   The starting point is SIGReg, which I described in the previous research note on
-  <a href="?p=practical-notes-on-lejepa">practical leJEPA failures</a>. SIGReg samples random directions,
+  <a href="/blog/practical-notes-on-lejepa/">practical leJEPA failures</a>. SIGReg samples random directions,
   projects embeddings onto those 1D axes, and checks whether each projected marginal looks like a standard
   Gaussian.
 </p>

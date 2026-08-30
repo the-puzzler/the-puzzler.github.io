@@ -102,7 +102,7 @@
     \]
   </figure>
   <p>
-    That is the whole game. SIGReg prevents the trivial constant-code collapse by pushing latents toward a Gaussian distribution (see <a href="?p=practical-notes-on-lejepa">this research note</a>). Everything else has to emerge from latent consistency under transformations.
+    That is the whole game. SIGReg prevents the trivial constant-code collapse by pushing latents toward a Gaussian distribution (see <a href="/blog/practical-notes-on-lejepa/">this research note</a>). Everything else has to emerge from latent consistency under transformations.
   </p>
   
   <div data-include-html="partials/algorithm-compare.html"></div>
@@ -293,7 +293,7 @@
   <div class="mlc-section-num">Takeaway</div>
   <h2>What Actually Matters</h2>
   <p>
-    The main point is that this is basically a leJEPA-style objective with one extra ingredient: an internal layer is constrained to stay on the input distribution. That matters because JEPA-style methods usually do not come with a decoder for free, and adding one later often damages the representation by forcing reconstruction into a latent space that was never meant to be invertible in the first place. I wrote more about that trade-off in <a href="?p=practical-notes-on-lejepa">this post on leJEPA and SIGReg</a>. Here, the latent objective and the image-distribution constraint are learned together rather than bolted together afterward.
+    The main point is that this is basically a leJEPA-style objective with one extra ingredient: an internal layer is constrained to stay on the input distribution. That matters because JEPA-style methods usually do not come with a decoder for free, and adding one later often damages the representation by forcing reconstruction into a latent space that was never meant to be invertible in the first place. I wrote more about that trade-off in <a href="/blog/practical-notes-on-lejepa/">this post on leJEPA and SIGReg</a>. Here, the latent objective and the image-distribution constraint are learned together rather than bolted together afterward.
   </p>
   <p>
     The other important point is why this behaves differently from a plain MSE autoencoder. It is not chasing weak pixel averages. It is chasing an abstract representation of what the image should contain under a family of transformations. That changes the failure mode. When it misses, in theory it is more likely to hallucinate something plausible than to wash everything into a blurry average, because the objective is organised around semantic agreement rather than direct pixel matching. The fact that those semantics are learned during training, without requiring a pretrained model, is the cherry on the cake.

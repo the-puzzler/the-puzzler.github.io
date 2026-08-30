@@ -73,7 +73,7 @@
 </p>
 
 <p>
-  Batchnorm works, but it introduces a train-mode versus eval-mode mismatch. I ran into this on my <a href="?p=la-leworldmodel">la leWorldModel</a> project. In my experience it fades with more training, but it is worth knowing about. The <a href="https://arxiv.org/pdf/2603.19312" target="_blank" rel="noreferrer">leWorldModel</a> paper handles this with a small MLP between the visual encoder and SIGReg: linear, activation, batchnorm, linear. That buffer is doing important work.
+  Batchnorm works, but it introduces a train-mode versus eval-mode mismatch. I ran into this on my <a href="/blog/la-leworldmodel/">la leWorldModel</a> project. In my experience it fades with more training, but it is worth knowing about. The <a href="https://arxiv.org/pdf/2603.19312" target="_blank" rel="noreferrer">leWorldModel</a> paper handles this with a small MLP between the visual encoder and SIGReg: linear, activation, batchnorm, linear. That buffer is doing important work.
 </p>
 
 <section id="norm-lab" class="sigreg-lab" aria-label="Normalisation interactive">

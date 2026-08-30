@@ -727,7 +727,9 @@ async function applyLegacyPostMetadata(path, fallbackTitle = '') {
   canonical.href = canonicalUrl;
 
   setMetaContent('meta[name="description"]', { name: 'description' }, description);
-  setMetaContent('meta[name="robots"]', { name: 'robots' }, 'index, follow, max-image-preview:large');
+  // This function only serves old query-string routes. Keep those routes out of
+  // the index while their links and redirect consolidate on the static page.
+  setMetaContent('meta[name="robots"]', { name: 'robots' }, 'noindex, follow');
   setMetaContent('meta[property="og:title"]', { property: 'og:title' }, title);
   setMetaContent('meta[property="og:description"]', { property: 'og:description' }, description);
   setMetaContent('meta[property="og:type"]', { property: 'og:type' }, 'article');
