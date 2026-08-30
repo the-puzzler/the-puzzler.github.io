@@ -30,8 +30,7 @@
     "path": "posts/sdmatch/sdmatch.html",
     "description": "Sketched Distribution Matching: a direct loss for matching one distribution to another with random or learned projections.",
     "social_image": "posts/sdmatch/assets/cover.png",
-    "tags": ["World Modelling", "Self-Supervision"],
-    "type": "research"
+    "tags": ["World Modelling", "Self-Supervision"]
   },
 
   {
@@ -49,8 +48,7 @@
     "path": "posts/practical-notes-on-lejepa/practical-notes-on-lejepa.html",
     "description": "Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.",
     "social_image": "posts/practical-notes-on-lejepa/thumbnail.png",
-    "tags": ["Self-Supervision"],
-    "type": "research"
+    "tags": ["Self-Supervision"]
   },
 
   {

@@ -32,12 +32,6 @@ const HOME_FILTER_TAGS = ['LLM', 'RL', 'Robotics', 'Biology', 'World Modelling',
 let homePostsCache = [];
 let activeHomeTags = new Set();
 let homeSearchQuery = '';
-let activeSection = 'blog';
-
-function postMatchesSection(post) {
-  if (activeSection === 'research') return post.type === 'research';
-  return post.type !== 'research';
-}
 
 function normalizePostTags(tags) {
   if (!Array.isArray(tags)) return [];
@@ -90,9 +84,8 @@ function renderTagFilters(posts) {
   const filterEl = $('#blog-tag-filters');
   if (!filterEl) return;
 
-  const sectionPosts = posts.filter(postMatchesSection);
   const counts = new Map(HOME_FILTER_TAGS.map(tag => [tag, 0]));
-  sectionPosts.forEach(post => {
+  posts.forEach(post => {
     normalizePostTags(post.tags).forEach(tag => {
       const canonical = HOME_FILTER_TAGS.find(t => t.toLowerCase() === tag.toLowerCase());
       if (canonical) counts.set(canonical, counts.get(canonical) + 1);
@@ -100,7 +93,7 @@ function renderTagFilters(posts) {
   });
 
   const buttons = [
-    { tag: '', label: `All (${sectionPosts.length})` },
+    { tag: '', label: `All (${posts.length})` },
     ...HOME_FILTER_TAGS.filter(tag => (counts.get(tag) || 0) > 0).map(tag => ({ tag, label: `${tag} (${counts.get(tag)})` }))
   ];
 
@@ -130,7 +123,6 @@ function renderHomePostList(posts) {
   if (!listEl) return;
 
   const filtered = posts
-    .filter(postMatchesSection)
     .filter(postMatchesActiveTag)
     .filter(postMatchesSearch)
     .sort((a, b) => {
@@ -173,27 +165,12 @@ function renderHomePostList(posts) {
   }).join('');
 }
 
-function initSectionTabs() {
-  $$('.section-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      const section = tab.dataset.section;
-      if (section === activeSection) return;
-      activeSection = section;
-      activeHomeTags.clear();
-      $$('.section-tab').forEach(t => t.classList.toggle('is-active', t.dataset.section === section));
-      renderTagFilters(homePostsCache);
-      renderHomePostList(homePostsCache);
-    });
-  });
-}
-
 async function renderList() {
   const listEl = $('#post-list');
   if (!listEl) return;
 
   homePostsCache = await loadPosts();
   initHomeSearch();
-  initSectionTabs();
   renderTagFilters(homePostsCache);
   renderHomePostList(homePostsCache);
 }

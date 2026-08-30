@@ -194,7 +194,7 @@ def render_legacy_share_page(post: dict) -> str:
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{html.escape(title)} | {SITE_NAME}</title>
   <meta name="description" content="{html.escape(description, quote=True)}">
-  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="robots" content="noindex, follow">
   <link rel="canonical" href="{html.escape(canonical, quote=True)}">
 
   <meta property="og:title" content="{html.escape(title, quote=True)}">
@@ -260,8 +260,7 @@ def render_home_item(post: dict) -> str:
 
 def seed_homepage(posts: list[dict]) -> None:
     source = INDEX_HTML.read_text(encoding="utf-8")
-    default_posts = [post for post in posts if post.get("type") != "research"]
-    items = "\n".join(render_home_item(post) for post in default_posts)
+    items = "\n".join(render_home_item(post) for post in posts)
     replacement = f'''<ul id="post-list" class="list">
         <!-- STATIC_POST_LIST_START -->
 {items}
