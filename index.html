@@ -75,33 +75,55 @@
       </nav>
     </header>
 
-    <!-- <section class="page">
-      <h1>Blogs</h1>
-      
-      <div class="hr"></div>
-      <ul id="post-list" class="list"></ul>
-    </section> -->
     <section class="page">
-      <!-- Hero Image -->
-      <img src="ghibme.jpg" alt="Hero" class="hero-img hero-light">
-      <img src="ghibmedark.jpg" alt="Hero" class="hero-img hero-dark">
-
-      <h1>About Me</h1>
-      <p>
-        Hi, I’m <strong>Matteo Peluso</strong>. I think mostly about <strong>world modelling</strong> and <strong>curriculum</strong>, and the ideas behind them rather than any particular method. What does it take for a system to build a useful internal model of the world? What experiences, in what order?
-      </p>
-      <p>
-        I’m drawn to novel framings over incremental progress. This is where I share what I’m working on.
-      </p>
+      <div class="home-intro">
+        <h1>Matteo</h1>
+        <div class="home-portrait">
+          <img src="ghibme.jpg" alt="Illustration of Matteo writing in a mountain landscape" class="hero-img hero-light" width="3168" height="1344">
+          <img src="ghibmedark.jpg" alt="Illustration of Matteo writing in a mountain landscape at night" class="hero-img hero-dark" width="3168" height="1344">
+        </div>
+        <p>I explore how systems build useful <strong>world models</strong>, and how experience shapes what they learn. Here I share experiments in world modelling, curriculum, and self-supervision.</p>
+      </div>
 
       <div class="hr"></div>
 
-      <h1>Blogs</h1>
-      <div class="tag-filter-row">
+      <section class="playground" aria-labelledby="playground-title">
+        <div class="playground-heading">
+          <h2 id="playground-title">Playground</h2>
+          <span>Try the research</span>
+        </div>
+        <div class="demo-library">
+          <a class="demo-tile" href="/blog/aag/#aag-doom-demo">
+            <div class="demo-cover demo-cover--doom"><img src="assets/demo-thumbnails/doom.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <strong>Doom world model</strong><span>Play Doom, one predicted frame at a time</span>
+          </a>
+          <a class="demo-tile" href="/blog/curriculum-mining/#othello-demo">
+            <div class="demo-cover demo-cover--othello"><img src="assets/demo-thumbnails/othello.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <strong>Othello</strong><span>Challenge the policy that beat AlphaZero networks</span>
+          </a>
+          <a class="demo-tile" href="/posts/pan1ni/nethack-navigator/">
+            <div class="demo-cover demo-cover--nethack"><img src="assets/demo-thumbnails/nethack.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <strong>NetHack navigator</strong><span>Pick a goal. Watch it find a way.</span>
+          </a>
+          <a class="demo-tile" href="/posts/self-teaching-autoencoder/latent_brush_demo/">
+            <div class="demo-cover demo-cover--latent-brush"><img src="assets/demo-thumbnails/latent-brush.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <strong>Latent brush</strong><span>Paint a face in latent space</span>
+          </a>
+        </div>
+      </section>
+
+      <div class="blog-heading-row">
+        <h1>Blogs</h1>
         <label class="blog-search-wrap" for="blog-search">
           <span class="sr-only">Search blogs</span>
           <input id="blog-search" class="blog-search" type="search" placeholder="Search blogs..." autocomplete="off">
         </label>
+        <select id="blog-sort" class="blog-sort" aria-label="Sort articles" disabled>
+          <option value="newest">Newest</option>
+          <option value="likes">Most liked</option>
+        </select>
+      </div>
+      <div class="tag-filter-row">
         <div id="blog-tag-filters" class="tag-filters" aria-label="Filter blogs by topic"></div>
       </div>
       <ul id="post-list" class="list">
@@ -111,7 +133,7 @@
             <h3><a href="/blog/aag/">Amortised Assignment Generation</a></h3>
             <div class="item-meta">
               <small>22 Aug 2026</small>
-              <span class="item-tags"><span class="item-tag">Generative Modelling</span></span>
+              <span class="item-tags"><span class="item-tag">Generative Modelling</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2091570734933885162" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="138 likes on X announcement"><span aria-hidden="true">♡</span> 138 on X</a>
             </div>
             <p>One step generation by efficiently pre-assigning gaussian latents to samples.</p>
           </div>
@@ -122,7 +144,7 @@
             <h3><a href="/blog/curriculum-mining/">Curriculum Mining</a></h3>
             <div class="item-meta">
               <small>26 Jul 2026</small>
-              <span class="item-tags"><span class="item-tag">RL</span></span>
+              <span class="item-tags"><span class="item-tag">RL</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2081445835636654096" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="294 likes on X announcement"><span aria-hidden="true">♡</span> 294 on X</a>
             </div>
             <p>Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.</p>
           </div>
@@ -133,7 +155,7 @@
             <h3><a href="/blog/pan1ni/">Pan1ni</a></h3>
             <div class="item-meta">
               <small>19 Jul 2026</small>
-              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Self-Supervision</span></span>
+              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Self-Supervision</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2079308248956477701" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="28 likes on X announcement"><span aria-hidden="true">♡</span> 28 on X</a>
             </div>
             <p>Making a goal seeking policy with video pretraining only</p>
           </div>
@@ -144,7 +166,7 @@
             <h3><a href="/blog/sdmatch/">SDMatch</a></h3>
             <div class="item-meta">
               <small>31 May 2026</small>
-              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Self-Supervision</span></span>
+              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Self-Supervision</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2061083879188914191" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="89 likes on X announcement"><span aria-hidden="true">♡</span> 89 on X</a>
             </div>
             <p>Sketched Distribution Matching: a direct loss for matching one distribution to another with random or learned projections.</p>
           </div>
@@ -155,7 +177,7 @@
             <h3><a href="/blog/self-teaching-autoencoder/">Self-Teaching Autoencoder</a></h3>
             <div class="item-meta">
               <small>19 May 2026</small>
-              <span class="item-tags"><span class="item-tag">Self-Supervision</span></span>
+              <span class="item-tags"><span class="item-tag">Self-Supervision</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2058633043364003917" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="614 likes on X announcement"><span aria-hidden="true">♡</span> 614 on X</a>
             </div>
             <p>A self-training autoencoder. Trained without reconstruction losses, pixel or otherwise, and no image-space supervision of any kind.</p>
           </div>
@@ -166,7 +188,7 @@
             <h3><a href="/blog/practical-notes-on-lejepa/">Practical notes on leJEPA</a></h3>
             <div class="item-meta">
               <small>11 May 2026</small>
-              <span class="item-tags"><span class="item-tag">Self-Supervision</span></span>
+              <span class="item-tags"><span class="item-tag">Self-Supervision</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2054931319713325544" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="9 likes on X announcement"><span aria-hidden="true">♡</span> 9 on X</a>
             </div>
             <p>Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.</p>
           </div>
@@ -177,7 +199,7 @@
             <h3><a href="/blog/la-leworldmodel/">la leWorldModel</a></h3>
             <div class="item-meta">
               <small>30 Mar 2026</small>
-              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Robotics</span><span class="item-tag">Self-Supervision</span></span>
+              <span class="item-tags"><span class="item-tag">World Modelling</span><span class="item-tag">Robotics</span><span class="item-tag">Self-Supervision</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2041216929759936712" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="220 likes on X announcement"><span aria-hidden="true">♡</span> 220 on X</a>
             </div>
             <p>Simultaneous latent action and world model learning from passive video for controllable prediction.</p>
           </div>
@@ -188,7 +210,7 @@
             <h3><a href="/blog/tokens-who-needs-them/">Tokens, who needs them?</a></h3>
             <div class="item-meta">
               <small>07 Mar 2026</small>
-              <span class="item-tags"><span class="item-tag">LLM</span></span>
+              <span class="item-tags"><span class="item-tag">LLM</span></span><a class="item-likes" href="https://x.com/MozarellaPesto/status/2030675747237441833" target="_blank" rel="noreferrer" title="Announcement likes · checked 2026-09-05" aria-label="18 likes on X announcement"><span aria-hidden="true">♡</span> 18 on X</a>
             </div>
             <p>Improving transformer memory efficiency by 2.7x</p>
           </div>

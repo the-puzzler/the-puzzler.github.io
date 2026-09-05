@@ -7,20 +7,13 @@
   /* Shared Layout Vars */
   --text-max: 48rem;
   /* ~768px */
-  --sheet-h: 100dvh;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --sheet-pad-top: 10px;
-  --sheet-pad-x: 16px;
-  --sheet-pad-bottom: 28px;
-  /* leave room for page badge */
-
   /* Font Stack (Locked) */
   --font-stack: "EB Garamond", Garamond, "URW Palladio L", serif;
 
   /* Theme: PAPER (Light Default) */
   --bg: #f9f7f1;
   --ink: #2c2925;
-  --ink-dim: #8a847e;
+  --ink-dim: #68625c;
   --rule: #a8a39d;
   --accent: #2c2925;
 
@@ -137,6 +130,7 @@ html {
 .mode-btn:active {
   transform: translateY(1px);
 }
+
 
 /* Mobile Tweaks for Controls */
 @media (max-width: 560px) {
@@ -546,16 +540,36 @@ li {
   margin-top: 0
 }
 
-/* Pull content up */
-.post.book-mode .sheet> :first-child {
-  margin-top: 0;
-}
-
-.post.book-mode .sheet> :last-child {
-  margin-bottom: 0;
-}
-
 /* Hero Image */
+.home-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 208px;
+  grid-template-rows: auto 1fr;
+  column-gap: 36px;
+  row-gap: 8px;
+  padding: 24px 0 12px;
+}
+.home-intro h1 { margin: 12px 0 0; }
+.home-intro p { grid-column: 1; margin: 0; line-height: 1.55; }
+.home-portrait { grid-column: 2; grid-row: 1 / 3; }
+.home-portrait .hero-img {
+  height: 208px;
+  object-fit: cover;
+  object-position: 70% center;
+}
+@media (max-width: 560px) {
+  .home-intro {
+    grid-template-columns: minmax(0, 1fr) 76px;
+    align-items: center;
+    gap: 14px 16px;
+    padding: 12px 0 4px;
+  }
+  .home-intro h1 { margin: 0; }
+  .home-portrait { grid-row: 1; }
+  .home-portrait .hero-img { height: 76px; }
+  .home-intro p { grid-column: 1 / -1; }
+}
+
 .hero-img {
   width: 100%;
   height: auto;
@@ -615,6 +629,57 @@ a:hover {
 }
 
 /* Home list */
+.playground { margin: 24px 0 28px; }
+.playground-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.playground-heading h2 { margin: 0; }
+.playground-heading > span { color: var(--ink-dim); font-size: 0.95rem; }
+.demo-library { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.demo-tile { display: block; min-width: 0; text-decoration: none; }
+.demo-cover {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 8 / 5;
+  margin-bottom: 8px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  background: var(--rule);
+}
+.demo-cover img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.demo-cover--doom { background: #242424; }
+.demo-cover--othello { background: #305640; }
+.demo-cover--nethack { background: #000; }
+.demo-cover--latent-brush { background: #fff; }
+.demo-play {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.75rem;
+  box-shadow: 0 1px 6px #0003;
+}
+.demo-tile strong { display: block; color: var(--ink); font-size: 1.05rem; line-height: 1.25; }
+.demo-tile > span { display: block; margin-top: 3px; color: var(--ink-dim); font-size: 0.9rem; line-height: 1.3; }
+.demo-tile:hover { opacity: 1; }
+.demo-tile:hover .demo-cover,
+.demo-tile:focus-visible .demo-cover { border-color: var(--ink); }
+.demo-tile:hover strong { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 560px) {
+  .demo-library { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  .demo-cover { aspect-ratio: 2 / 1; }
+}
+
 .tag-filter-row {
   display: flex;
   align-items: center;
@@ -702,13 +767,10 @@ a:hover {
   list-style: none;
   padding: 0;
   margin: 0;
-  height: 72vh;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .item {
+  position: relative;
   padding: 10px 0;
   border-bottom: 1px solid var(--rule);
   display: flex;
@@ -716,6 +778,22 @@ a:hover {
   justify-content: space-between;
   gap: 14px;
 }
+
+.item h3 a::after { content: ''; position: absolute; inset: 0; border-radius: 4px; }
+.item:has(h3 a):hover,
+.item:has(h3 a:focus-visible) { background: color-mix(in srgb, var(--bg) 95%, var(--ink) 5%); }
+.item h3 a:focus-visible { outline: none; }
+.item h3 a:focus-visible::after { outline: 2px solid var(--accent); outline-offset: 3px; }
+.item-likes {
+  position: relative;
+  z-index: 1;
+  padding: 4px 2px;
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.item-likes:hover { color: var(--ink); text-decoration: underline; }
 
 .item:first-child {
   border-top: 1px solid var(--rule)
@@ -822,31 +900,6 @@ a:hover {
   transition: filter 0.3s ease;
 }
 
-/* Dark Mode: Dim images */
-:root[data-mode="dark"] .post img,
-:root[data-mode="dark"] .post video {
-  filter: brightness(0.7) contrast(1.1) sepia(0.4);
-}
-
-:root[data-mode="dark"] .post img:hover,
-:root[data-mode="dark"] .post video:hover {
-  filter: none;
-}
-
-/* System Dark Mode */
-@media (prefers-color-scheme: dark) {
-
-  :root:not([data-mode="light"]) .post img,
-  :root:not([data-mode="light"]) .post video {
-    filter: brightness(0.7) contrast(1.1) sepia(0.4);
-  }
-
-  :root:not([data-mode="light"]) .post img:hover,
-  :root:not([data-mode="light"]) .post video:hover {
-    filter: none;
-  }
-}
-
 /* Code */
 code,
 pre {
@@ -904,196 +957,184 @@ pre {
   }
 }
 
-/* =========================================
-     Book mode — soft page breaks (Global)
-     ========================================= */
-
-/* Prevent vertical page scroll on post view only */
-body:has(.post.book-mode) {
-  overflow-y: hidden;
+@media (max-width: 560px) {
+  .container { padding-bottom: 8px; }
 }
 
-.post.book-mode {
-  position: relative;
-  padding: 0;
-  margin-bottom: 0;
+/* Reading and discovery */
+a:focus-visible,
+button:focus-visible,
+.blog-search:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
 }
 
-.book {
+.blog-heading-row {
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  /* lock vertical scroll */
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-  height: var(--sheet-h);
-  /* provided by JS (header-aware) */
+  grid-template-columns: auto minmax(0, 1fr) minmax(140px, 190px) auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 10px;
 }
-
-.book::-webkit-scrollbar {
-  display: none
-}
-
-.book {
-  scrollbar-width: none
-}
-
-.sheet {
-  scroll-snap-align: start;
-  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--safe-bottom));
-  min-height: var(--sheet-h);
-  max-height: var(--sheet-h);
-  overflow: hidden;
-  /* no per-sheet vertical scroll */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-/* Fit media to the page height to avoid overflow */
-.post.book-mode img,
-.post.book-mode video {
-  max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-  object-fit: contain;
-}
-
-/* If a code block is very tall, let it scroll internally (rare case) */
-.post.book-mode pre {
-  max-height: calc(var(--sheet-h) - (var(--sheet-pad-top) + var(--sheet-pad-bottom) + var(--safe-bottom)));
-  overflow: auto;
-}
-
-/* Page number badge */
-.page-num {
-  position: fixed;
-  left: 50%;
-  bottom: calc(12px + var(--safe-bottom));
-  /* slightly higher */
-  transform: translateX(-50%);
-  font-size: .85rem;
-  font-weight: 600;
-  opacity: 0.9;
+.blog-heading-row h1 { margin: 0; }
+.blog-heading-row .blog-search-wrap { width: 100%; grid-column: 3; grid-row: 1; }
+.blog-sort {
+  grid-column: 4;
+  grid-row: 1;
+  height: 2.125rem;
+  padding: 0 8px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
   background: var(--bg);
   color: var(--ink);
-  padding: 3px 10px;
-  border: 1px solid var(--rule);
-  border-radius: 99px;
-  z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  font: inherit;
+  cursor: pointer;
 }
-
-/* Hide <hr> lines visually in book mode (they’re soft breaks) */
-.post.book-mode hr {
-  display: none
-}
-
-/* No extra whitespace after the book on phones */
-.post.book-mode+.footer {
-  display: none
-}
-
-body:has(.post.book-mode) .post-toc {
-  display: none;
-}
-
-
-/* ===========================
-     Mobile Specific & Overrides
-   =========================== */
-@media (max-width:560px) {
-
-  /* Hide Header in Book Mode (Mobile Only) */
-  body:has(.post.book-mode) .header {
-    display: none;
-  }
-
-  /* Slightly reduce bottom padding on phones */
-  .container {
-    padding-bottom: 8px
-  }
-}
-
-:root {
-  /* how much to zoom out (lower = smaller). 0.94–0.90 works well */
-  --page-scale: 0.93;
-
-  /* optional extra gutter inside the viewport */
-  --page-gutter: max(12px, env(safe-area-inset-bottom, 0px));
-}
-
-/* Logic for zoomed sheets (shared, but useful mainly for small screens/book mode) */
-/* keep the book vibe (no vertical scroll at the root) */
-body:has(.post.book-mode) {
-  overflow-y: hidden
-}
-
-.post.book-mode .book {
-  height: 100svh;
-  /* use the *visible* small viewport; okay because we underscan */
-  /* if your browser supports dvh, prefer it: */
-}
-
-@supports (height: 100dvh) {
-  .post.book-mode .book {
-    height: 100dvh;
-  }
-}
-
-/* wrapper that is exactly viewport-high */
-.post.book-mode .sheet-wrap {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  /* clip the over-sized inner content */
+.blog-sort:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.blog-search { width: 100%; height: 2.125rem; }
+.tag-chip { min-height: 2rem; padding: 6px 10px; font-size: 0.875rem; }
+.tag-filter-row { min-height: 0; margin-bottom: 12px; }
+.tag-filters { justify-content: flex-start; gap: 6px; }
+.item { padding: 20px 0; }
+.item h3 { font-size: clamp(1.25rem, 3vw, 1.45rem); }
+.item p { line-height: 1.5; }
+.blog-results {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  white-space: nowrap;
+  gap: 8px;
+  min-height: 28px;
+  font-size: 0.9rem;
+  color: var(--ink-dim);
 }
-
-/* inner layer that we “zoom out” */
-.post.book-mode .sheet-zoom {
-  /* make it bigger than the wrapper so that scaling it down fits with margin */
-  width: calc(100% / var(--page-scale));
-  height: calc(100% / var(--page-scale));
-  transform: scale(var(--page-scale));
-  transform-origin: top left;
-  /* important */
-  padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + var(--page-gutter));
-  /* your existing styles may add borders etc. — that’s fine */
+.blog-results button[hidden] { display: inline-block; visibility: hidden; }
+.blog-results button {
+  padding: 8px 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
-
-/* if you previously set height on .sheet, remove it or let this override */
-.post.book-mode .sheet {
-  height: auto;
-  /* the zoomed inner provides the sizing now */
-}
-
-/* cap tall media/code so they never touch the edges even after scale */
-.post.book-mode img,
-.post.book-mode video {
-  max-height: 80%;
-  object-fit: contain;
-}
-
-.post.book-mode pre {
-  max-height: 80%;
-  overflow: auto;
-}
-
-@media (max-width:560px) {
-  .post.book-mode .sheet {
-    height: var(--vp-h, 100svh);
-    overflow: hidden;
-    position: relative;
-    padding: 0;
-    /* moved to inner */
+@media (max-width: 720px) {
+  .blog-heading-row {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 2px 16px;
   }
+  .blog-heading-row .blog-search-wrap { grid-column: 2; max-width: 240px; justify-self: end; }
+  .blog-results { grid-column: 1; grid-row: 2; }
+  .blog-sort { grid-column: 2; grid-row: 2; justify-self: end; }
+}
+.toc-toggle { display: none; }
+.post :is(h2, h3) { scroll-margin-top: 5rem; }
 
-  .post.book-mode .page-inner {
-    transform-origin: top left;
-    will-change: transform;
-    padding: var(--sheet-pad-top) var(--sheet-pad-x) calc(var(--sheet-pad-bottom) + env(safe-area-inset-bottom, 0px));
+@media (max-width: 1248px) {
+  .post-layout { display: flex; flex-direction: column; }
+  .post-toc,
+  .post-toc--card {
+    display: block;
+    order: -1;
+    position: sticky;
+    top: 0;
+    left: auto;
+    width: 100%;
+    max-width: var(--text-max);
+    margin: 0 auto 18px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--rule);
+  }
+  .toc-roller { display: none; }
+  .toc-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 0;
+    border: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: inherit;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .toc-toggle::after { content: '+'; font-size: 1.4rem; }
+  .toc-toggle[aria-expanded="true"]::after { content: '−'; }
+  .post-toc .toc-card { display: none; }
+  .post-toc.is-open .toc-card {
+    display: block;
+    max-height: 55dvh;
+    margin: 0;
+    padding: 0 8px 12px;
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+    border: 0;
+    box-shadow: none;
+    background: var(--bg);
+    scrollbar-width: thin;
+  }
+  .post-toc .toc-card h2 { display: none; }
+  .post-toc .toc-list { font: inherit; gap: 0; }
+  .post-toc .toc-list a { display: block; padding: 10px 0; line-height: 1.4; }
+  .post-toc .toc-list a::before,
+  .post-toc .toc-list a.active::before { content: none; }
+  .post-toc .toc-list .toc-h3 { padding-left: 16px; }
+}
+
+@media (max-width: 560px) {
+  #post-list .item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 104px;
+    grid-template-rows: auto auto auto;
+    align-items: start;
+    gap: 4px 12px;
+    padding: 14px 0;
+  }
+  #post-list .item-main { display: contents; }
+  #post-list .item h3 {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+    font-size: 1.2rem;
+    line-height: 1.2;
+    hyphens: none;
+  }
+  #post-list .item-meta {
+    grid-column: 1;
+    grid-row: 2;
+    gap: 2px 8px;
+    font-size: 1rem;
+  }
+  #post-list .item-tags { display: none; }
+  #post-list .item-thumb-link {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    width: 104px;
+  }
+  #post-list .item-thumb { height: 78px; }
+  #post-list .item p {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    margin: 4px 0 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    hyphens: none;
+  }
+  #post-list .item:not(:has(.item-thumb-link)) :is(h3, .item-meta) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
   }
 }

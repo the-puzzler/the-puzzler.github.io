@@ -235,6 +235,16 @@ def render_home_item(post: dict) -> str:
     title = html.escape(str(post.get("title") or slug))
     tags = "".join(f'<span class="item-tag">{html.escape(str(tag))}</span>' for tag in post.get("tags", []))
     tags_html = f'<span class="item-tags">{tags}</span>' if tags else ""
+    x_post = post.get("x_post") or {}
+    likes_html = ""
+    if re.fullmatch(r"\d+", str(x_post.get("id", ""))) and type(x_post.get("likes")) is int and x_post["likes"] >= 0:
+        likes = x_post["likes"]
+        checked = html.escape(str(x_post.get("checked_at", "")), quote=True)
+        likes_html = (
+            f'<a class="item-likes" href="https://x.com/MozarellaPesto/status/{x_post["id"]}" '
+            f'target="_blank" rel="noreferrer" title="Announcement likes · checked {checked}" '
+            f'aria-label="{likes} likes on X announcement"><span aria-hidden="true">♡</span> {likes:,} on X</a>'
+        )
     image = str(post.get("social_image") or "")
     thumb = ""
     if image:
@@ -250,7 +260,7 @@ def render_home_item(post: dict) -> str:
             <h3><a href="{html.escape(href, quote=True)}"{extra}>{title}</a></h3>
             <div class="item-meta">
               <small>{html.escape(format_date(str(post.get("date") or "")))}</small>
-              {tags_html}
+              {tags_html}{likes_html}
             </div>
             {description_html}
           </div>

@@ -1,0 +1,44 @@
+name: Refresh X likes
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: refresh-x-likes
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: github.repository == 'the-puzzler/the-puzzler.github.io' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - name: Check refresh failure handling
+        run: python3 scripts/test-refresh-x-likes.py
+      - name: Refresh verified counts and rebuild static pages
+        run: python3 scripts/refresh-x-likes.py --allow-partial
+      - name: Commit updated snapshots
+        run: |
+          git add posts.json index.html blog/ share/ sitemap.xml robots.txt
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Update X announcement likes'
+            # A concurrent push causes a safe failure, never a force push.
+            git push origin HEAD:main
+          fi
+      - name: Request GitHub Pages rebuild
+        # GITHUB_TOKEN pushes do not automatically trigger a Pages build.
+        # Always request it so a retry also recovers a failed previous request.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/pages/builds"

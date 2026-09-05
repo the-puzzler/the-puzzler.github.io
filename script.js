@@ -30,8 +30,21 @@ function formatDate(iso) {
 
 const HOME_FILTER_TAGS = ['LLM', 'RL', 'Robotics', 'Biology', 'World Modelling', 'Generative Modelling', 'Self-Supervision'];
 let homePostsCache = [];
-let activeHomeTags = new Set();
-let homeSearchQuery = '';
+const initialHomeParams = new URLSearchParams(location.search);
+let activeHomeTags = new Set(initialHomeParams.getAll('topic').filter(tag => HOME_FILTER_TAGS.includes(tag)));
+let homeSearchQuery = (initialHomeParams.get('q') || '').trim().toLowerCase();
+let homeSort = initialHomeParams.get('sort') === 'likes' ? 'likes' : 'newest';
+
+function syncHomeFilters() {
+  const url = new URL(location.href);
+  url.searchParams.delete('q');
+  url.searchParams.delete('topic');
+  url.searchParams.delete('sort');
+  if (homeSort === 'likes') url.searchParams.set('sort', 'likes');
+  if (homeSearchQuery) url.searchParams.set('q', homeSearchQuery);
+  activeHomeTags.forEach(tag => url.searchParams.append('topic', tag));
+  history.replaceState(null, '', url);
+}
 
 function normalizePostTags(tags) {
   if (!Array.isArray(tags)) return [];
@@ -45,16 +58,6 @@ function postMatchesActiveTag(post) {
     if (normalized.includes(selectedTag.toLowerCase())) return true;
   }
   return false;
-}
-
-function postTagMatchScore(post) {
-  if (!activeHomeTags.size) return 0;
-  const normalized = new Set(normalizePostTags(post.tags).map(t => t.toLowerCase()));
-  let score = 0;
-  for (const selectedTag of activeHomeTags) {
-    if (normalized.has(selectedTag.toLowerCase())) score += 1;
-  }
-  return score;
 }
 
 function postMatchesSearch(post) {
@@ -114,6 +117,7 @@ function renderTagFilters(posts) {
       }
       renderTagFilters(homePostsCache);
       renderHomePostList(homePostsCache);
+      $$('.tag-chip', filterEl).find(button => button.dataset.tag === tag)?.focus();
     });
   });
 }
@@ -126,10 +130,20 @@ function renderHomePostList(posts) {
     .filter(postMatchesActiveTag)
     .filter(postMatchesSearch)
     .sort((a, b) => {
-      const scoreDiff = postTagMatchScore(b) - postTagMatchScore(a);
-      if (scoreDiff !== 0) return scoreDiff;
+      if (homeSort === 'likes') {
+        const count = post => /^\d+$/.test(post.x_post?.id || '') && Number.isInteger(post.x_post?.likes) && post.x_post.likes >= 0 ? post.x_post.likes : -1;
+        const likesDiff = count(b) - count(a);
+        if (likesDiff !== 0) return likesDiff;
+      }
       return new Date(b.date) - new Date(a.date);
     });
+  syncHomeFilters();
+  const status = $('#blog-result-count');
+  if (status) status.textContent = homeSearchQuery || activeHomeTags.size
+    ? `${filtered.length} of ${posts.length} articles`
+    : `${posts.length} articles`;
+  const clear = $('#blog-clear-filters');
+  if (clear) clear.hidden = !homeSearchQuery && !activeHomeTags.size;
   if (!filtered.length) {
     listEl.innerHTML = '<li class="item"><div class="item-main"><p>No posts match the current filters.</p></div></li>';
     return;
@@ -138,6 +152,10 @@ function renderHomePostList(posts) {
   listEl.innerHTML = filtered.map(p => {
     const href = makeHref(p.path || "");
     const attrs = linkAttrs(p.path || "");
+    const xPost = p.x_post;
+    const likesHtml = xPost && /^\d+$/.test(xPost.id) && Number.isInteger(xPost.likes) && xPost.likes >= 0
+      ? `<a class="item-likes" href="https://x.com/MozarellaPesto/status/${xPost.id}" target="_blank" rel="noreferrer" title="Announcement likes · checked ${String(xPost.checked_at || '').replace(/[^0-9-]/g, '')}" aria-label="${xPost.likes} likes on X announcement"><span aria-hidden="true">♡</span> ${xPost.likes.toLocaleString()} on X</a>`
+      : '';
     const tags = normalizePostTags(p.tags);
     const tagsHtml = tags.length
       ? `<span class="item-tags">${tags.map(tag => `<span class="item-tag">${tag}</span>`).join('')}</span>`
@@ -156,6 +174,7 @@ function renderHomePostList(posts) {
           <div class="item-meta">
             <small>${formatDate(p.date)}</small>
             ${tagsHtml}
+            ${likesHtml}
           </div>
           ${p.description ? `<p>${p.description}</p>` : ``}
         </div>
@@ -170,6 +189,31 @@ async function renderList() {
   if (!listEl) return;
 
   homePostsCache = await loadPosts();
+  const sortEl = $('#blog-sort');
+  if (sortEl) {
+    sortEl.value = homeSort;
+    sortEl.disabled = false;
+    sortEl.onchange = () => {
+      homeSort = sortEl.value === 'likes' ? 'likes' : 'newest';
+      renderHomePostList(homePostsCache);
+    };
+  }
+  let feedback = $('#blog-results');
+  if (!feedback) {
+    feedback = document.createElement('div');
+    feedback.id = 'blog-results';
+    feedback.className = 'blog-results';
+    feedback.innerHTML = '<span id="blog-result-count" role="status" aria-live="polite"></span><button id="blog-clear-filters" type="button" aria-label="Clear search and filters" hidden>Clear</button>';
+    $('.blog-heading-row').appendChild(feedback);
+    $('#blog-clear-filters').onclick = () => {
+      homeSearchQuery = '';
+      activeHomeTags.clear();
+      $('#blog-search').value = '';
+      renderTagFilters(homePostsCache);
+      renderHomePostList(homePostsCache);
+      $('#blog-search').focus();
+    };
+  }
   initHomeSearch();
   renderTagFilters(homePostsCache);
   renderHomePostList(homePostsCache);
@@ -322,6 +366,22 @@ function buildPostTOC(contentEl) {
   clearPostTOC();
   const cardVariant = Boolean(contentEl.querySelector('[data-toc-variant="card"]'));
   toc.classList.toggle('post-toc--card', cardVariant);
+  let toggle = toc.querySelector('.toc-toggle');
+  if (!toggle) {
+    toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'toc-toggle';
+    toggle.textContent = 'On this page';
+    toggle.setAttribute('aria-controls', 'toc-panel');
+    toc.prepend(toggle);
+  }
+  toc.querySelector('.toc-card').id = 'toc-panel';
+  toggle.setAttribute('aria-expanded', 'false');
+  toc.classList.remove('is-open');
+  toggle.onclick = () => {
+    const open = toc.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(open));
+  };
 
   const headings = $$('h2, h3', contentEl)
     .filter(h => h.textContent.trim().length && !h.hasAttribute('data-toc-skip'));
@@ -351,8 +411,12 @@ function buildPostTOC(contentEl) {
     a.textContent = h.textContent.trim();
     a.addEventListener('click', (e) => {
       e.preventDefault();
-      h.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      toc.classList.remove('is-open');
+      toggle.setAttribute('aria-expanded', 'false');
+      h.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
       history.replaceState(null, '', headingUrl);
+      h.setAttribute('tabindex', '-1');
+      h.focus({ preventScroll: true });
       // Collapse hover panel after mouse click (avoid sticky focus-within state)
       a.blur();
     });
@@ -390,7 +454,7 @@ function buildPostTOC(contentEl) {
   }
 
   const links = $$('a', ul);
-  const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+  const byId = new Map(links.map(a => [new URL(a.href).hash.slice(1), a]));
   const topOffset = 120;
   // Keep TOC opening position aligned to the current section without
   // continuously re-centering during regular scrolling/clicking.
@@ -415,8 +479,10 @@ function buildPostTOC(contentEl) {
       else break;
     }
     const active = headings[activeIndex];
-    links.forEach(a => a.classList.remove('active'));
-    byId.get(active.id)?.classList.add('active');
+    links.forEach(a => { a.classList.remove('active'); a.removeAttribute('aria-current'); });
+    const activeLink = byId.get(active.id);
+    activeLink?.classList.add('active');
+    activeLink?.setAttribute('aria-current', 'location');
     if (roller) {
       roller.querySelector('.toc-roller-prev2').textContent = headings[activeIndex - 2]?.textContent.trim() || '';
       roller.querySelector('.toc-roller-prev').textContent = headings[activeIndex - 1]?.textContent.trim() || '';
@@ -441,245 +507,6 @@ function buildPostTOC(contentEl) {
   };
 }
 
-// -----------------------------
-// Book mode (soft page breaks, keep-with-next for headings)
-// -----------------------------
-function enableSoftBookMode(contentEl) {
-  const post = contentEl.closest('.post');
-  if (!post) return;
-  if (post.classList.contains('book-mode')) return; // already active
-
-  // Save linear HTML once for clean rebuilds
-  if (!contentEl._originalHTML) contentEl._originalHTML = contentEl.innerHTML;
-
-  // Make sure headings show their final text before measuring
-  normalizeHeadings(contentEl);
-
-  // Split content into sections by <hr>
-  const sections = splitIntoSections(contentEl);
-
-  // Measurer with exact width context
-  const { sheetForMeasure, cleanup } = makeMeasurer(contentEl);
-
-  // Available page height below header
-  // If header is hidden by CSS in book mode, this might change, but we assume
-  // consistency or that maxH uses current logic.
-  const maxH = getPageMaxHeight();
-  document.documentElement.style.setProperty('--sheet-h', `${maxH}px`);
-
-  const pages = [];
-  let current = [];
-
-  const pushPage = (nodes) => { if (nodes.length) pages.push({ nodes }); };
-  const tryPack = (nodes) => {
-    const tentative = current.concat(nodes);
-    const h = measureNodesHeight(sheetForMeasure, tentative);
-    if (h <= maxH) { current = tentative; return true; }
-    return false;
-  };
-
-  // Build pages
-  for (const section of sections) {
-    const blocks = splitSectionIntoBlocks(section);
-    const units = buildKeepWithNextUnits(blocks);
-
-    const wholeSection = [...section];
-    if (wholeSection.length && tryPack(wholeSection)) continue;
-
-    pushPage(current); current = [];
-    for (const unit of units) {
-      if (tryPack(unit)) continue;
-      pushPage(current); current = [];
-      if (!tryPack(unit)) pushPage(unit);
-    }
-  }
-  pushPage(current); current = [];
-
-  // Build live DOM
-  const book = document.createElement('div');
-  book.className = 'book';
-  for (const p of pages) {
-    const sheet = document.createElement('section');
-    sheet.className = 'sheet';
-    p.nodes.forEach(n => sheet.appendChild(n));
-    book.appendChild(sheet);
-  }
-
-  contentEl.innerHTML = '';
-  contentEl.appendChild(book);
-
-  post.classList.add('book-mode'); // Triggers CSS
-
-  addPageBadge(post, book);
-  cleanup();
-
-  window.addEventListener('resize', onBookResize);
-}
-
-function disableBookMode(contentEl) {
-  const post = contentEl.closest('.post');
-  if (!post) return;
-  if (!post.classList.contains('book-mode')) return;
-
-  // Restore
-  if (contentEl._originalHTML) {
-    contentEl.innerHTML = contentEl._originalHTML;
-  }
-  post.classList.remove('book-mode');
-
-  // Remove Global Badges
-  const old = document.querySelector('.page-num-global');
-  if (old) old.remove();
-
-  // Cleanup Resize Listener
-  window.removeEventListener('resize', onBookResize);
-
-  document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
-}
-
-
-const onBookResize = debounce(() => {
-  document.documentElement.style.setProperty('--sheet-h', `${getPageMaxHeight()}px`);
-  const contentEl = document.querySelector('.page');
-  if (!contentEl) return;
-  const book = contentEl.querySelector('.book');
-  if (!book) return;
-
-  normalizeHeadings(book);
-  const linearHTML = Array.from(book.querySelectorAll('.sheet')).map(s => s.innerHTML).join('');
-  contentEl.innerHTML = linearHTML;
-
-  contentEl.closest('.post').classList.remove('book-mode');
-  enableSoftBookMode(contentEl);
-
-  document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
-}, 200);
-
-function splitIntoSections(container) {
-  const nodes = Array.from(container.childNodes);
-  const groups = [[]];
-  for (const n of nodes) {
-    if (n.nodeType === 1 && n.tagName === 'HR') {
-      if (groups[groups.length - 1].length > 0) groups.push([]);
-    } else {
-      groups[groups.length - 1].push(n);
-    }
-  }
-  if (groups[groups.length - 1].length === 0 && groups.length > 1) groups.pop();
-  // Normalize stray text to paragraphs
-  return groups.map(g => g.map(node => {
-    if (node.nodeType === 3 && node.textContent.trim() !== '') {
-      const p = document.createElement('p');
-      p.textContent = node.textContent;
-      return p;
-    }
-    return node;
-  }));
-}
-
-// Split into blocks (indivisible display units)
-function splitSectionIntoBlocks(nodes) {
-  const blocks = [];
-  nodes.forEach(n => {
-    if (n.nodeType === 3) {
-      const txt = n.textContent.trim();
-      if (txt) { const p = document.createElement('p'); p.textContent = txt; blocks.push(p); }
-    } else if (n.nodeType === 1) {
-      const tag = n.tagName.toLowerCase();
-      const isBlock = /^(p|h1|h2|h3|h4|h5|h6|ul|ol|li|pre|blockquote|figure|img|table|hr|div)$/i.test(tag);
-      if (isBlock) blocks.push(n);
-      else { const p = document.createElement('p'); p.appendChild(n); blocks.push(p); }
-    }
-  });
-  // Remove any hr that slipped in (sections are split by hr already)
-  return blocks.filter(el => !(el.tagName && el.tagName.toLowerCase() === 'hr'));
-}
-
-// Build units that keep headings with the next block
-function buildKeepWithNextUnits(blocks) {
-  const units = [];
-  for (let i = 0; i < blocks.length; i++) {
-    const b = blocks[i];
-    const tag = (b.tagName || '').toLowerCase();
-    if (/^h[1-6]$/.test(tag)) {
-      const next = blocks[i + 1];
-      if (next) {
-        units.push([b, next]); // heading + next block stay together
-        i++;                   // skip the next (already grouped)
-      } else {
-        units.push([b]);       // heading at end of section; try to keep it alone at top of a page
-      }
-    } else {
-      units.push([b]);
-    }
-  }
-  return units;
-}
-
-function makeMeasurer(referenceEl) {
-  const width = Math.max(referenceEl.getBoundingClientRect().width, 1);
-  const measurer = document.createElement('div');
-  measurer.style.cssText = `
-    position:absolute; left:-99999px; top:0;
-    width:${width}px; visibility:hidden; pointer-events:none;
-  `;
-  document.body.appendChild(measurer);
-
-  const sheet = document.createElement('section');
-  sheet.className = 'sheet';
-  measurer.appendChild(sheet);
-
-  function cleanup() { measurer.remove(); }
-  return { sheetForMeasure: sheet, cleanup };
-}
-function measureNodesHeight(sheetEl, nodes) {
-  sheetEl.innerHTML = '';
-  nodes.forEach(n => sheetEl.appendChild(n.cloneNode(true)));
-  const h = sheetEl.scrollHeight;
-  sheetEl.innerHTML = '';
-  return h;
-}
-function getPageMaxHeight() {
-  const vh = (window.visualViewport?.height || window.innerHeight);
-  const header = document.querySelector('.header');
-  const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
-  const pad = 4; // Minimal pad, allowing text behind buttons
-  return Math.max(120, Math.round(vh - headerBottom - pad));
-}
-function addPageBadge(postEl, bookEl) {
-  console.log('[addPageBadge] Called. Book children:', bookEl.children.length);
-  // Remove any old global badges
-  const old = document.querySelector('.page-num-global');
-  if (old) old.remove();
-
-  const badge = document.createElement('div');
-  badge.className = 'page-num page-num-global';
-  document.body.appendChild(badge);
-
-  const total = bookEl.children.length;
-  function update() {
-    const idx = Math.round(bookEl.scrollLeft / Math.max(bookEl.clientWidth, 1));
-    const clamped = Math.min(Math.max(idx, 0), total - 1);
-    const txt = `${clamped + 1} / ${total}`;
-    // console.log('[addPageBadge] Update:', txt);
-    badge.textContent = txt;
-  }
-  bookEl.addEventListener('scroll', debounce(update, 50), { passive: true });
-  window.addEventListener('resize', debounce(update, 100));
-  update();
-
-  bookEl.addEventListener('click', (e) => {
-    const rect = bookEl.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    if (x < rect.width * 0.2) snapToPage(bookEl, -1);
-    else if (x > rect.width * 0.8) snapToPage(bookEl, +1);
-  }, { passive: true });
-}
-function snapToPage(bookEl, delta) {
-  const idx = Math.round(bookEl.scrollLeft / Math.max(bookEl.clientWidth, 1)) + delta;
-  const target = Math.min(Math.max(idx, 0), bookEl.children.length - 1);
-  bookEl.scrollTo({ left: target * bookEl.clientWidth, behavior: 'smooth' });
-}
 function getCurrentPostPath() {
   const params = new URLSearchParams(location.search);
   return params.get('p') || document.body?.dataset.staticPostPath || '';
@@ -900,181 +727,6 @@ async function renderPost() {
   // This handles ANY folder structure (flat, nested, etc) correctly.
   const path = await resolvePostPath(p);
 
-  // Fetch Logic
-  // ======= Helpers scoped to this function =======
-  function ensureInner() {
-    // If not in book mode or on desktop, remove global badge
-    if (!window.matchMedia('(max-width: 560px)').matches) {
-      const g = document.querySelector('.page-num-global');
-      if (g) g.remove();
-    }
-    const post = contentEl.closest('.post.book-mode');
-    if (!post) return;
-    post.querySelectorAll('.sheet').forEach(sheet => {
-      let inner = sheet.querySelector(':scope > .page-inner');
-      if (!inner) {
-        inner = document.createElement('div');
-        inner.className = 'page-inner';
-        while (sheet.firstChild) inner.appendChild(sheet.firstChild);
-        sheet.appendChild(inner);
-      }
-      // clear any previous scaling before measuring
-      inner.style.transform = 'none';
-      inner.style.zoom = '';
-    });
-  }
-
-  function setViewportVars() {
-    const avail = getPageMaxHeight(); // your existing helper (vv.height - header - pad)
-    const px = Math.max(0, Math.floor(avail));
-    const root = document.documentElement;
-    root.style.setProperty('--vp-h', px + 'px');
-    root.style.setProperty('--sheet-h', px + 'px');
-    return px;
-  }
-
-  const supportsZoom = CSS.supports?.('zoom', '1') || /Safari|iPhone|iPad/i.test(navigator.userAgent);
-
-  // Measure the PAINTED height of an inner (taking scale into account)
-  function paintedHeight(inner) {
-    // getBoundingClientRect reflects both zoom *and* transforms reliably
-    return inner.getBoundingClientRect().height || 0;
-  }
-
-  // Apply a temporary scale to measure; returns painted height at that scale.
-  function measureAtScale(inner, s) {
-    // reset
-    inner.style.transform = 'none';
-    if (supportsZoom) inner.style.zoom = '';
-    // set
-    if (s < 1) {
-      if (supportsZoom) inner.style.zoom = String(s);
-      else inner.style.transform = `scale(${s})`;
-    }
-    // read
-    const h = paintedHeight(inner);
-    return h;
-  }
-
-  // Binary search the LARGEST s in [minS, 1] such that paintedHeight <= avail - marginPx
-
-  // Binary search the MAX scale that fits, with a smaller safety + a final nudge up
-  function fitInnerExactly(inner, avail, options) {
-    // leaner safety
-    const marginPct = options?.marginPct ?? 0.006; // 0.6% (was 1.2%)
-    const marginPx = options?.marginPx ?? 0;     // 0 px (was 1px per DPR)
-    const lowerCap = options?.minScale ?? 0.75;  // don’t go microscopic
-    const supportsZoom = CSS.supports?.('zoom', '1') || /Safari|iPhone|iPad/i.test(navigator.userAgent);
-
-    // measure helper at a given scale
-    function measureAtScale(s) {
-      // reset
-      inner.style.transform = 'none';
-      if (supportsZoom) inner.style.zoom = '';
-      // set
-      if (s < 1) {
-        if (supportsZoom) inner.style.zoom = String(s);
-        else inner.style.transform = `scale(${s})`;
-      }
-      // read
-      return paintedHeight(inner);
-    }
-
-    // quick path: full size already fits
-    if (measureAtScale(1) <= (avail - marginPx)) {
-      if (supportsZoom) inner.style.zoom = '';
-      inner.style.transform = 'none';
-      inner.dataset.scale = '1.000';
-      return 1;
-    }
-
-    // search the largest s ∈ [lowerCap, 1] that fits
-    let lo = lowerCap, hi = 1;
-    let best = lo;
-    for (let i = 0; i < 14; i++) {            // a few extra iters for precision
-      const mid = (lo + hi) / 2;
-      const h = measureAtScale(mid);
-      if (h <= (avail - marginPx)) { best = mid; lo = mid; }
-      else { hi = mid; }
-    }
-
-    // optimistic nudge up to reclaim a hair of space (counteracts tiny rounding)
-    const nudge = 0.004; // 0.4%
-    let finalS = Math.min(1, best + nudge);
-    // if nudge pushed us over, step back once
-    if (measureAtScale(finalS) > (avail - marginPx)) {
-      finalS = best;
-      measureAtScale(finalS); // apply exactly
-    }
-
-    // lock it in (already applied by measureAtScale)
-    inner.dataset.scale = finalS.toFixed(3);
-    return finalS;
-  }
-
-  function fitAllSheets() {
-    ensureInner();
-    const avail = setViewportVars();
-
-    const inners = Array.from(
-      contentEl.closest('.post.book-mode')?.querySelectorAll('.sheet > .page-inner') || []
-    );
-    if (!inners.length) return;
-
-    // Fit each page independently to “just enough”
-    inners.forEach(inner => {
-      fitInnerExactly(inner, avail, { marginPct: 0.012, marginPx: undefined, minScale: 0.70 });
-    });
-  }
-
-  let fitRAF = 0;
-  function chaseFit(ms = 900) {
-    const t0 = performance.now();
-    cancelAnimationFrame(fitRAF);
-    const tick = () => {
-      fitAllSheets();
-      if (performance.now() - t0 < ms) fitRAF = requestAnimationFrame(tick);
-    };
-    fitRAF = requestAnimationFrame(tick);
-  }
-
-  async function startViewportFitterOnce() {
-    if (contentEl._fitStarted) return;
-    contentEl._fitStarted = true;
-
-    // two paints to let Safari URL bar + line wraps settle
-    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-    chaseFit(900);
-
-    // follow dynamic viewport changes
-    if (window.visualViewport) {
-      visualViewport.addEventListener('resize', () => chaseFit(900), { passive: true });
-      visualViewport.addEventListener('scroll', () => chaseFit(900), { passive: true });
-    } else {
-      window.addEventListener('resize', () => chaseFit(900), { passive: true });
-      window.addEventListener('scroll', () => chaseFit(900), { passive: true });
-    }
-    window.addEventListener('orientationchange', () => chaseFit(1200), { passive: true });
-    window.addEventListener('pageshow', () => chaseFit(900), { passive: true });
-    window.addEventListener('load', () => chaseFit(900), { passive: true });
-
-    // refit on content/layout changes
-    if (window.MutationObserver) {
-      const mo = new MutationObserver(() => chaseFit(900));
-      mo.observe(contentEl, { childList: true, subtree: true });
-    }
-    if (document.fonts?.ready) document.fonts.ready.then(() => chaseFit(600)).catch(() => { });
-    contentEl.querySelectorAll('img,video').forEach(el => {
-      el.addEventListener('load', () => chaseFit(600), { once: true });
-      el.addEventListener('loadedmetadata', () => chaseFit(600), { once: true });
-    });
-    if (window.MathJax?.startup?.promise) {
-      MathJax.startup.promise.then(() => chaseFit(900)).catch(() => { });
-    }
-    window.addEventListener('post:ready', () => chaseFit(900));
-  }
-  // ===============================================
-
   try {
     const res = await fetch(path); // Default cache for robustness
     if (!res.ok) throw new Error('Not found');
@@ -1097,62 +749,15 @@ async function renderPost() {
     normalizeHeadings(contentEl);
     buildPostTOC(contentEl);
 
-    // Typeset math first for accurate heights
+    // Typeset article math
     await typesetAfterLoad(contentEl);
 
-    // ----------- Book Mode Logic -----------
-    // User Request: Start in regular scroll mode by default on ALL devices.
-    // Explicit click required to enable.
-    const shouldBook = false;
-
-    if (shouldBook) {
-      enableSoftBookMode(contentEl);
-
-      // Rebuild-once hooks then refit
-      const reflowOnce = debounce(async () => {
-        document.documentElement.style.setProperty('--sheet-h', `${getPageMaxHeight()}px`);
-        const book = contentEl.querySelector('.book');
-        if (book) {
-          normalizeHeadings(book);
-          const linearHTML = Array.from(book.querySelectorAll('.sheet')).map(s => s.innerHTML).join('');
-          contentEl.innerHTML = linearHTML;
-        } else if (contentEl._originalHTML) {
-          contentEl.innerHTML = contentEl._originalHTML;
-          normalizeHeadings(contentEl);
-          await typesetAfterLoad(contentEl);
-        }
-
-        // Only re-enable if still "shouldBook"? 
-        if (contentEl.closest('.post').classList.contains('book-mode')) {
-          enableSoftBookMode(contentEl);
-        }
-
-        document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
-        chaseFit(900);
-      }, 150);
-
-      window.addEventListener('orientationchange', reflowOnce, { once: true });
-      window.addEventListener('load', reflowOnce, { once: true });
-      contentEl.querySelectorAll('img').forEach(img => {
-        if (!img.complete) img.addEventListener('load', reflowOnce, { once: true });
-      });
-
-      // start per-page exact fitter after pages/typeset exist
-      await startViewportFitterOnce();
-    }
-
-    // Sidecars after packing
     loadSidecarAssets(path);
     document.dispatchEvent(new CustomEvent('post:ready', { detail: { path } }));
 
     // Update title and point this legacy SPA route at its static canonical page.
     const h1 = contentEl.querySelector('h1');
     await applyLegacyPostMetadata(path, h1?.innerText || '');
-
-    // Final follow-up fit (Only if book mode is active)
-    if (window.matchMedia('(max-width: 560px)').matches && contentEl.closest('.post.book-mode')) {
-      chaseFit(900);
-    }
 
   } catch (e) {
     console.error(e);
@@ -1208,6 +813,7 @@ function initControls() {
     const updateThemeUI = () => {
       const current = getEffectiveMode();
       themeBtn.textContent = current === 'dark' ? '☀' : '☾';
+      themeBtn.setAttribute('aria-label', current === 'dark' ? 'Switch to light theme' : 'Switch to dark theme');
     };
     themeBtn.onclick = () => {
       const current = getEffectiveMode();
@@ -1225,7 +831,7 @@ function initControls() {
     });
   }
 
-  // === 2. Controls for POST PAGE (Home + Book Mode) ===
+  // === 2. Controls for POST PAGE (Home, sharing, and copying) ===
   if (!isHomePage) {
     // A. Home Button
     const homeBtn = document.createElement('a');
@@ -1290,47 +896,7 @@ function initControls() {
     });
     container.appendChild(llmBtn);
 
-    // D. Book Mode Button
-    const bookBtn = document.createElement('button');
-    bookBtn.className = 'mode-btn';
 
-    const updateBookUI = () => {
-      const contentEl = document.querySelector('.page');
-      const isBook = contentEl?.closest('.post')?.classList.contains('book-mode');
-      bookBtn.textContent = isBook ? '📄' : '📖';
-      bookBtn.title = isBook ? 'Disable Book Mode' : 'Enable Book Mode';
-    };
-
-    bookBtn.onclick = () => {
-      const contentEl = document.querySelector('.page');
-      if (!contentEl) return;
-      const post = contentEl.closest('.post');
-      if (!post) return;
-
-      const isBook = post.classList.contains('book-mode');
-      if (isBook) {
-        disableBookMode(contentEl);
-        localStorage.setItem('bookMode', 'false');
-      } else {
-        // CRITICAL: Scroll to top before measuring to prevent offset issues
-        window.scrollTo(0, 0);
-
-        enableSoftBookMode(contentEl);
-        localStorage.setItem('bookMode', 'true');
-        if (window.matchMedia('(max-width: 560px)').matches) {
-          document.dispatchEvent(new CustomEvent('post:ready', { detail: { path: getCurrentPostPath() } }));
-        }
-      }
-      updateBookUI();
-    };
-    // Initialize UI state
-    updateBookUI();
-    container.appendChild(bookBtn);
-
-    // CRITICAL FIX: Update button state when Book Mode is toggled programmatically (e.g. auto-load)
-    window.addEventListener('post:ready', () => {
-      updateBookUI();
-    });
   }
 }
 

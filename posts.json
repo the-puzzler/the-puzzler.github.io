@@ -1,6 +1,11 @@
 [
   {
     "title": "Amortised Assignment Generation",
+    "x_post": {
+      "id": "2091570734933885162",
+      "likes": 138,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-08-22",
     "path": "posts/aag/aag.html",
     "description": "One step generation by efficiently pre-assigning gaussian latents to samples.",
@@ -9,6 +14,11 @@
   },
   {
     "title": "Curriculum Mining",
+    "x_post": {
+      "id": "2081445835636654096",
+      "likes": 294,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-07-26",
     "path": "posts/curriculum-mining/curriculum-mining.html",
     "description": "Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.",
@@ -17,6 +27,11 @@
   },
   {
     "title": "Pan1ni",
+    "x_post": {
+      "id": "2079308248956477701",
+      "likes": 28,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-07-19",
     "path": "posts/pan1ni/pan1ni.html",
     "description": "Making a goal seeking policy with video pretraining only",
@@ -26,6 +41,11 @@
 
   {
     "title": "SDMatch",
+    "x_post": {
+      "id": "2061083879188914191",
+      "likes": 89,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-05-31",
     "path": "posts/sdmatch/sdmatch.html",
     "description": "Sketched Distribution Matching: a direct loss for matching one distribution to another with random or learned projections.",
@@ -35,6 +55,11 @@
 
   {
     "title": "Self-Teaching Autoencoder",
+    "x_post": {
+      "id": "2058633043364003917",
+      "likes": 614,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-05-19",
     "path": "posts/self-teaching-autoencoder/self-teaching-autoencoder.html",
     "description": "A self-training autoencoder. Trained without reconstruction losses, pixel or otherwise, and no image-space supervision of any kind.",
@@ -44,6 +69,11 @@
 
   {
     "title": "Practical notes on leJEPA",
+    "x_post": {
+      "id": "2054931319713325544",
+      "likes": 9,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-05-11",
     "path": "posts/practical-notes-on-lejepa/practical-notes-on-lejepa.html",
     "description": "Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.",
@@ -53,6 +83,11 @@
 
   {
     "title": "la leWorldModel",
+    "x_post": {
+      "id": "2041216929759936712",
+      "likes": 220,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-03-30",
     "path": "posts/la-leworldmodel/la-leworldmodel.html",
     "description": "Simultaneous latent action and world model learning from passive video for controllable prediction.",
@@ -62,6 +97,11 @@
 
   {
     "title": "Tokens, who needs them?",
+    "x_post": {
+      "id": "2030675747237441833",
+      "likes": 18,
+      "checked_at": "2026-09-05"
+    },
     "date": "2026-03-07",
     "path": "posts/tokens-who-needs-them/tokens-who-needs-them.html",
     "description": "Improving transformer memory efficiency by 2.7x",
