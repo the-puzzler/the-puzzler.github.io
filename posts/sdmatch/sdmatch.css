@@ -183,6 +183,7 @@
 
 .sdmatch-line {
   background: #2a2a2a;
+  box-shadow: 0 0 0 1px var(--ink-dim);
 }
 
 .sdmatch-result-figure {
@@ -222,4 +223,14 @@ pre code {
   .sdmatch-demo-actions {
     justify-content: flex-start;
   }
+}
+
+/* Canvas plots use fixed dark labels and an opaque paper surface. */
+.page[data-post="sdmatch"] :is(#sdmatch-canvas, #sigreg-canvas) { background: #f9f7f1; color-scheme: light; }
+
+/* Native controls and paired colours follow the saved preference, then the OS. */
+.page[data-post="sdmatch"] { color-scheme: light; }
+:root[data-mode="dark"] .page[data-post="sdmatch"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .page[data-post="sdmatch"] { color-scheme: dark; }
 }

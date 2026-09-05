@@ -655,3 +655,10 @@
   content: " ──";
   opacity: 0.6;
 }
+
+/* Native controls and paired colours follow the saved preference, then the OS. */
+.page[data-post="pan1ni"] { color-scheme: light; }
+:root[data-mode="dark"] .page[data-post="pan1ni"] { color-scheme: dark; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .page[data-post="pan1ni"] { color-scheme: dark; }
+}

@@ -918,6 +918,11 @@ pre {
 }
 
 /* Divider helper */
+.post:where([data-post="aag"], [data-post="curriculum-mining"], [data-post="pan1ni"], [data-post="sdmatch"], [data-post="self-teaching-autoencoder"]) :where(code, pre) {
+  background: color-mix(in srgb, var(--bg) 94%, var(--ink) 6%);
+  color: var(--ink);
+}
+
 .hr {
   border: none;
   border-top: 1px solid var(--rule);
