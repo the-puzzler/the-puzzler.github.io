@@ -134,7 +134,9 @@ def render_article_page(post: dict, article_html: str, sidecar_css: bool, sideca
   <meta name="twitter:image" content="{html.escape(image, quote=True)}">
 
   <script type="application/ld+json">{structured_json}</script>
-  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;M&lt;/text&gt;&lt;/svg&gt;">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="/styles.css?v=20260728a">
 {css_tag}  <script defer src="/script.js?v={SCRIPT_VERSION}"></script>
