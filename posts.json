@@ -10,7 +10,9 @@
     "path": "posts/aag/aag.html",
     "description": "One step generation by efficiently pre-assigning gaussian latents to samples.",
     "social_image": "posts/aag/assets/celeba_cond_attributes.png",
-    "tags": ["Generative Modelling"]
+    "tags": [
+      "Generative Modelling"
+    ]
   },
   {
     "title": "Curriculum Mining",
@@ -23,7 +25,9 @@
     "path": "posts/curriculum-mining/curriculum-mining.html",
     "description": "Beating AlphaZero policy networks with search-free self-play PPO, diverse resets and sparse terminal rewards.",
     "social_image": "posts/curriculum-mining/assets/reset-theory.png",
-    "tags": ["RL"]
+    "tags": [
+      "RL"
+    ]
   },
   {
     "title": "Pan1ni",
@@ -36,9 +40,11 @@
     "path": "posts/pan1ni/pan1ni.html",
     "description": "Making a goal seeking policy with video pretraining only",
     "social_image": "posts/pan1ni/assets/thumb.png",
-    "tags": ["World Modelling", "Self-Supervision"]
+    "tags": [
+      "World Modelling",
+      "Self-Supervision"
+    ]
   },
-
   {
     "title": "SDMatch",
     "x_post": {
@@ -50,9 +56,11 @@
     "path": "posts/sdmatch/sdmatch.html",
     "description": "Sketched Distribution Matching: a direct loss for matching one distribution to another with random or learned projections.",
     "social_image": "posts/sdmatch/assets/cover.png",
-    "tags": ["World Modelling", "Self-Supervision"]
+    "tags": [
+      "World Modelling",
+      "Self-Supervision"
+    ]
   },
-
   {
     "title": "Self-Teaching Autoencoder",
     "x_post": {
@@ -64,9 +72,10 @@
     "path": "posts/self-teaching-autoencoder/self-teaching-autoencoder.html",
     "description": "A self-training autoencoder. Trained without reconstruction losses, pixel or otherwise, and no image-space supervision of any kind.",
     "social_image": "posts/self-teaching-autoencoder/assets/cover.png",
-    "tags": ["Self-Supervision"]
+    "tags": [
+      "Self-Supervision"
+    ]
   },
-
   {
     "title": "Practical notes on leJEPA",
     "x_post": {
@@ -78,9 +87,10 @@
     "path": "posts/practical-notes-on-lejepa/practical-notes-on-lejepa.html",
     "description": "Pitfalls to watch for whilst using leJEPA, and a couple of failed experiments along the way.",
     "social_image": "posts/practical-notes-on-lejepa/thumbnail.png",
-    "tags": ["Self-Supervision"]
+    "tags": [
+      "Self-Supervision"
+    ]
   },
-
   {
     "title": "la leWorldModel",
     "x_post": {
@@ -92,9 +102,12 @@
     "path": "posts/la-leworldmodel/la-leworldmodel.html",
     "description": "Simultaneous latent action and world model learning from passive video for controllable prediction.",
     "social_image": "posts/la-leworldmodel/assets/thumbnail.png",
-    "tags": ["World Modelling", "Robotics", "Self-Supervision"]
+    "tags": [
+      "World Modelling",
+      "Robotics",
+      "Self-Supervision"
+    ]
   },
-
   {
     "title": "Tokens, who needs them?",
     "x_post": {
@@ -106,43 +119,51 @@
     "path": "posts/tokens-who-needs-them/tokens-who-needs-them.html",
     "description": "Improving transformer memory efficiency by 2.7x",
     "social_image": "posts/tokens-who-needs-them/assets/meme.jpg",
-    "tags": ["LLM"]
+    "tags": [
+      "LLM"
+    ]
   },
-
   {
     "title": "Optimiser? I Hardly Know 'Er.",
     "date": "2026-03-02",
     "path": "posts/optimiser-i-hardly-know-er/optimiser-i-hardly-know-er.html",
     "description": "Using LLM Program Search to Build Robot Controllers Without RL Optimisers",
     "social_image": "posts/optimiser-i-hardly-know-er/assets/funny.png",
-    "tags": ["LLM", "Robotics"]
+    "tags": [
+      "LLM",
+      "Robotics"
+    ]
   },
-
   {
     "title": "Training a model to open the gates of hell",
     "date": "2026-02-17",
     "path": "posts/training-a-model-to-open-the-gates-of-hell/training-a-model-to-open-the-gates-of-hell.html",
     "description": "This is a short fun blog in which I showcase an experiment in creating endless learnable content.",
     "social_image": "posts/training-a-model-to-open-the-gates-of-hell/assets/blackwhite_clip_02_latent0_thumb.jpg",
-    "tags": ["World Modelling"]
+    "tags": [
+      "World Modelling"
+    ]
   },
-
   {
     "title": "Curriculum Is Key: Stepping Stones Toward AGI",
     "date": "2026-02-12",
     "path": "posts/curriculum-is-key/curriculum-is-key.html",
     "description": "Exploratory post on curriculum as the missing ingredient required for true intelligence and creativity.",
     "social_image": "posts/curriculum-is-key/images/opener.png",
-    "tags": ["Robotics"]
+    "tags": [
+      "Robotics"
+    ]
   },
-
   {
     "title": "Microbiome Modelling",
     "date": "2025-09-29",
     "path": "posts/micro-modelling/micro-modelling.html",
     "description": "Microbiome World Modelling.",
     "social_image": "posts/micro-modelling/micro-modelling-imgs/input-space.jpg",
-    "tags": ["Biology", "World Modelling"]
+    "tags": [
+      "Biology",
+      "World Modelling"
+    ]
   },
   {
     "title": "Self-Organising Text",
@@ -150,7 +171,9 @@
     "path": "posts/self-org-text/self-org-text.html",
     "description": "Cellular Automata Inspired Self Organising Text",
     "social_image": "posts/self-org-text/self-org-text-imgs/cover.png",
-    "tags": ["LLM"]
+    "tags": [
+      "LLM"
+    ]
   },
   {
     "title": "Sample Efficient AR Diffusion",
@@ -158,7 +181,8 @@
     "path": "https://francesco215.github.io/autoregressive_diffusion/",
     "description": "Oniris: Autoregressive and Sample-Efficient Next-Gen Video Diffusion",
     "social_image": "posts/sample-efficient-ar-diffusion/thumbnail.png",
-    "tags": ["World Modelling"]
+    "tags": [
+      "World Modelling"
+    ]
   }
-  
 ]
