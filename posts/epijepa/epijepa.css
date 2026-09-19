@@ -1,0 +1,227 @@
+.epijepa-post {
+  color-scheme: light;
+  --epi-green: #41695d;
+  --epi-surface: #e9eee4;
+  --epi-edge: #82998a;
+  --epi-grid: #ced8c9;
+  --epi-fill: #b8d5bf;
+  --epi-warm: #76533e;
+  --epi-focus: #9b6520;
+}
+:root[data-mode="dark"] .epijepa-post {
+  color-scheme: dark;
+  --epi-green: #a1d2b5;
+  --epi-surface: #29352e;
+  --epi-edge: #789986;
+  --epi-grid: #424c44;
+  --epi-fill: #52705b;
+  --epi-warm: #e4b982;
+  --epi-focus: #f0c56d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .epijepa-post {
+  color-scheme: dark;
+  --epi-green: #a1d2b5;
+  --epi-surface: #29352e;
+  --epi-edge: #789986;
+  --epi-grid: #424c44;
+  --epi-fill: #52705b;
+  --epi-warm: #e4b982;
+  --epi-focus: #f0c56d;
+  }
+}
+
+.epijepa-post .epijepa-equation {
+  overflow-x: auto;
+  padding: 0.4rem 0;
+}
+.epijepa-post .epijepa-method-details {
+  margin: 1.4rem 0;
+  padding: .9rem 1rem;
+  border: 1px solid var(--rule);
+}
+.epijepa-post .epijepa-method-details summary { cursor: pointer; font-weight: 600; }
+.epijepa-post .epijepa-method-details summary:focus-visible { outline: 2px solid var(--epi-focus); outline-offset: 4px; }
+.epijepa-post .epijepa-result-figure { margin: 1.5rem 0; }
+.epijepa-post .epijepa-result-figure img { display: block; width: 100%; height: auto; margin: 0; }
+.epijepa-post .epijepa-result-figure figcaption {
+  margin-top: .65rem;
+  color: var(--ink-dim);
+  font-size: .8rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.epijepa-post .epijepa-question {
+  margin: 2rem 0 2.5rem;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  border-left: 3px solid currentColor;
+}
+.epijepa-post .epijepa-question p {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.35;
+  font-weight: 600;
+  text-align: left;
+  hyphens: none;
+}
+
+/* Compact mixture control and learning curve. */
+.epijepa-post .epi-curve-demo { margin: 1.4rem 0; padding: 0.8rem 0; border-block: 1px solid var(--rule); }
+.epijepa-post .epi-curve-header { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; font-size: 0.9rem; }
+.epijepa-post .epi-curve-header strong { font-weight: 500; }
+.epijepa-post .epi-curve-header output { color: var(--epi-green); font-weight: 600; font-variant-numeric: tabular-nums; }
+.epijepa-post .epi-demo-panels { display: grid; grid-template-columns: 2fr 3fr; gap: 1rem; align-items: center; }
+.epijepa-post .epi-demo-panels svg { display: block; width: 100%; }
+.epijepa-post [data-triangle] { touch-action: none; cursor: crosshair; }
+.epijepa-post .epi-triangle { fill: var(--epi-surface); stroke: var(--epi-edge); stroke-width: 1.2; }
+.epijepa-post .epi-labels { fill: currentColor; font: 12px system-ui, sans-serif; }
+.epijepa-post .epi-grid { stroke: var(--epi-grid); fill: none; }
+.epijepa-post .epi-area { fill: var(--epi-fill); opacity: 0.7; }
+.epijepa-post .epi-curve { fill: none; stroke: var(--epi-green); stroke-width: 2.5; }
+.epijepa-post .epi-floor { stroke: var(--epi-warm); stroke-width: 1.2; stroke-dasharray: 4 4; }
+.epijepa-post .epi-floor-label { fill: var(--epi-warm); font: 11px system-ui, sans-serif; }
+.epijepa-post [data-handle] { outline: none; cursor: grab; }
+.epijepa-post .epi-dot { fill: var(--epi-green); stroke: var(--bg); stroke-width: 2; }
+.epijepa-post [data-handle]:focus .epi-dot { stroke: var(--epi-focus); stroke-width: 3; }
+.epijepa-post .epi-curve-demo figcaption { font-size: 0.8rem; line-height: 1.45; text-align: left; min-height: 3em; }
+.epijepa-post .epi-demo-note { color: var(--ink-dim); }
+@media (max-width: 520px) {
+  .epijepa-post .epi-demo-panels { grid-template-columns: 1fr; gap: 0; }
+  .epijepa-post [data-triangle] { max-width: 210px; justify-self: center; }
+}
+
+.epijepa-code-button {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .4rem .8rem;
+  padding: .72rem .9rem;
+  border: 1px solid light-dark(#222, #ebdbb2);
+  color: light-dark(#fff, #1d2021);
+  background: light-dark(#222, #ebdbb2);
+  text-decoration: none;
+}
+.epijepa-code-button:hover {
+  color: light-dark(#222, #ebdbb2);
+  background: transparent;
+  text-decoration: none;
+}
+.epijepa-code-button:focus-visible {
+  outline: 2px solid var(--epi-focus);
+  outline-offset: 4px;
+}
+.epijepa-code-button code {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font-size: .77rem;
+}
+.epijepa-code-top { margin: 1.5rem 0; }
+.epijepa-code-bottom { margin: 2rem 0; text-align: center; }
+
+/* Static vector plots follow the site's explicit theme and system fallback. */
+.epijepa-post .epijepa-result-figure img { border: 0; border-radius: 0; box-shadow: none; cursor: default; }
+.epijepa-post .epijepa-result-figure .epi-chart-dark { display: none; }
+:root[data-mode="dark"] .epijepa-post .epi-chart-light { display: none; }
+:root[data-mode="dark"] .epijepa-post .epi-chart-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .epijepa-post .epi-chart-light { display: none; }
+  :root:not([data-mode="light"]) .epijepa-post .epi-chart-dark { display: block; }
+}
+.epijepa-post .epi-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 0 .5rem;
+  border-block: 1px solid var(--rule);
+}
+.epijepa-post .epi-comparison-panel { min-width: 0; }
+.epijepa-post .epi-comparison-title { margin: 0 .5rem .25rem; font-size: 1.2rem; font-weight: 600; line-height: 1.2; text-align: left; }
+.epijepa-post .epi-comparison-meta { margin: 0 .5rem .75rem; color: var(--ink-dim); font: .7rem/1.4 system-ui, sans-serif; text-align: left; }
+.epijepa-post .epi-sweeps { margin: -.5rem 0 1.5rem; }
+.epijepa-post .epi-sweeps summary { cursor: pointer; color: var(--ink-dim); font-size: .85rem; }
+.epijepa-post .epi-sweeps summary:focus-visible { outline: 2px solid var(--epi-focus); outline-offset: 4px; }
+.epijepa-post .epi-sweep-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding-top: 1rem; }
+.epijepa-post .epi-sweep-figure { margin: 0; }
+.epijepa-post .epi-chart-title { margin: 0 .5rem .5rem; font: 500 .8rem/1.4 system-ui, sans-serif; text-align: left; }
+.epijepa-post .epi-sweep-caption { font-size: .8rem; line-height: 1.5; text-align: left; color: var(--ink-dim); }
+@media (max-width: 520px) {
+  .epijepa-post .epi-comparison-grid, .epijepa-post .epi-sweep-grid { grid-template-columns: 1fr; gap: 1rem; }
+  .epijepa-post .epi-comparison-panel + .epi-comparison-panel { padding-top: .75rem; border-top: 1px solid var(--rule); }
+}
+
+.epijepa-post .epijepa-algorithm {
+  width: fit-content;
+  max-width: 100%;
+  margin: 1.7rem auto;
+  border: 1px solid var(--rule);
+  background: light-dark(#fafafa, #252829);
+  box-shadow: 4px 4px 0 light-dark(#e7e7e7, #151718);
+}
+.epijepa-post .epijepa-algorithm figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem .65rem;
+  padding: .65rem .9rem;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-dim);
+  font: .7rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  letter-spacing: .03em;
+  text-align: left;
+}
+.epijepa-post .epijepa-algorithm figcaption strong { color: var(--ink); text-transform: uppercase; }
+.epijepa-post .epijepa-pseudocode {
+  overflow-x: auto;
+  margin: 0;
+  padding: 1rem 1.15rem 1.15rem;
+  border: 0;
+  border-radius: 0;
+  color: var(--ink);
+  background: transparent;
+  white-space: pre;
+}
+.epijepa-post .epijepa-pseudocode code {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: .76rem/1.75 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: inherit;
+}
+.epijepa-post .epijepa-pseudocode:focus-visible { outline: 2px solid var(--epi-focus); outline-offset: 3px; }
+.epijepa-post .epijepa-pseudocode .pc-comment { color: light-dark(#737373, #a89984); font-style: italic; }
+.epijepa-post .epijepa-pseudocode .pc-keyword { color: light-dark(#8d3150, #ed9cba); font-weight: 700; }
+.epijepa-post .epijepa-pseudocode .pc-fn { color: light-dark(#245d78, #8cc8e4); font-weight: 600; }
+.epijepa-post .epijepa-pseudocode .pc-var { color: light-dark(#5b458f, #c0a5ef); }
+
+/* Class-coloured projections of the exported validation embeddings. */
+.epijepa-post .epijepa-hero-figure { max-width: 42rem; margin: 2rem auto 2.4rem; }
+.epijepa-post .epijepa-hero-panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.epijepa-post .epijepa-hero-panel { min-width: 0; }
+.epijepa-post .epijepa-hero-label { margin: 0 0 .6rem; font-size: 1.15rem; font-weight: 600; text-align: center; }
+.epijepa-post .epijepa-hero-label span { display: block; margin-top: .3rem; color: var(--ink-dim); font: .65rem/1.4 system-ui, sans-serif; }
+.epijepa-post .epijepa-hero-plot { display: block; width: 100%; height: auto; border: 0; border-radius: 0; box-shadow: none; }
+.epijepa-post .epijepa-hero-figure figcaption { margin-top: .7rem; color: var(--ink-dim); font-size: .8rem; line-height: 1.5; text-align: left; }
+.epijepa-post .epi-hero-dark { display: none; }
+:root[data-mode="dark"] .epijepa-post .epi-hero-light { display: none; }
+:root[data-mode="dark"] .epijepa-post .epi-hero-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .epijepa-post .epi-hero-light { display: none; }
+  :root:not([data-mode="light"]) .epijepa-post .epi-hero-dark { display: block; }
+}
+@media (max-width: 520px) {
+  .epijepa-post .epijepa-hero-panels { gap: .35rem; }
+  .epijepa-post .epijepa-hero-label { font-size: 1rem; }
+  .epijepa-post .epijepa-hero-label span { font-size: .6rem; min-height: 2.8em; }
+}
+
+.epijepa-post .epi-hero-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: .4rem .9rem; margin: .75rem 0; color: var(--ink-dim); font: .65rem/1.4 system-ui, sans-serif; }
+.epijepa-post .epi-hero-legend span { display: inline-flex; align-items: center; gap: .3rem; }
+.epijepa-post .epi-hero-legend span::before { content: ''; width: .45rem; height: .45rem; border-radius: 50%; background: var(--class-colour); }
+:root[data-mode="dark"] .epijepa-post .epi-hero-legend span::before { background: color-mix(in srgb, var(--class-colour) 72%, white); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode="light"]) .epijepa-post .epi-hero-legend span::before { background: color-mix(in srgb, var(--class-colour) 72%, white); }
+}

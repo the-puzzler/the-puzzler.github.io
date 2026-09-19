@@ -78,6 +78,18 @@ def rewrite_article_links(source: str, slug: str) -> str:
     return re.sub(r'href=(["\'])(#[^"\']+)\1', rewrite_hash, source)
 
 
+def social_image_metadata(post: dict) -> str:
+    tags = []
+    for field in ("width", "height", "alt"):
+        value = post.get(f"social_image_{field}")
+        if value is not None:
+            escaped = html.escape(str(value), quote=True)
+            tags.append(f'  <meta property="og:image:{field}" content="{escaped}">')
+            if field == "alt":
+                tags.append(f'  <meta name="twitter:image:alt" content="{escaped}">')
+    return "\n".join(tags) + ("\n" if tags else "")
+
+
 def render_article_page(post: dict, article_html: str, sidecar_css: bool, sidecar_js: bool) -> str:
     title = str(post.get("title") or slug_from_path(post["path"]))
     description = str(post.get("description") or DEFAULT_DESCRIPTION)
@@ -126,7 +138,7 @@ def render_article_page(post: dict, article_html: str, sidecar_css: bool, sideca
   <meta property="og:site_name" content="{SITE_NAME}">
   <meta property="og:url" content="{html.escape(canonical, quote=True)}">
   <meta property="og:image" content="{html.escape(image, quote=True)}">
-  <meta property="article:published_time" content="{html.escape(date, quote=True)}">
+{social_image_metadata(post)}  <meta property="article:published_time" content="{html.escape(date, quote=True)}">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{html.escape(title, quote=True)}">
@@ -205,7 +217,7 @@ def render_legacy_share_page(post: dict) -> str:
   <meta property="og:site_name" content="{SITE_NAME}">
   <meta property="og:url" content="{html.escape(canonical, quote=True)}">
   <meta property="og:image" content="{html.escape(image, quote=True)}">
-
+{social_image_metadata(post)}
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{html.escape(title, quote=True)}">
   <meta name="twitter:description" content="{html.escape(description, quote=True)}">

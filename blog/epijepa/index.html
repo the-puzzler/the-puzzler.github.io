@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <base href="/">
+  <title>EpiJEPA | the-puzzler</title>
+  <meta name="description" content="Can rewarding learnable information prevent JEPA embeddings from collapsing, without forcing them into a Gaussian distribution?">
+  <meta name="author" content="Matteo Peluso">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://the-puzzler.github.io/blog/epijepa/">
+
+  <meta property="og:title" content="EpiJEPA">
+  <meta property="og:description" content="Can rewarding learnable information prevent JEPA embeddings from collapsing, without forcing them into a Gaussian distribution?">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="the-puzzler">
+  <meta property="og:url" content="https://the-puzzler.github.io/blog/epijepa/">
+  <meta property="og:image" content="https://the-puzzler.github.io/posts/epijepa/assets/thumbnail.png">
+  <meta property="og:image:width" content="1460">
+  <meta property="og:image:height" content="664">
+  <meta property="og:image:alt" content="EpiJEPA and SIGReg: side-by-side PCA plots of Imagenette projector outputs, coloured by image class.">
+  <meta name="twitter:image:alt" content="EpiJEPA and SIGReg: side-by-side PCA plots of Imagenette projector outputs, coloured by image class.">
+  <meta property="article:published_time" content="2026-09-18">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="EpiJEPA">
+  <meta name="twitter:description" content="Can rewarding learnable information prevent JEPA embeddings from collapsing, without forcing them into a Gaussian distribution?">
+  <meta name="twitter:image" content="https://the-puzzler.github.io/posts/epijepa/assets/thumbnail.png">
+
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"BlogPosting","headline":"EpiJEPA","description":"Can rewarding learnable information prevent JEPA embeddings from collapsing, without forcing them into a Gaussian distribution?","datePublished":"2026-09-18","dateModified":"2026-09-18","mainEntityOfPage":"https://the-puzzler.github.io/blog/epijepa/","url":"https://the-puzzler.github.io/blog/epijepa/","image":["https://the-puzzler.github.io/posts/epijepa/assets/thumbnail.png"],"keywords":["Self-Supervision"],"author":{"@type":"Person","name":"Matteo Peluso"},"publisher":{"@type":"Organization","name":"the-puzzler"}}</script>
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css?v=20260728a">
+  <link rel="stylesheet" href="/posts/epijepa/epijepa.css">
+  <script defer src="/script.js?v=20260830seo3"></script>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+      }
+    };
+  </script>
+  <script id="mathjax" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+  <script type="module" src="/posts/epijepa/epijepa.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QJZJKLZKHH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-QJZJKLZKHH');
+  </script>
+</head>
+<body data-static-post-path="posts/epijepa/epijepa.html" data-static-post-slug="epijepa">
+  <div class="container">
+    <header class="header">
+      <div class="brand">the-puzzler <span class="badge">Matteo</span></div>
+      <nav class="nav" aria-label="Primary navigation">
+        <a href="https://x.com/MozarellaPesto" target="_blank" rel="noreferrer">X</a>
+        <a href="https://github.com/the-puzzler" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="/">Home</a>
+      </nav>
+    </header>
+
+    <section class="page post" data-post="epijepa">
+<article class="epijepa-post">
+  <h1 data-toc-variant="card">EpiJEPA</h1>
+  <p class="post-subtitle">Using an epiplexity-inspired score to keep joint embeddings from collapsing.</p>
+
+
+  <figure class="epijepa-hero-figure">
+    <div class="epijepa-hero-panels">
+      <div class="epijepa-hero-panel">
+        <p class="epijepa-hero-label">EpiJEPA<span>Epiplexity + view agreement</span></p>
+        <img class="epijepa-hero-plot epi-hero-light" src="/posts/epijepa/assets/hero-epi-light.svg" width="512" height="512" alt="EpiJEPA: first two principal components of centred Imagenette projector embeddings, with each image coloured by its class.">
+        <img class="epijepa-hero-plot epi-hero-dark" src="/posts/epijepa/assets/hero-epi-dark.svg" width="512" height="512" alt="EpiJEPA: first two principal components of centred Imagenette projector embeddings, with each image coloured by its class.">
+      </div>
+      <div class="epijepa-hero-panel">
+        <p class="epijepa-hero-label">SIGReg<span>Gaussian regularisation + view agreement</span></p>
+        <img class="epijepa-hero-plot epi-hero-light" src="/posts/epijepa/assets/hero-sigreg-light.svg" width="512" height="512" alt="SIGReg: first two principal components of centred Imagenette projector embeddings, with each image coloured by its class.">
+        <img class="epijepa-hero-plot epi-hero-dark" src="/posts/epijepa/assets/hero-sigreg-dark.svg" width="512" height="512" alt="SIGReg: first two principal components of centred Imagenette projector embeddings, with each image coloured by its class.">
+      </div>
+    </div>
+    <div class="epi-hero-legend" aria-label="Image classes">
+      <span style="--class-colour: #2678a8">Tench</span>
+      <span style="--class-colour: #d77622">Spaniel</span>
+      <span style="--class-colour: #42924c">Cassette</span>
+      <span style="--class-colour: #c34d54">Chainsaw</span>
+      <span style="--class-colour: #8f65b0">Church</span>
+      <span style="--class-colour: #98664f">Horn</span>
+      <span style="--class-colour: #c468a7">Truck</span>
+      <span style="--class-colour: #7b7c78">Pump</span>
+      <span style="--class-colour: #94952d">Golf ball</span>
+      <span style="--class-colour: #299da6">Parachute</span>
+    </div>
+    <figcaption>SIGReg pushes the embeddings towards a Gaussian distribution. EpiJEPA does not impose that shape. PCA of Imagenette projector embeddings; colours show image classes. <a href="https://github.com/the-puzzler/epijepa/tree/main/embedding_analysis">Embedding analysis ↗</a></figcaption>
+  </figure>
+
+  <div class="epijepa-code-top"><a class="epijepa-code-button" href="https://github.com/the-puzzler/epijepa" target="_blank" rel="noopener noreferrer">
+      <span>View the code</span>
+      <code>the-puzzler/epijepa ↗</code>
+    </a></div>
+
+  <h2 id="introduction">Introduction</h2>
+  <p>JEPA methods are an important part of self-supervised learning. In the image-based setting explored here, they use an invariance objective to learn robust feature representations: an encoder embeds different views of the same object, and the objective pushes those embeddings to agree. Ideally, this preserves the pertinent “slow features” that remain stable across views, while discarding incidental detail.</p>
+  <p>In practice, view agreement alone admits a trivial solution: map every input to the same embedding. Regularisation steers optimisation away from this collapse and gives the encoder a reason to preserve useful variation.</p>
+  <p>In <a href="https://arxiv.org/abs/2511.08544">LeJEPA</a>, <a href="/blog/practical-notes-on-lejepa/#SIGReg">SIGReg</a> provides that anti-collapse mechanism, and it works very well. It also pushes the distribution of embeddings across a batch towards a Gaussian. A more elegant mechanism might measure the structured information in the embeddings directly and reward the encoder for preserving it. This led me to ask:</p>
+  <blockquote class="epijepa-question">
+    <p>Can we use epiplexity to prevent collapse in JEPA embeddings?</p>
+  </blockquote>
+
+  <h2 id="theory">Theory</h2>
+  <h3 data-toc-skip id="what-is-epiplexity">What is epiplexity?</h3>
+  <blockquote>
+    <p>We can view epiplexity as a measure of the structured content in data that a learner can discover within a fixed compute budget.</p>
+  </blockquote>
+  <p>The <a href="https://arxiv.org/abs/2601.03220">formal definition</a> uses compression: find a model that makes the model itself and the data it describes as compact as possible, within that budget. Epiplexity is the number of bits needed to describe the resulting model, representing the structure it has captured.</p>
+  <p>A learning curve gives us one way to approximate this. As the learner picks up patterns, its prediction loss falls. The <a href="https://arxiv.org/html/2601.03220v1#S4.SS1">area above the final loss</a> adds up how much worse its predictions were during learning than at the end. This area estimates the information acquired along the way; the final loss reflects what remains unexplained. Try changing the mixture below:</p>
+  <figure id="epi-curve-demo" class="epi-curve-demo" aria-labelledby="epi-curve-title">
+    <div class="epi-curve-header"><strong id="epi-curve-title">Structure, noise and learning</strong><span>Epiplexity ≈ <output aria-label="Estimated epiplexity">…</output></span></div>
+    <div class="epi-demo-panels">
+      <svg data-triangle viewBox="0 0 240 205" aria-label="Mix easy structure, rich structure and unpredictable noise">
+        <path class="epi-triangle" d="M120 34 L32 164 L208 164 Z"/>
+        <g class="epi-labels"><text x="120" y="17" text-anchor="middle">Rich structure</text><text x="6" y="187">Easy structure</text><text x="234" y="187" text-anchor="end">Noise</text></g>
+        <g data-handle role="slider" tabindex="0" aria-label="Information mixture: use arrow keys to move" aria-valuemin="0" aria-valuemax="100" aria-valuenow="33"><circle r="20" fill="transparent"/><circle r="7" class="epi-dot"/></g>
+      </svg>
+      <svg data-plot viewBox="0 0 360 205" role="img" aria-label="Learning curve with estimated epiplexity shaded above the final loss">
+        <path class="epi-grid" d="M38 24H340 M38 94H340 M38 164H340"/>
+        <g class="epi-labels"><text x="29" y="28" text-anchor="end">4</text><text x="29" y="98" text-anchor="end">2</text><text x="29" y="168" text-anchor="end">0</text><text x="38" y="186" text-anchor="middle">0</text><text x="340" y="186" text-anchor="middle">100</text><text x="189" y="201" text-anchor="middle">Learning steps</text><text x="38" y="13">Loss</text></g>
+        <path data-area class="epi-area"/>
+        <line data-floor x1="38" x2="340" class="epi-floor"/>
+        <path data-curve class="epi-curve"/>
+        <text data-floor-label x="45" class="epi-floor-label"/>
+      </svg>
+    </div>
+    <figcaption><span data-explanation></span> <span class="epi-demo-note">Drag the point or use arrow keys. Toy curves, fixed learning budget; area in loss × steps.</span></figcaption>
+  </figure>
+  <h3 data-toc-skip id="practical-epiplexity-calculation">Tractable epiplexity calculation</h3>
+  <p>To score embeddings at each training step, EpiJEPA uses a different approximation from Yanbo Zhang and Michael Levin's <a href="https://arxiv.org/html/2607.18433v1#S3"><em>Intelligence from Learnable Novelty</em></a>, based on a small predictor.</p>
+  <p>I pass the images through a fixed random feature extractor, called a <em>reservoir</em>. Then I fit a linear predictor, called a <em>ridge readout</em>, to predict the embeddings from those features. If the embeddings preserve several independent patterns from the images, the predictor may need several independent directions to represent them. A log-determinant score measures the strength and spread of those directions, approximating the predictor's description length.</p>
+  <p>This connects directly to collapse. If every embedding is identical, there is no variation for the predictor to explain: after centring, its weights and score are zero. Rewarding the score alongside view agreement gives the encoder an incentive to preserve variation connected to the images, helping prevent the trivial collapse to a constant output.</p>
+
+  <h2 id="method">Method</h2>
+  <p>For Imagenette, I took the training code directly from the <a href="https://github.com/galilai-group/lejepa/blob/c293d291ca87cd4fddee9d3fffe4e914c7272052/MINIMAL.md">LeJEPA repository's minimal example</a>. I kept the encoder, projector, augmentations, optimiser and training schedule fixed, and replaced SIGReg with the epiplexity-inspired score. This keeps the comparison focused on the anti-collapse mechanism. My SIGReg baseline reached 90.42% online probe accuracy, close to the authors' reported 90.7%, giving a check that the original recipe was reproduced.</p>
+  <p>With this swap, the training loop keeps LeJEPA's view-agreement loss and adds a ridge fit for each view:</p>
+  <figure class="epijepa-algorithm">
+    <figcaption><strong>Algorithm 1</strong><span>EpiJEPA · Imagenette training</span></figcaption>
+    <pre class="epijepa-pseudocode" tabindex="0" aria-label="EpiJEPA training pseudocode"><code><span class="pc-var">R</span> ← <span class="pc-fn">frozen_random_CNN</span>(features=64)
+
+<span class="pc-keyword">for each</span> batch of images:
+  <span class="pc-var">views</span> ← <span class="pc-fn">augment</span>(images)
+  <span class="pc-var">Z</span> ← <span class="pc-fn">encoder</span>(views)
+
+  <span class="pc-keyword">for each</span> view v:
+    <span class="pc-var">H</span> ← <span class="pc-fn">normalise</span>(R(views[v]))  <span class="pc-comment">// centre and scale</span>
+    <span class="pc-var">W</span> ← <span class="pc-fn">ridge_fit</span>(H, <span class="pc-fn">centre</span>(Z[v]))
+    <span class="pc-var">scores</span>[v] ← <span class="pc-fn">logdet_score</span>(W)
+
+  <span class="pc-var">agreement</span> ← <span class="pc-fn">mean</span>((Z − <span class="pc-fn">mean_over_views</span>(Z))²)
+  <span class="pc-var">loss</span> ← (1 − λ) × agreement − λ × <span class="pc-fn">mean</span>(scores) / S₀
+  <span class="pc-fn">update_encoder</span>(loss)  <span class="pc-comment">// backpropagate through the ridge fit</span></code></pre>
+  </figure>
+  <p>A regularisation weight controls how strongly the score competes with view agreement. I scale the score by its value at the start of training so that the weight is easier to interpret.</p>
+  <details class="epijepa-method-details">
+    <summary>The equations and training settings</summary>
+    <p>With processed reservoir features \(H\) and centred embeddings \(Z_c\), the readout and score are:</p>
+    <div class="epijepa-equation">\[
+      W=(H^\top H+\rho I)^{-1}H^\top Z_c,
+      \qquad S=\tfrac12\log_2\det(I+\eta W^\top W).
+    \]</div>
+    <p>I use \(\rho=3\) and \(\eta=30\), and solve the readout afresh on each batch. Reservoir features are standardised by column and divided by the square root of their width.</p>
+    <div class="epijepa-equation">\[
+      \begin{aligned}
+      L_{\text{CIFAR}} &= L_{\text{alignment}}/A_0-\beta S/S_0,\\
+      L_{\text{Imagenette}} &= (1-\lambda)L_{\text{inv}}-\lambda S/S_0.
+      \end{aligned}
+    \]</div>
+    <p>Here \(S\) is averaged over views. The fixed scales \(A_0\) and \(S_0\) come from four initial batches. The <a href="https://github.com/the-puzzler/epijepa/blob/main/epiplexity.py">implementation</a> contains the full ridge calculation.</p>
+  </details>
+
+  <h2 id="results">Results</h2>
+  <p>To assess what the encoder learns, I train a simple classifier on its features without letting the labels update the encoder. This is the probe accuracy shown below.</p>
+  <p>On Imagenette, the probes use backbone features before the projector. I also tested the projector outputs: accuracy was lower, but the gap between EpiJEPA and SIGReg stayed about the same.</p>
+
+  <figure class="epijepa-result-figure epi-comparison" aria-label="Frozen-backbone probe accuracy on CIFAR-10 and Imagenette">
+    <div class="epi-comparison-grid">
+      <div class="epi-comparison-panel">
+        <p class="epi-comparison-title">CIFAR-10</p>
+        <p class="epi-comparison-meta">Validation split · ResNet-18 · 3 seeds</p>
+        <img class="epi-chart-light" src="/posts/epijepa/assets/cifar-comparison-light.svg" width="480" height="270" loading="lazy" alt="CIFAR-10 validation backbone probe accuracy: alignment alone 68.19 ± 0.43%, epiplexity only 44.21 ± 0.63%, EpiJEPA 77.55 ± 0.61%, SIGReg 78.41 ± 0.22%.">
+        <img class="epi-chart-dark" src="/posts/epijepa/assets/cifar-comparison-dark.svg" width="480" height="270" loading="lazy" alt="CIFAR-10 validation backbone probe accuracy: alignment alone 68.19 ± 0.43%, epiplexity only 44.21 ± 0.63%, EpiJEPA 77.55 ± 0.61%, SIGReg 78.41 ± 0.22%.">
+      </div>
+      <div class="epi-comparison-panel">
+        <p class="epi-comparison-title">Imagenette</p>
+        <p class="epi-comparison-meta">Validation split · ViT-S/8 · 1 seed</p>
+        <img class="epi-chart-light" src="/posts/epijepa/assets/imagenette-comparison-light.svg" width="480" height="270" loading="lazy" alt="Imagenette validation frozen-backbone probe accuracy: alignment alone 23.31%, epiplexity only 37.35%, EpiJEPA 87.16% at λ = 0.1, SIGReg 90.22% at λ = 0.02.">
+        <img class="epi-chart-dark" src="/posts/epijepa/assets/imagenette-comparison-dark.svg" width="480" height="270" loading="lazy" alt="Imagenette validation frozen-backbone probe accuracy: alignment alone 23.31%, epiplexity only 37.35%, EpiJEPA 87.16% at λ = 0.1, SIGReg 90.22% at λ = 0.02.">
+      </div>
+    </div>
+    <figcaption>Validation backbone probe accuracy (%). EpiJEPA combines the score with view agreement; epiplexity only removes view agreement. CIFAR shows mean ± standard deviation.</figcaption>
+  </figure>
+
+  <details class="epi-sweeps">
+    <summary>Regularisation weight sweeps</summary>
+    <div class="epi-sweep-grid">
+      <figure class="epijepa-result-figure epi-sweep-figure"><p class="epi-chart-title">CIFAR-10 · validation</p>
+        <img class="epi-chart-light" src="/posts/epijepa/assets/cifar-sweep-light.svg" width="480" height="255" loading="lazy" alt="EpiJEPA validation accuracy peaks at β = 0.3 and falls sharply at larger weights. Dashed lines show the best validation means for SIGReg and alignment alone.">
+        <img class="epi-chart-dark" src="/posts/epijepa/assets/cifar-sweep-dark.svg" width="480" height="255" loading="lazy" alt="EpiJEPA validation accuracy peaks at β = 0.3 and falls sharply at larger weights. Dashed lines show the best validation means for SIGReg and alignment alone.">
+      </figure>
+      <figure class="epijepa-result-figure epi-sweep-figure"><p class="epi-chart-title">Imagenette · online probe</p>
+        <img class="epi-chart-light" src="/posts/epijepa/assets/imagenette-online-light.svg" width="480" height="255" loading="lazy" alt="EpiJEPA online accuracy peaks at 86.09% at λ = 0.1. SIGReg scores 90.42%.">
+        <img class="epi-chart-dark" src="/posts/epijepa/assets/imagenette-online-dark.svg" width="480" height="255" loading="lazy" alt="EpiJEPA online accuracy peaks at 86.09% at λ = 0.1. SIGReg scores 90.42%.">
+      </figure>
+      <figure class="epijepa-result-figure epi-sweep-figure"><p class="epi-chart-title">Imagenette · frozen probe</p>
+        <img class="epi-chart-light" src="/posts/epijepa/assets/imagenette-frozen-light.svg" width="480" height="255" loading="lazy" alt="EpiJEPA frozen-backbone accuracy peaks at 87.67% at λ = 0.2. SIGReg scores 90.22%.">
+        <img class="epi-chart-dark" src="/posts/epijepa/assets/imagenette-frozen-dark.svg" width="480" height="255" loading="lazy" alt="EpiJEPA frozen-backbone accuracy peaks at 87.67% at λ = 0.2. SIGReg scores 90.22%.">
+      </figure>
+    </div>
+    <p class="epi-sweep-caption">CIFAR error bars show one standard deviation across three seeds. Imagenette uses one seed, with SIGReg at λ = 0.02. Online probes train alongside the encoder; frozen probes are fitted afterwards. Sweep accuracy axes are cropped.</p>
+  </details>
+
+  <p>The <a href="https://github.com/the-puzzler/epijepa/tree/main/results">repository contains both figures and the full result tables</a>.</p>
+
+  <h2 id="conclusion">Conclusion</h2>
+  <p>EpiJEPA can act as an anti-collapse mechanism in JEPA methods without imposing a specific embedding distribution. The Imagenette analysis supports this distinction: excess kurtosis is 3.41 for EpiJEPA and 0.14 for SIGReg, where a Gaussian has zero excess kurtosis.</p>
+  <p>EpiJEPA also uses more of the embedding space on CIFAR, with an effective rank of 58.4 versus 24.7 for SIGReg out of 64 dimensions. On Imagenette, both are close to full rank, and EpiJEPA's PCA plot looks more cleanly clustered to me. Yet these properties do not translate into better classification: its probe accuracy trails SIGReg by about one percentage point on CIFAR and three on Imagenette.</p>
+  <p>Removing view agreement substantially weakens classification. Epiplexity can prevent collapse on its own, but these results suggest it is insufficient as a standalone learning objective. View agreement helps turn that variation into useful semantic representations.</p>
+  <p>I think this method shows promise. I spent relatively little time refining the epiplexity implementation, so further tuning may help close the remaining accuracy gap to SIGReg.</p>
+  <div class="epijepa-code-bottom"><a class="epijepa-code-button" href="https://github.com/the-puzzler/epijepa" target="_blank" rel="noopener noreferrer">
+      <span>View the code</span>
+      <code>the-puzzler/epijepa ↗</code>
+    </a></div>
+
+  <h2 data-toc-skip>Comments</h2>
+  <div id="post-comments-thread"></div>
+</article>
+
+    </section>
+
+    <footer class="footer">
+      <span>© <span id="y"></span> the-puzzler</span>
+      <script>document.getElementById('y').textContent = new Date().getFullYear()</script>
+    </footer>
+  </div>
+</body>
+</html>

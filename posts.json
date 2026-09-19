@@ -1,5 +1,16 @@
 [
   {
+    "title": "EpiJEPA",
+    "date": "2026-09-18",
+    "path": "posts/epijepa/epijepa.html",
+    "social_image": "posts/epijepa/assets/thumbnail.png",
+    "social_image_alt": "EpiJEPA and SIGReg: side-by-side PCA plots of Imagenette projector outputs, coloured by image class.",
+    "social_image_width": 1460,
+    "social_image_height": 664,
+    "description": "Can rewarding learnable information prevent JEPA embeddings from collapsing, without forcing them into a Gaussian distribution?",
+    "tags": ["Self-Supervision"]
+  },
+  {
     "title": "Amortised Assignment Generation",
     "x_post": {
       "id": "2091570734933885162",
