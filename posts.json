@@ -1,6 +1,11 @@
 [
   {
     "title": "EpiJEPA",
+    "x_post": {
+      "id": "2101346227086369190",
+      "likes": 340,
+      "checked_at": "2026-09-22"
+    },
     "date": "2026-09-18",
     "path": "posts/epijepa/epijepa.html",
     "social_image": "posts/epijepa/assets/thumbnail.png",
