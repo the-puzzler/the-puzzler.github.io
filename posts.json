@@ -1,5 +1,19 @@
 [
   {
+    "title": "EpiWM",
+    "date": "2026-10-05",
+    "path": "posts/epiwm/epiwm.html",
+    "description": "Beating leWorldModel with the EpiJEPA objective in place of SIGReg.",
+    "tags": [
+      "World Modelling",
+      "Self-Supervision"
+    ],
+    "social_image": "posts/epiwm/assets/thumbnail.png",
+    "social_image_alt": "Side-by-side Cube PCA plots comparing EpiWM and released LeWM, with the same episode traced through each representation.",
+    "social_image_width": 1200,
+    "social_image_height": 800
+  },
+  {
     "title": "EpiJEPA",
     "x_post": {
       "id": "2101346227086369190",

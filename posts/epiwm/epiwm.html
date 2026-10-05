@@ -1,0 +1,199 @@
+<article class="epiwm-post">
+  <h1 data-toc-variant="card">EpiWM</h1>
+  <p class="post-subtitle">Beating <a href="https://arxiv.org/abs/2603.19312">leWorldModel</a> with the EpiJEPA objective in place of SIGReg.</p>
+
+  <figure class="epiwm-viewer" data-player="cube">
+    <div class="epiwm-viewer-grid">
+      <div class="epiwm-video-panel"><div class="epiwm-panel-title" data-video-title>Cube · recorded episode</div><video controls muted loop playsinline preload="metadata" src="/posts/epiwm/assets/cube.mp4" aria-label="Recorded Cube dataset episode"></video></div>
+      <div class="epiwm-pca-panel"><div class="epiwm-panel-title"><span class="epiwm-dot epi"></span>EpiWM <small data-variance="epijepa"></small></div><canvas data-model="epijepa" role="img" aria-label="EpiWM PCA with the current video frame highlighted">EpiWM PCA trajectory.</canvas></div>
+      <div class="epiwm-pca-panel"><div class="epiwm-panel-title"><span class="epiwm-dot released"></span>Released LeWM <small data-variance="released_lewm"></small></div><canvas data-model="released_lewm" role="img" aria-label="Released LeWM PCA with the current video frame highlighted">Released LeWM PCA trajectory.</canvas></div>
+    </div>
+    <div class="epiwm-playback" hidden><input data-scrub type="range" min="0" max="1" value="0" step="1" aria-label="Episode frame"><output data-frame>Frame 0</output></div>
+    <p class="epiwm-load-status" data-status role="status">Loading PCA coordinates…</p>
+    <figcaption>The frames of the videos are embedded and projected into the latent space of each model and traced across time.</figcaption>
+  </figure>
+  <figure class="epiwm-score-figure epiwm-headline" data-score-figure="headline">
+    <div class="epiwm-toolbar"><strong>Planning success · 500 tasks</strong></div>
+    <div class="epiwm-bars" data-score-charts><p>Loading planning results…</p></div>
+    <div class="epiwm-legend"><span><i class="epiwm-dot released"></i>Released LeWM</span><span><i class="epiwm-dot epi"></i>EpiWM</span></div>
+    <figcaption>Success rate on 500 tasks. EpiWM: mean of three training seeds; LeWM: released checkpoint.</figcaption>
+    <noscript><p>Released LeWM / EpiWM: TwoRoom 82.8 / 99.9%; PushT 84.6 / 88.5%; Cube 66.0 / 71.5%; Reacher 60.8 / 73.5%.</p></noscript>
+  </figure>
+  <p class="epiwm-resource-links"><a href="https://github.com/the-puzzler/epijepa/tree/main/worldmodel">Code</a> · <a href="https://huggingface.co/basilboy/epiwm">Checkpoints</a></p>
+
+  <h2 id="introduction">Introduction</h2>
+  <p>In <a href="/blog/epijepa/">EpiJEPA</a>, I explored an epiplexity-inspired objective as an alternative to SIGReg for preventing embedding collapse. EpiJEPA does not force the embeddings to follow a prescribed distribution, which in theory gives the model more freedom to find the representation best suited to its task. EpiWM takes that idea into world modelling.</p>
+  <p>The goal here is simple:</p>
+  <ul class="epiwm-goals">
+    <li>Replace SIGReg with the EpiJEPA objective.</li>
+    <li>Show that representational expressivity can improve performance.</li>
+  </ul>
+  <p>I compare EpiWM with LeWM's released checkpoints and my own LeWM reproductions (labelled SIGReg controls) across the paper's four <a href="https://arxiv.org/html/2603.19312v3#S4.SS1">control environments</a>: PushT, TwoRoom, OGBench-Cube and Reacher.</p>
+
+  <h2 id="theory">Theory</h2>
+  <p>World models predict the consequences of actions, letting an agent plan before acting. The argument for <a href="https://arxiv.org/html/2603.19312v3#S1">JEPA-based world models</a> is that predicting in embedding space lets them discard nuisance information and focus on what matters for control. This is shown to <a href="https://arxiv.org/html/2603.19312v3#A8">linearise the task</a>, turning a traditionally generative problem into a single point regression.</p>
+  <p class="epiwm-aside"><small>Personally, I think a generative objective is still essential, and that JEPA and generative methods can be combined. <em>unlike Yann</em></small></p>
+
+  <h3 data-toc-skip id="lewm-recap">LeWM</h3>
+  <p><a href="https://arxiv.org/abs/2603.19312">LeWM</a> jointly trains an encoder and an action-conditioned predictor: frames \(x_n\) become embeddings \(z_n\), and the predictor estimates the next embedding from the recent history and actions.</p>
+
+  <figure class="epiwm-diagram">
+    <svg viewBox="0 0 500 215" role="img" aria-labelledby="lewm-diagram-title lewm-diagram-desc">
+      <title id="lewm-diagram-title">LeWM: frames to embeddings to next-embedding prediction</title>
+      <desc id="lewm-diagram-desc">Frames x n minus 2, x n minus 1 and x n pass through the same encoder to produce z n minus 2, z n minus 1 and z n. Only the earlier embeddings feed the predictor, together with action a n minus 1, to predict z hat n. A two-headed arrow compares z hat n with the target z n.</desc>
+      <defs>
+        <marker id="epiwm-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L8 4L0 8Z" class="epiwm-arrowhead"/>
+        </marker>
+      </defs>
+
+      <g class="epiwm-symbol" text-anchor="middle">
+        <text x="60" y="26">x<tspan class="epiwm-index" dy="5">n−2</tspan></text>
+        <text x="250" y="26">x<tspan class="epiwm-index" dy="5">n−1</tspan></text>
+        <text x="440" y="26">x<tspan class="epiwm-index" dy="5">n</tspan></text>
+      </g>
+      <g class="epiwm-wire" marker-end="url(#epiwm-arrow)">
+        <path d="M60 36V52"/>
+        <path d="M250 36V52"/>
+        <path d="M440 36V52"/>
+      </g>
+      <rect class="epiwm-module" x="10" y="55" width="100" height="32" rx="3"/>
+      <rect class="epiwm-module" x="200" y="55" width="100" height="32" rx="3"/>
+      <rect class="epiwm-module" x="390" y="55" width="100" height="32" rx="3"/>
+      <g class="epiwm-label" text-anchor="middle">
+        <text x="60" y="77">Encoder</text>
+        <text x="250" y="77">Encoder</text>
+        <text x="440" y="77">Encoder</text>
+      </g>
+      <g class="epiwm-wire" marker-end="url(#epiwm-arrow)">
+        <path d="M60 87V104"/>
+        <path d="M250 87V104"/>
+        <path d="M440 87V104"/>
+      </g>
+      <g class="epiwm-symbol" text-anchor="middle">
+        <text x="60" y="124">z<tspan class="epiwm-index" dy="5">n−2</tspan></text>
+        <text x="250" y="124">z<tspan class="epiwm-index" dy="5">n−1</tspan></text>
+        <text x="440" y="124">z<tspan class="epiwm-index" dy="5">n</tspan></text>
+      </g>
+      <path class="epiwm-wire" d="M60 135V147H250 M250 135V147"/>
+      <path class="epiwm-wire" d="M250 147V163" marker-end="url(#epiwm-arrow)"/>
+      <path class="epiwm-wire" d="M440 136V165" marker-start="url(#epiwm-arrow)" marker-end="url(#epiwm-arrow)"/>
+      <text class="epiwm-label" x="429" y="156" text-anchor="end">Minimise</text>
+
+      <text class="epiwm-symbol" x="75" y="188" text-anchor="middle">a<tspan class="epiwm-index" dy="5">n−1</tspan></text>
+      <path class="epiwm-wire" d="M105 182H182" marker-end="url(#epiwm-arrow)"/>
+      <rect class="epiwm-module" x="185" y="166" width="130" height="32" rx="3"/>
+      <text class="epiwm-label" x="250" y="188" text-anchor="middle">Predictor</text>
+      <path class="epiwm-wire" d="M315 182H400" marker-end="url(#epiwm-arrow)"/>
+      <text class="epiwm-symbol" x="440" y="188" text-anchor="middle">ẑ<tspan class="epiwm-index" dy="5">n</tspan></text>
+    </svg>
+  </figure>
+
+  <p>Training minimises the error between \(\hat z_n\) and the target frame's embedding \(z_n\). However, this task has a trivial solution: \(z_n = C\) for all \(n\). SIGReg prevents trivial collapse by encouraging an isotropic Gaussian embedding distribution.</p>
+  <p>But an isotropic Gaussian may not be the optimal representation distribution. EpiWM replaces that regulariser with the EpiJEPA objective, which does not force a particular distribution.</p>
+
+  <h3 data-toc-skip id="epijepa-recap">EpiJEPA</h3>
+  <p>Epiplexity measures the information that a computationally limited observer can learn from data.</p>
+  <figure class="epiwm-diagram">
+    <svg viewBox="0 0 500 240" role="img" aria-labelledby="epijepa-diagram-title epijepa-diagram-desc">
+      <title id="epijepa-diagram-title">EpiJEPA: learning from the embeddings</title>
+      <desc id="epijepa-diagram-desc">A sample goes through two branches: an encoder produces embedding z, while a fixed random feature extractor supplies a small linear predictor. The predictor is fitted to recover z. Its fitted weights W are scored to estimate how much it learnt.</desc>
+      <defs>
+        <marker id="epijepa-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0 0L8 4L0 8Z" class="epiwm-arrowhead"/>
+        </marker>
+      </defs>
+
+      <text class="epiwm-symbol" x="30" y="105" text-anchor="middle">x</text>
+      <text class="epiwm-label" x="30" y="126" text-anchor="middle">Sample</text>
+      <path class="epiwm-wire" d="M47 98H75"/>
+      <path class="epiwm-wire" d="M75 98V41H132" marker-end="url(#epijepa-arrow)"/>
+      <path class="epiwm-wire" d="M75 98V160H102" marker-end="url(#epijepa-arrow)"/>
+
+      <rect class="epiwm-module" x="135" y="24" width="140" height="34" rx="3"/>
+      <text class="epiwm-label" x="205" y="47" text-anchor="middle">Encoder</text>
+      <path class="epiwm-wire" d="M275 41H381" marker-end="url(#epijepa-arrow)"/>
+      <text class="epiwm-symbol" x="400" y="48" text-anchor="middle">z</text>
+
+      <rect class="epiwm-module" x="105" y="130" width="160" height="60" rx="3"/>
+      <g class="epiwm-label" text-anchor="middle">
+        <text x="185" y="154">Fixed random</text>
+        <text x="185" y="176">features</text>
+      </g>
+      <path class="epiwm-wire" d="M265 160H307" marker-end="url(#epijepa-arrow)"/>
+      <rect class="epiwm-module" x="310" y="130" width="180" height="60" rx="3"/>
+      <text class="epiwm-label" x="400" y="152" text-anchor="middle">Small predictor</text>
+      <text class="epiwm-symbol" x="400" y="180" text-anchor="middle">W</text>
+      <path class="epiwm-wire" d="M400 130V63" marker-end="url(#epijepa-arrow)"/>
+      <text class="epiwm-label" x="413" y="101">Fit to z</text>
+      <path class="epiwm-wire" d="M328 196Q328 204 340 204H388Q400 204 400 212Q400 204 412 204H460Q472 204 472 196"/>
+      <text class="epiwm-label" x="490" y="231" text-anchor="end">How much did it learn?</text>
+    </svg>
+    <figcaption>Approximating epiplexity à la <a href="https://arxiv.org/abs/2607.18433">Zhang and Levin</a>.</figcaption>
+  </figure>
+
+  <p><a href="/blog/epijepa/">EpiJEPA</a> uses an approximation of this idea to reward learnable information in the embeddings. A small linear predictor learns to predict the embeddings from features extracted from the same frames by a frozen, randomly initialised CNN (this small predictor is only for loss calculation). I fit it using ridge regression, then use a log-determinant score to measure the strength and spread of its weights (how much it learnt).</p>
+  <p>If the embeddings collapse to a constant, the task is trivial and the score is zero, indicating nothing had to be learnt. Rewarding this score gives the encoder an incentive to preserve information connected to the input.</p>
+
+  <h2 id="method">Method</h2>
+  <h3 data-toc-skip id="model">Model</h3>
+  <p>EpiWM starts from <a href="https://github.com/lucas-maes/le-wm">LeWM's released architecture</a>, with the following changes:</p>
+  <table class="epiwm-comparison" aria-label="LeWM and EpiWM model comparison">
+    <thead>
+      <tr><th scope="col">Component</th><th scope="col">LeWM</th><th scope="col">EpiWM</th></tr>
+    </thead>
+    <tbody>
+      <tr><th scope="row">Encoder</th><td colspan="2">Same ViT-tiny</td></tr>
+      <tr><th scope="row">Encoder projector</th><td>BatchNorm-MLP</td><td>Same, plus final non-affine BatchNorm<sup><a href="#projector-note" aria-label="Projector normalisation note">†</a></sup></td></tr>
+      <tr><th scope="row">Predictor</th><td colspan="2">Same AdaLN predictor and projection head</td></tr>
+      <tr><th scope="row">Anti-collapse objective</th><td>SIGReg: match \(\mathcal{N}(0,I)\)</td><td>Maximise the epiplexity score</td></tr>
+      <tr><th scope="row">Epiplexity Score Estimator</th><td>N/A</td><td>Frozen random CNN on the same frames, with a fitted linear readout</td></tr>
+      <tr><th scope="row">Prediction loss</th><td colspan="2">Same MSE</td></tr>
+      <tr><th scope="row">Data and planning</th><td colspan="2">Same training data and CEM planner</td></tr>
+    </tbody>
+  </table>
+  <p class="epiwm-aside" id="projector-note"><small>† The epiplexity score can grow without bound as the embeddings grow in scale. The extra BatchNorm fixes this scale, with no learnable scale or shift. This is the same as in <a href="/blog/epijepa/">EpiJEPA</a>; SIGReg fixes scale through its Gaussian target.</small></p>
+
+  <p id="reacher-note">For PushT, TwoRoom and Cube, I use the same training datasets as LeWM. My Reacher* models were trained on the released dmc/reacher_random dataset, collected using a random policy. The paper instead describes training on data collected using a <a href="https://arxiv.org/html/2603.19312v3#A5">Soft Actor-Critic (SAC) policy</a>. I evaluate all Reacher models on the released random-policy dataset, so these results are not directly comparable to the paper’s reported 86%.</p>
+
+  <h3 data-toc-skip id="evaluation">Evaluation</h3>
+  <p>I compare three models: the released LeWM checkpoints, EpiWM, and my own SIGReg controls. Each task asks the model to plan from a starting state to a target state. Each environment has three evaluation sets, all selected with seed 42: the original 50 tasks, a non-overlapping set of 200 tasks, and a further 500-task evaluation. Start states come from the training datasets, following LeWM’s protocol.</p>
+  <p>Planning uses CEM, which samples action sequences and refines those predicted to reach the goal. Unless noted, all models use the same <a href="https://github.com/lucas-maes/le-wm/blob/main/config/eval/solver/cem.yaml">released CEM settings</a>, including 30 iterations in every environment.</p>
+
+  <p>Then, to compare the underlying learnt representations, I visualise them using PCA. I pass the same 3,000 randomly sampled dataset frames through each model and take the projector outputs, the embeddings used for planning. I fit PCA separately for each model and plot the first two principal components. Frames from a recorded episode are projected using each model’s fitted PCA and traced in time with the video. The percentages show how much of the embedding variance these two dimensions capture.</p>
+
+  <h2 id="results">Results</h2>
+  <h3 data-toc-skip id="planning">Planning</h3>
+  <figure class="epiwm-score-figure" data-score-figure="full" id="planning-scores">
+    <div class="epiwm-toolbar"><strong>Planning success</strong><label>Tasks <select data-eval-set aria-label="Evaluation task set"><option value="paper50">50 · original</option><option value="n200">200</option><option value="n500" selected>500</option></select></label></div>
+    <div class="epiwm-bars" data-score-charts aria-live="polite"><p>Loading planning results…</p></div>
+    <div class="epiwm-legend"><span><i class="epiwm-dot released"></i>Released LeWM</span><span><i class="epiwm-dot epi"></i>EpiWM</span><span><i class="epiwm-dot control"></i>My SIGReg control</span></div>
+    <figcaption>Success rate (%). Bars show means; dots show training seeds; labels below the bars give training steps. EpiWM uses three seeds and the SIGReg controls use two, with matching training budgets.</figcaption>
+    <p class="epiwm-aside" id="cube-cem-note" data-cube-cem-note hidden><small>‡ Released Cube uses CEM-10 on the 50-task set because it scored higher.</small></p>
+    <noscript><p>500-task success (released / EpiWM / control): TwoRoom 82.8 / 99.9 / 87.9%; PushT 84.6 / 88.5 / 88.6%; Cube 66.0 / 71.5 / 65.5%; Reacher 60.8 / 73.5 / 62.2%.</p></noscript>
+  </figure>
+  <p>EpiWM beats the released checkpoints across all four environments on the larger evaluation sets. Against my controls, PushT is effectively tied. The original 50 PushT tasks favour released LeWM; both larger sets reverse that ranking.</p>
+
+  <h3 data-toc-skip id="representations">Representations</h3>
+  <p>The EpiWM representations are visibly more structured in these PCA plots, especially in Cube and TwoRoom, where the first two principal components capture recognisable x and y structure from the video frames. This makes the physical motion easy to follow in latent space.</p>
+  <figure class="epiwm-viewer" data-player="tworoom" data-explorer>
+    <div class="epiwm-toolbar"><label>Environment <select data-environment><option value="tworoom">TwoRoom</option><option value="pusht">PushT</option><option value="cube">Cube</option><option value="reacher">Reacher</option></select></label><label>Colour by <select data-colour><option value="none">Episode progress</option></select></label><span data-colour-key class="epiwm-colour-key" hidden></span></div>
+    <div class="epiwm-viewer-grid">
+      <div class="epiwm-video-panel"><div class="epiwm-panel-title" data-video-title>TwoRoom · recorded episode</div><video controls muted loop playsinline preload="metadata" src="/posts/epiwm/assets/tworoom.mp4" aria-label="Recorded TwoRoom dataset episode"></video></div>
+      <div class="epiwm-pca-panel"><div class="epiwm-panel-title"><span class="epiwm-dot epi"></span>EpiWM <small data-variance="epijepa"></small></div><canvas data-model="epijepa" role="img" aria-label="EpiWM PCA with the current video frame highlighted">EpiWM PCA trajectory.</canvas></div>
+      <div class="epiwm-pca-panel"><div class="epiwm-panel-title"><span class="epiwm-dot released"></span>Released LeWM <small data-variance="released_lewm"></small></div><canvas data-model="released_lewm" role="img" aria-label="Released LeWM PCA with the current video frame highlighted">Released LeWM PCA trajectory.</canvas></div>
+    </div>
+    <div class="epiwm-playback" hidden><button type="button" data-play aria-label="Play episode">Play</button><input data-scrub type="range" min="0" max="1" value="0" step="1" aria-label="Episode frame"><output data-frame>Frame 0</output></div>
+    <p class="epiwm-load-status" data-status role="status">Loading PCA coordinates…</p>
+    <figcaption>The frames of the videos are embedded and projected into the latent space of each model and traced across time.</figcaption>
+  </figure>
+  <p>These analyses compare one selected EpiWM checkpoint per environment (the best on the 500-task set) with its released LeWM counterpart.</p>
+
+  <h2 id="conclusion">Conclusion</h2>
+  <p>Replacing SIGReg with the EpiJEPA objective matches or improves planning performance across all four environments on the larger evaluation sets. The PCA plots also show more recognisable spatial structure, particularly in Cube and TwoRoom.</p>
+  <p>These results support the idea behind EpiWM: preventing collapse need not mean forcing the embeddings towards a prescribed distribution. Rewarding learnable information gives the model room to develop its own representation, and here that freedom produces a useful world model.</p>
+  <p class="epiwm-resource-links"><a href="https://github.com/the-puzzler/epijepa/tree/main/worldmodel">Code</a> · <a href="https://huggingface.co/basilboy/epiwm">Checkpoints</a></p>
+
+  <h2 data-toc-skip id="comments">Comments</h2>
+  <div id="post-comments-thread"></div>
+</article>

@@ -1,0 +1,14 @@
+[
+  {
+    "environment": "cube",
+    "model": "released",
+    "eval_set": "paper50",
+    "run": "official_cube",
+    "value": 72.0,
+    "cem_iterations": 10,
+    "previous_value": 68.0,
+    "previous_cem_iterations": 30,
+    "source": "User-provided implementation audit: /data/epiwm/investigation_released/REPORT_cube_pusht_provenance.md",
+    "selection": "Use CEM-10 because it scored higher on the same 50 start-goal pairs."
+  }
+]
