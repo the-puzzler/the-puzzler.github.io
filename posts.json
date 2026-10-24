@@ -1,6 +1,11 @@
 [
   {
     "title": "EpiWM",
+    "x_post": {
+      "id": "2107179970745557116",
+      "likes": 211,
+      "checked_at": "2026-10-24"
+    },
     "date": "2026-10-05",
     "path": "posts/epiwm/epiwm.html",
     "description": "Beating leWorldModel with the EpiJEPA objective in place of SIGReg.",
