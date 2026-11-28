@@ -277,7 +277,7 @@
         </g>
       </svg>
     </figure>
-    <p>For this reason, I let the network train on the task loss alone for the first 1,000 steps, then increased the weight on the ANNA loss linearly over the next 1,000.</p>
+    <p>For this reason, on the images, I let the network train on the task loss alone for the first 1,000 steps, then increased the weight on the ANNA loss linearly over the next 1,000.</p>
 
     <p class="anna-k-schedule">Following the <a href="/blog/beautiful-on-the-inside/#top-k">intuition above</a>, <i>k</i> shrinks geometrically with depth, from 128 neighbours at the first layer to five at the last.</p>
     <figure id="layerwise-k-schedule">
@@ -308,7 +308,7 @@
     <li><strong>MSE:</strong> how well the main network completes its task.</li>
   </ul>
 
-  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO regularise the same representation: either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, with and without weight decay. With only two layers, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
+  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO regularise the same representation: either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, with weight decay, and on attention also without. With only two layers, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
 
   <h2 id="results">Results</h2>
     <h3 data-toc-skip id="cat-training">Cat training</h3>
