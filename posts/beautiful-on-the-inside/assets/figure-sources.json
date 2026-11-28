@@ -1,0 +1,25 @@
+{
+  "export": "ANNA blog assets (see its README.md)",
+  "sources": {
+    "anna-cat/": [
+      "result2_cat/runs/anna/3_polish/s3/final.pt",
+      "video/weights_no_regulariser.npz (step 150,000)"
+    ],
+    "map-symmetry.svg": [
+      "result1_three_images/images_per_seed.tsv"
+    ],
+    "pixel-mse.svg": [
+      "result1_three_images/images_per_seed.tsv"
+    ],
+    "grokking-accuracy.svg": [
+      "result3_grokking/curves/"
+    ],
+    "anna-montage/": [
+      "video/weights_anna.npz",
+      "video/weights_no_regulariser.npz"
+    ],
+    "thumbnail.png": [
+      "result2_cat/runs/anna/3_polish/s3/final.pt"
+    ]
+  }
+}

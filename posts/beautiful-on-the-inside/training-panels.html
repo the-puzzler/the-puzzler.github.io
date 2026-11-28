@@ -1,0 +1,19 @@
+  <h3 data-toc-skip id="cat-training">Cat training</h3>
+  <p>Out of curiosity, I wanted to see how the internals<sup class="info-note"><button type="button" aria-label="How the maps were chosen" aria-describedby="montage-units">ⓘ</button><span role="tooltip" id="montage-units" hidden>Each row shows six units from one quarter of the network’s depth, picked to be representative. The same units appear on both sides.</span></sup> change during training, with and without ANNA. Unlike the other experiments, I also lowered ANNA’s strength in two steps along the way, to get a better trade-off between MSE and symmetry.</p>
+  <figure id="representations-over-time" aria-labelledby="cat-training">
+    <div class="training-headings" aria-hidden="true"><span>ANNA</span><span>Unregularised</span></div>
+    <fieldset class="training-models">
+      <legend class="sr-only">View a network</legend>
+      <label><input type="radio" name="training-model" value="anna" checked>ANNA</label>
+      <label><input type="radio" name="training-model" value="control">Unregularised</label>
+    </fieldset>
+    <div class="training-frame">
+      <img loading="lazy" decoding="async" width="864" height="456" src="/posts/beautiful-on-the-inside/assets/anna-montage/step150000.webp?v=2" alt="Paintings and hidden-unit maps of the ANNA and unregularised cats at step 150,000.">
+    </div>
+    <div class="training-controls" hidden>
+      <button type="button">Play</button>
+      <div data-include-html="assets/anna-montage/slider.html"></div>
+      <output>Step 150,000 · Second polish</output>
+    </div>
+    <span class="training-error" role="status"></span>
+  </figure>
