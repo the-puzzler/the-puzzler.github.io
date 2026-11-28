@@ -79,11 +79,7 @@
     <section class="page">
       <div class="home-intro">
         <h1>Matteo</h1>
-        <div class="home-portrait">
-          <img src="ghibme.jpg" alt="Illustration of Matteo writing in a mountain landscape" class="hero-img hero-light" width="3168" height="1344">
-          <img src="ghibmedark.jpg" alt="Illustration of Matteo writing in a mountain landscape at night" class="hero-img hero-dark" width="3168" height="1344">
-        </div>
-        <p>I explore how systems build useful <strong>world models</strong>, and how experience shapes what they learn. Here I share experiments in world modelling, curriculum, and self-supervision.</p>
+        <p>Here I share experiments in world modelling, curriculum, and self-supervision.</p>
       </div>
 
       <div class="hr"></div>
@@ -95,19 +91,28 @@
         </div>
         <div class="demo-library">
           <a class="demo-tile" href="/blog/aag/#aag-doom-demo">
-            <div class="demo-cover demo-cover--doom"><img src="assets/demo-thumbnails/doom.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <div class="demo-cover demo-cover--doom">
+              <img src="assets/demo-thumbnails/doom.png" alt="" width="64" height="64">
+            </div>
             <strong>Doom world model</strong><span>Play Doom, one predicted frame at a time</span>
           </a>
           <a class="demo-tile" href="/blog/curriculum-mining/#othello-demo">
-            <div class="demo-cover demo-cover--othello"><img src="assets/demo-thumbnails/othello.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <div class="demo-cover demo-cover--othello">
+              <img src="assets/demo-thumbnails/othello.png" alt="" width="434" height="435">
+            </div>
             <strong>Othello</strong><span>Challenge the policy that beat AlphaZero networks</span>
           </a>
           <a class="demo-tile" href="/posts/pan1ni/nethack-navigator/">
-            <div class="demo-cover demo-cover--nethack"><img src="assets/demo-thumbnails/nethack.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <div class="demo-cover demo-cover--nethack">
+              <img src="assets/demo-thumbnails/nethack.png" alt="" width="144" height="144">
+            </div>
             <strong>NetHack navigator</strong><span>Pick a goal. Watch it find a way.</span>
           </a>
           <a class="demo-tile" href="/posts/self-teaching-autoencoder/latent_brush_demo/">
-            <div class="demo-cover demo-cover--latent-brush"><img src="assets/demo-thumbnails/latent-brush.png" alt="" loading="lazy" width="320" height="200"><span class="demo-play" aria-hidden="true">▶</span></div>
+            <div class="demo-cover demo-cover--latent-brush">
+              <img src="assets/demo-thumbnails/latent-brush.png" alt="" width="192" height="192">
+              <img class="demo-feature-map" src="assets/demo-thumbnails/latent-features.png" alt="" width="32" height="32">
+            </div>
             <strong>Latent brush</strong><span>Paint a face in latent space</span>
           </a>
         </div>
@@ -119,13 +124,16 @@
           <span class="sr-only">Search blogs</span>
           <input id="blog-search" class="blog-search" type="search" placeholder="Search blogs..." autocomplete="off">
         </label>
-        <select id="blog-sort" class="blog-sort" aria-label="Sort articles" disabled>
-          <option value="newest">Newest</option>
-          <option value="likes">Most liked</option>
-        </select>
-      </div>
-      <div class="tag-filter-row">
-        <div id="blog-tag-filters" class="tag-filters" aria-label="Filter blogs by topic"></div>
+        <div class="blog-controls">
+          <details class="blog-topics" id="blog-topics">
+            <summary>Topics</summary>
+            <div id="blog-tag-filters" class="topic-menu" role="group" aria-label="Filter blogs by topic"></div>
+          </details>
+          <select id="blog-sort" class="blog-sort" aria-label="Sort articles" disabled>
+            <option value="newest">Newest</option>
+            <option value="likes">Most liked</option>
+          </select>
+        </div>
       </div>
       <ul id="post-list" class="list">
         <!-- STATIC_POST_LIST_START -->

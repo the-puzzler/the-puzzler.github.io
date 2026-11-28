@@ -95,30 +95,37 @@ function renderTagFilters(posts) {
     });
   });
 
-  const buttons = [
-    { tag: '', label: `All (${posts.length})` },
-    ...HOME_FILTER_TAGS.filter(tag => (counts.get(tag) || 0) > 0).map(tag => ({ tag, label: `${tag} (${counts.get(tag)})` }))
-  ];
+  filterEl.innerHTML = HOME_FILTER_TAGS.filter(tag => (counts.get(tag) || 0) > 0).map(tag =>
+    `<label class="topic-option"><input type="checkbox" value="${tag}"${activeHomeTags.has(tag) ? ' checked' : ''}>` +
+    `<span>${tag}</span><span class="topic-count">${counts.get(tag)}</span></label>`
+  ).join('');
 
-  filterEl.innerHTML = buttons.map(({ tag, label }) => {
-    const isActive = tag ? activeHomeTags.has(tag) : activeHomeTags.size === 0;
-    return `<button class="tag-chip${isActive ? ' is-active' : ''}" data-tag="${tag}" type="button" aria-pressed="${isActive}">${label}</button>`;
-  }).join('');
+  const summary = $('#blog-topics summary');
+  if (summary) summary.textContent = activeHomeTags.size ? `Topics (${activeHomeTags.size})` : 'Topics';
 
-  $$('.tag-chip', filterEl).forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tag = btn.dataset.tag || '';
-      if (!tag) {
-        activeHomeTags.clear();
-      } else if (activeHomeTags.has(tag)) {
-        activeHomeTags.delete(tag);
-      } else {
-        activeHomeTags.add(tag);
-      }
-      renderTagFilters(homePostsCache);
+  $$('input', filterEl).forEach(box => {
+    box.addEventListener('change', () => {
+      if (box.checked) activeHomeTags.add(box.value);
+      else activeHomeTags.delete(box.value);
+      if (summary) summary.textContent = activeHomeTags.size ? `Topics (${activeHomeTags.size})` : 'Topics';
       renderHomePostList(homePostsCache);
-      $$('.tag-chip', filterEl).find(button => button.dataset.tag === tag)?.focus();
     });
+  });
+}
+
+function initTopicMenu() {
+  const menu = $('#blog-topics');
+  if (!menu || menu.dataset.bound === 'true') return;
+  menu.dataset.bound = 'true';
+  // Close the dropdown on an outside click or Escape, like a native select.
+  document.addEventListener('click', event => {
+    if (menu.open && !menu.contains(event.target)) menu.open = false;
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && menu.open) {
+      menu.open = false;
+      menu.querySelector('summary').focus();
+    }
   });
 }
 
@@ -215,6 +222,7 @@ async function renderList() {
     };
   }
   initHomeSearch();
+  initTopicMenu();
   renderTagFilters(homePostsCache);
   renderHomePostList(homePostsCache);
 }
@@ -824,11 +832,6 @@ function initControls() {
     };
     updateThemeUI();
     container.appendChild(themeBtn);
-
-    // Hero images only exist on home page typically, but safe to bind if present
-    document.querySelectorAll('.hero-img').forEach(img => {
-      img.onclick = themeBtn.onclick;
-    });
   }
 
   // === 2. Controls for POST PAGE (Home, sharing, and copying) ===
