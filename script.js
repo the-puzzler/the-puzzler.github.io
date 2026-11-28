@@ -372,6 +372,8 @@ function buildPostTOC(contentEl) {
   if (!toc || !nav || !contentEl) return;
 
   clearPostTOC();
+  // A post can opt out of the contents box with data-toc="off" on its title.
+  if (contentEl.querySelector('[data-toc="off"]')) return;
   const cardVariant = Boolean(contentEl.querySelector('[data-toc-variant="card"]'));
   toc.classList.toggle('post-toc--card', cardVariant);
   let toggle = toc.querySelector('.toc-toggle');
