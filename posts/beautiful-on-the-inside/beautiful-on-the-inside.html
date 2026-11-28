@@ -241,7 +241,7 @@
     <li><strong>MSE:</strong> how well the main network completes its task.</li>
   </ul>
 
-  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO act on: either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, all with weight decay. With only two layers in the model, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
+  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO act on either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, all with weight decay. With only two layers in the model, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
 
   <h2 id="results">Results</h2>
   <div data-include-html="training-panels.html"></div>
