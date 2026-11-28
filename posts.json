@@ -3,7 +3,7 @@
     "title": "Beautiful on the Inside",
     "date": "2026-11-28",
     "path": "posts/beautiful-on-the-inside/beautiful-on-the-inside.html",
-    "description": "How a neural network can create beautiful internal representations by pulling each activation towards its nearest neighbours.",
+    "description": "How a neural network can create beautiful internal representations (and grok 6× faster) by pulling each activation towards its nearest neighbours.",
     "tags": [
       "Self-Supervision"
     ],
