@@ -241,7 +241,7 @@
     <li><strong>MSE:</strong> how well the main network completes its task.</li>
   </ul>
 
-  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO regularise the same representation: either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, with weight decay, and on attention also without. With only two layers, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
+  <p><strong>Grokking.</strong> Following the UFO paper, a two-layer transformer learns modular division, <i>x</i> / <i>y</i> mod 97, from half of all input pairs and is tested on the other half. ANNA and the UFO regularise the same representation: either the attention weights at the “=” token, or the MLP units there. I run eight seeds per setting, all with weight decay. With only two layers, I used <i>k</i> schedules from 384 to 5 on attention and from 511 (whole batch) to 32 on the MLP.</p>
 
   <h2 id="results">Results</h2>
   <div data-include-html="training-panels.html"></div>
@@ -267,7 +267,7 @@
   </figure>
 
   <h3 data-toc-skip id="grokking">Grokking</h3>
-  <p>In the UFO paper, they also show that the regularisation pressure accelerates grokking. To see whether ANNA has a comparable effect, I replicated the experiments with the paper’s code. On attention, ANNA groks about as fast as the UFO, with or without weight decay. On the MLP it is somewhat slower. Both are several times faster than weight decay alone.</p>
+  <p>In the UFO paper, they also show that the regularisation pressure accelerates grokking. To see whether ANNA has a comparable effect, I replicated the experiments with the paper’s code. On attention, ANNA groks about as fast as the UFO. On the MLP it is somewhat slower. Both are several times faster than weight decay alone.</p>
 
   <figure class="anna-grokking" aria-label="Grokking on modular division">
     <div data-include-html="assets/grokking-accuracy.svg"></div>
